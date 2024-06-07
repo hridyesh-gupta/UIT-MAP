@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #1d48ac;
+            color: white;
+        }
+
+        .header img {
+            max-height: 50px;
+        }
+
+        .sub-header {
+            display: flex;
+            justify-content: center;
+            background-color: #e0e9ff;
+            padding: 10px 0;
+        }
+
+        .sub-header a {
+            margin: 0 15px;
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+
+        .sub-header a:hover {
+            color: #001a53;
+        }
+
+        .main {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            padding: 20px;
+        }
+
+        .details {
+            flex: 1;
+            margin-right: 20px;
+        }
+
+        .photo {
+            flex: 0 0 150px;
+        }
+
+        .photo img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .details h1 {
+            font-size: 2em;
+            margin: 0;
+        }
+
+        .details p {
+            font-size: 1em;
+            color: #666;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #1d48ac;
+            color: white;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+
+        @media (max-width: 767px) {
+            .main {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .details {
+                margin: 0 0 20px 0;
+                text-align: center;
+            }
+
+            .photo {
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <img src="https://via.placeholder.com/100x50" alt="Logo">
+        </div>
+    </header>
+
+    <nav class="sub-header">
+        <a href="#section1">Student Detail</a>
+        <a href="#section2">View Rubrics</a>
+        <a href="#section3">Project Details</a>
+        <a href="#section4">Project Status</a>
+        <a href="#section5">Evaluation</a>
+    </nav>
+
+    <main class="main">
+        <div class="details">
+            <h1 id="name">John Doe</h1>
+            <p><strong>Position:</strong> <span id="position">Software Engineer</span></p>
+            <p><strong>Email:</strong> <span id="email">john.doe@example.com</span></p>
+            <p><strong>Phone:</strong> <span id="phone">(123) 456-7890</span></p>
+            <p id="bio">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque sit amet accumsan tortor. Donec ut urna quis elit sollicitudin posuere.</p>
+        </div>
+        <div class="photo">
+            <img id="photo" src="https://via.placeholder.com/150" alt="John Doe">
+        </div>
+    </main>
+
+    <footer class="footer">
+        &copy; UNITED INSTITUTE OF TECHNOLOGY, All rights reserved.
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Simulate fetching data after login verification
+            fetchUserData();
+        });
+
+        function fetchUserData() {
+            // Replace this URL with your actual API endpoint
+            fetch('https://api.example.com/user/profile')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('name').textContent = data.name;
+                    document.getElementById('position').textContent = data.position;
+                    document.getElementById('email').textContent = data.email;
+                    document.getElementById('phone').textContent = data.phone;
+                    document.getElementById('bio').textContent = data.bio;
+                    document.getElementById('photo').src = data.photoUrl;
+                })
+                .catch(error => console.error('Error fetching user data:', error));
+        }
+    </script>
+</body>
+</html>
