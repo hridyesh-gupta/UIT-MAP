@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAP - Student Details</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        .table-container {
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-blue-600 text-white p-4">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <img src="https://via.placeholder.com/50" alt="College Logo" class="h-12">
+            <h1 class="text-3xl font-bold">MAP - Student Details</h1>
+            <div></div>
+        </div>
+    </header>
+
+    <!-- Sub-header -->
+    <nav class="bg-blue-500 text-white">
+        <div class="max-w-6xl mx-auto p-4 flex justify-between">
+            <a href="#" class="text-lg font-semibold">Student Details</a>
+            <a href="#" class="text-lg">View Rubrics</a>
+            <a href="#" class="text-lg">Project Detail</a>
+            <a href="#" class="text-lg">Project Status</a>
+            <a href="#" class="text-lg">Evaluation</a>
+            <a href="#" class="text-lg">Project Marks</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow">
+        <div class="max-w-4xl mx-auto bg-white p-8 rounded shadow my-8">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-5">
+                <h2 class="text-2xl font-semibold text-gray-700">Student Bio-data</h2>
+                <div class="w-32 h-32 mt-4 md:mt-0">
+                    <img id="student-photo" src="https://via.placeholder.com/150" alt="Student Photo" class="rounded shadow">
+                </div>
+            </div>
+
+            <table class="w-full text-left mb-5">
+                <tbody>
+                    <tr>
+                        <td class="font-semibold text-gray-600">Name</td>
+                        <td>:</td>
+                        <td id="student-name"></td>
+                    </tr>
+                    <tr>
+                        <td class="font-semibold text-gray-600">Roll Number</td>
+                        <td>:</td>
+                        <td id="student-roll"></td>
+                    </tr>
+                    <tr>
+                        <td class="font-semibold text-gray-600">DOB</td>
+                        <td>:</td>
+                        <td id="student-dob"></td>
+                    </tr>
+                    <tr>
+                        <td class="font-semibold text-gray-600">Contact No</td>
+                        <td>:</td>
+                        <td id="student-contact"></td>
+                    </tr>
+                    <tr>
+                        <td class="font-semibold text-gray-600">E-Mail</td>
+                        <td>:</td>
+                        <td id="student-email"></td>
+                    </tr>
+                    <tr>
+                        <td class="font-semibold text-gray-600">10<sup>th</sup> Marks (in %)</td>
+                        <td>:</td>
+                        <td id="student-marks-10"></td>
+                    </tr>
+                    <tr>
+                        <td class="font-semibold text-gray-600">12<sup>th</sup> Marks (in %)</td>
+                        <td>:</td>
+                        <td id="student-marks-12"></td>
+                    </tr>
+                    <tr>
+                        <td class="font-semibold text-gray-600">Diploma (in %)</td>
+                        <td>:</td>
+                        <td id="student-diploma"></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">B. Tech. (Obtained / Total)</h2>
+            <div class="table-container">
+                <table class="w-full text-left border-collapse border border-gray-300">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="border px-4 py-2">Semester</th>
+                            <th class="border px-4 py-2">Marks</th>
+                            <th class="border px-4 py-2">CP</th>
+                            <th class="border px-4 py-2">Paper Name</th>
+                        </tr>
+                    </thead>
+                    <tbody id="academic-record">
+                        <!-- Data will be inserted here dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-blue-600 text-white p-4 text-center">
+        <div class="max-w-6xl mx-auto">
+            &copy; 2023 MAP College. All rights reserved.
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Simulate fetching data from a database
+            const studentData = {
+                name: "Yash Srivastava",
+                rollNumber: "2002840100179",
+                dob: "04/03/2003",
+                contact: "8081486463",
+                email: "yashsrivastava450@gmail.com",
+                marks10: "80%",
+                marks12: "76%",
+                diploma: "NA",
+                photo: "https://via.placeholder.com/150",
+                academicRecord: [
+                    { semester: "I Semester", marks: "628 / 950", cp: "0", paper: "" },
+                    { semester: "II Semester", marks: "788 / 900", cp: "0", paper: "" },
+                    { semester: "III Semester", marks: "567 / 950", cp: "0", paper: "" },
+                    { semester: "IV Semester", marks: "634 / 900", cp: "0", paper: "" },
+                    { semester: "V Semester", marks: "676 / 950", cp: "0", paper: "" },
+                    { semester: "VI Semester", marks: "CP", cp: "0", paper: "" },
+                    { semester: "VII Semester", marks: "CP", cp: "0", paper: "" },
+                    { semester: "VIII Semester", marks: "CP", cp: "0", paper: "" }
+                ]
+            };
+
+            // Populate student data
+            document.getElementById("student-name").innerText = studentData.name;
+            document.getElementById("student-roll").innerText = studentData.rollNumber;
+            document.getElementById("student-dob").innerText = studentData.dob;
+            document.getElementById("student-contact").innerText = studentData.contact;
+            document.getElementById("student-email").innerText = studentData.email;
+            document.getElementById("student-marks-10").innerText = studentData.marks10;
+            document.getElementById("student-marks-12").innerText = studentData.marks12;
+            document.getElementById("student-diploma").innerText = studentData.diploma;
+            document.getElementById("student-photo").src = studentData.photo;
+
+            // Populate academic record
+            const academicRecordTable = document.getElementById("academic-record");
+            studentData.academicRecord.forEach(record => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td class="border px-4 py-2">${record.semester}</td>
+                    <td class="border px-4 py-2">${record.marks}</td>
+                    <td class="border px-4 py-2">${record.cp}</td>
+                    <td class="border px-4 py-2">${record.paper}</td>
+                `;
+                academicRecordTable.appendChild(row);
+            });
+        });
+    </script>
+</body>
+</html>
