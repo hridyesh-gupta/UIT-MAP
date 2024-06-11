@@ -17,7 +17,9 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
     
     $sql="SELECT * FROM user WHERE username='$username' AND password='$password'";
     $result=mysqli_query($data,$sql); 
-    //Through $data parameter, the function knows which database connection to use when executing the query and through $sql parameter, the function knows which query to execute. And mysqli_query() function returns the whole result set of all those rows(users) which satisfy the condition in sql query. But this result set will only contain single row as the username is unique. And this fetched result set can't be used directly. So, we need to fetch the data from the result set using mysqli_fetch_array() function which will fetch the first row of result set. 
+    //Through $data parameter, the function knows which database connection to use when executing the query and through $sql parameter, the function knows which query to execute. And mysqli_query() function returns the whole result set of all those rows(users) which satisfy the condition in sql query. But this result set will only contain single row as the username is unique. 
+    
+    //And this fetched result set can't be used directly. So, we need to fetch the data from the result set using mysqli_fetch_array() function which will fetch the first row of result set. 
     $row=mysqli_fetch_array($result); 
 
     if($row["usertype"]=="admin"){ //If the user is admin redirecting to adminhome.php
