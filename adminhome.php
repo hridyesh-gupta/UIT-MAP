@@ -29,10 +29,10 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
     <!-- Sub-header -->
     <nav class="bg-blue-500 text-white">
         <div class="max-w-6xl mx-auto p-4 flex justify-between">
-            <a href="1.1stdraft.html" class="text-lg">Student Details</a>
-            <a href="2nddraft.html" class="text-lg">Guidelines</a>
-            <a href="3rddraft.html" class="text-lg">View Rubrics</a>
-            <a href="4thdraft.html" class="text-lg">Project Detail</a>
+            <a href="1st.html" class="text-lg">Student Details</a>
+            <a href="2nd.html" class="text-lg">Guidelines</a>
+            <a href="3rd.html" class="text-lg">View Rubrics</a>
+            <a href="4th.html" class="text-lg">Project Detail</a>
             <a href="#" class="text-lg">Project Status</a>
             <a href="#" class="text-lg">Evaluation</a>
             <a href="#" class="text-lg">Project Marks</a>
