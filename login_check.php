@@ -1,4 +1,7 @@
 <?php
+error_reporting(0); //To hide the errors
+session_start(); //To start the session
+
 $host="localhost";
 $user="root";
 $password="";
@@ -22,14 +25,20 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
     //And this fetched result set can't be used directly. So, we need to fetch the data from the result set using mysqli_fetch_array() function which will fetch the first row of result set. 
     $row=mysqli_fetch_array($result); 
 
-    if($row["usertype"]=="admin"){ //If the user is admin redirecting to adminhome.php
-        header("location: adminhome.php"); 
+    if($row["usertype"]=="admin"){ 
+        $_SESSION['username']=$username; //Storing the username in session variable whenever the correct username and password is entered so that when we check those session variables in adminhome.php, we can know that the user is logged in and is not accessing th. 
+        $_SESSION['usertype']="admin"; //Storing the usertype in session variable so that we can know that the user is admin
+        header("location: adminhome.php"); //If the user is admin redirecting to adminhome.php
     }
-    else if($row["usertype"]=="student"){ //If the user is student redirecting to studenthome.php
-        header("location: studenthome.php"); 
+    else if($row["usertype"]=="student"){ 
+        $_SESSION['username']=$username; //Storing the username in session variable whenever the correct username and password is entered so that when we check those session variables in studenthome.php, we can know that the user is logged in.
+        $_SESSION['usertype']="student"; //Storing the usertype in session variable so that we can know that the user is student
+        header("location: studenthome.php"); //If the user is student redirecting to studenthome.php
     }
     else{
-        echo "Invalid username or password"; //If the username or password is incorrect
+        $message= "Invalid username or password"; //If the username or password is incorrect
+        $_SESSION['loginMessage']=$message; //Storing the error message in session variable
+        header("location: index.php"); //Redirecting to login page
     }
 }
 ?>
