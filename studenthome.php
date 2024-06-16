@@ -12,11 +12,57 @@ elseif($_SESSION['usertype']!="student"){ //If the user is not student, then it 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Dashboard</title>
+    <title>MAP - Student Panel</title>
+    <link href="https://unpkg.com/tailwindcss@^2.0/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-    <h1>Student Dashboard</h1>
-    <p>Welcome Student!</p>
-    <a href="logout.php">Logout</a>
+<body class="bg-white text-gray-800 flex flex-col min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-blue-600 text-white p-4">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <img src="COLLEGE.png" alt="College Logo" class="h-12">
+            <h1 class="text-3xl font-bold">MAP - Student Home</h1>
+            <div></div>
+        </div>
+    </header>
+
+    <!-- Sub-header -->
+    <!-- <nav class="bg-blue-500 text-white">
+        <div class="max-w-6xl mx-auto p-4 flex justify-between">
+            <a href="1st.html" class="text-lg">Student Details</a>
+            <a href="2nd.html" class="text-lg">Guidelines</a>
+            <a href="3rd.html" class="text-lg">View Rubrics</a>
+            <a href="4th.html" class="text-lg">Project Detail</a>
+            <a href="#" class="text-lg">Project Status</a>
+            <a href="#" class="text-lg">Evaluation</a>
+            <a href="#" class="text-lg">Project Marks</a>
+        </div>
+    </nav> -->
+
+    <!-- Main Content -->
+    <main class="flex-grow bg-gray-100 p-8">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-2xl font-bold mb-6">Student Panel</h2>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <button class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300" onclick="location.href='1st.html'">Student Details</button>
+                <button class="bg-blue-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-blue-600 transition duration-300" onclick="location.href='2nd.html'">Guidelines</button>
+                <button class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300" onclick="location.href='3rd.html'">View Rubrics</button>
+                <button class="bg-blue-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-blue-600 transition duration-300" onclick="location.href='4th.html'">Project Details</button>
+                <button class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300" onclick="location.href=''">Project Status</button>
+                <button class="bg-blue-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-blue-600 transition duration-300" onclick="location.href=''">Evaluation</button>
+                <button class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300" onclick="location.href=''">Project Marks</button>
+                <button class="bg-red-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-red-600 transition duration-300 col-span-full sm:col-span-2 lg:col-span-1" onclick="location.href='logout.php'">Logout</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-blue-500 text-white p-4 mt-8">
+        <div class="max-w-6xl mx-auto text-center">
+            <p>&copy; 2024 Your College Name. All rights reserved.</p>
+        </div>
+    </footer>
+
 </body>
 </html>
