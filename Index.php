@@ -17,14 +17,14 @@
     <div class="flex flex-col lg:flex-row bg-white shadow-lg rounded-lg max-w-4xl w-full">
         <div class="p-8 w-full lg:w-1/2">
             <div class="flex justify-center mb-6">
-                <img src="ugi logo.jpg" alt="United Group Of Institution logo">
+                <img src="COLLEGE.png" alt="United Group Of Institution logo" width="200" height="100">
             </div>
-            <h1 class="text-center text-2xl font-bold mb-4">Login Here</h1>
+            <h1 class="text-center text-1.5xl font-bold mb-4">Login Here</h1>
             <form action="login_check.php" method="POST">
                 <div class="mb-4">
-                    <label for="text" class="block text-sm font-medium text-gray-700">Unique Id</label>
+                    <label for="uniqueId" class="block text-sm font-medium text-gray-700">Unique Id</label>
                     <div class="mt-1 relative rounded-md shadow-sm">
-                        <input type="text" id="uniqueId" name="uniqueId" pattern="[A-Za-z0-9]{4,20}" title="Please enter a valid unique ID (4-20 alphanumeric characters)" >
+                        <input type="text" id="uniqueId" name="uniqueId" pattern="[A-Za-z0-9]{4,20}" title="Please enter a valid unique ID (4-20 alphanumeric characters)" class="block w-full pr-10 border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                         <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                             <i class="fas fa-envelope text-gray-400"></i>
                         </div>
