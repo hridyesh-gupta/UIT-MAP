@@ -42,7 +42,7 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
     <!-- Main Content -->
     <main class="flex-grow bg-gray-100 p-8">
         <div class="max-w-6xl mx-auto">
-            <h2 class="text-2xl font-bold mb-6">Admin Rights</h2>
+            <h2 class="text-2xl font-bold mb-6">Admin Panel</h2>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <button class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300">Add Student</button>
