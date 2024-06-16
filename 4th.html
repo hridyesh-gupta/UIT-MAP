@@ -4,39 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MAP - Project Details</title>
-    <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
-    <style>
-        .locked {
-            background-color: #d3d3d3;
-        }
-    </style>
+    <link href="https://unpkg.com/tailwindcss@^2.0/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100">
+<body class="bg-white text-gray-800 flex flex-col min-h-screen">
 
     <!-- Header -->
-    <header class="bg-gradient-to-r from-blue-600 to-blue-900 text-white p-4">
+    <header class="bg-blue-600 text-white p-4">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <img src="https://via.placeholder.com/50" alt="College Logo" class="h-12">
+            <img src="COLLEGE.png" alt="College Logo" class="h-12">
             <h1 class="text-3xl font-bold">MAP - Project Details</h1>
             <div></div>
         </div>
     </header>
 
     <!-- Sub-header -->
-    <nav class="bg-blue-500 text-white shadow-md">
+    <nav class="bg-blue-500 text-white">
         <div class="max-w-6xl mx-auto p-4 flex justify-between">
-            <a href="#" class="text-lg hover:underline">Student Details</a>
-            <a href="#" class="text-lg hover:underline">Guidelines</a>
-            <a href="#" class="text-lg hover:underline">View Rubrics</a>
-            <a href="#" class="text-lg font-semibold hover:underline">Project Detail</a>
-            <a href="#" class="text-lg hover:underline">Project Status</a>
-            <a href="#" class="text-lg hover:underline">Evaluation</a>
-            <a href="#" class="text-lg hover:underline">Project Marks</a>
+            <a href="1stdraft.html" class="text-lg">Student Details</a>
+            <a href="2nd.html" class="text-lg">Guidelines</a>
+            <a href="3rd.html" class="text-lg">View Rubrics</a>
+            <a href="4th.html" class="text-lg font-semibold">Project Detail</a>
+            <a href="#" class="text-lg">Project Status</a>
+            <a href="#" class="text-lg">Evaluation</a>
+            <a href="#" class="text-lg">Project Marks</a>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <div class="max-w-6xl mx-auto bg-white p-8 shadow-lg my-8">
+    <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto">
         <h2 class="text-2xl font-bold mb-4">Students Project Details</h2>
 
         <div class="mb-4">
@@ -54,7 +49,7 @@
     </div>
 
     <!-- Responsibilities Section -->
-    <div class="max-w-6xl mx-auto bg-white p-8 shadow-lg my-8" id="responsibilitiesSection" style="display:none;">
+    <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto" id="responsibilitiesSection" style="display:none;">
         <h2 class="text-2xl font-bold mb-4">Project Work Distribution</h2>
         <table class="min-w-full bg-white">
             <thead>
@@ -70,7 +65,7 @@
     </div>
 
     <!-- Group Details Section -->
-    <div class="max-w-6xl mx-auto bg-white p-8 shadow-lg my-8">
+    <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto">
         <h2 class="text-2xl font-bold mb-4">Group Details</h2>
 
         <div class="mb-4">
@@ -89,55 +84,56 @@
             <input type="date" id="approvalDate" class="w-full border p-2" disabled>
         </div>
     </div>
-<!-- Project Information Section -->
-<div class="max-w-6xl mx-auto bg-white p-8 shadow-lg my-8">
-    <h2 class="text-2xl font-bold mb-4">Project Information</h2>
 
-    <div class="mb-4">
-        <label for="projectTitle" class="block text-gray-700">Project Title:</label>
-        <input type="text" id="projectTitle" class="w-full border p-2">
+    <!-- Project Information Section -->
+    <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto">
+        <h2 class="text-2xl font-bold mb-4">Project Information</h2>
+
+        <div class="mb-4">
+            <label for="projectTitle" class="block text-gray-700">Project Title:</label>
+            <input type="text" id="projectTitle" class="w-full border p-2">
+        </div>
+
+        <div class="mb-4">
+            <label for="briefIntroduction" class="block text-gray-700">Brief Introduction:</label>
+            <textarea id="briefIntroduction" class="w-full border p-2 h-20"></textarea>
+        </div>
+
+        <div class="mb-4">
+            <label for="objectiveStatement" class="block text-gray-700">Objective and Problem Statement:</label>
+            <textarea id="objectiveStatement" class="w-full border p-2 h-20"></textarea>
+        </div>
+
+        <div class="mb-4">
+            <label for="technologyUsed" class="block text-gray-700">Technology/Methodology Used:</label>
+            <textarea id="technologyUsed" class="w-full border p-2 h-20"></textarea>
+        </div>
     </div>
 
-    <div class="mb-4">
-        <label for="briefIntroduction" class="block text-gray-700">Brief Introduction:</label>
-        <textarea id="briefIntroduction" class="w-full border p-2 h-20"></textarea>
-    </div>
+    <!-- Approval Section -->
+    <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto">
+        <h2 class="text-2xl font-bold mb-4">Approval Status</h2>
 
-    <div class="mb-4">
-        <label for="objectiveStatement" class="block text-gray-700">Objective and Problem Statement:</label>
-        <textarea id="objectiveStatement" class="w-full border p-2 h-20"></textarea>
-    </div>
+        <div class="mb-4">
+            <label for="supervisorApprovalStatus" class="block text-gray-700">Supervisor Approval Status:</label>
+            <input type="text" id="supervisorApprovalStatus" class="w-full border p-2" disabled>
+        </div>
 
-    <div class="mb-4">
-        <label for="technologyUsed" class="block text-gray-700">Technology/Methodology Used:</label>
-        <textarea id="technologyUsed" class="w-full border p-2 h-20"></textarea>
-    </div>
-</div>
+        <div class="mb-4" id="supervisorApprovalDateDiv" style="display:none;">
+            <label for="supervisorApprovalDate" class="block text-gray-700">Supervisor Approval Date:</label>
+            <input type="date" id="supervisorApprovalDate" class="w-full border p-2" disabled>
+        </div>
 
-<!-- Approval Section -->
-<div class="max-w-6xl mx-auto bg-white p-8 shadow-lg my-8">
-    <h2 class="text-2xl font-bold mb-4">Approval Status</h2>
+        <div class="mb-4">
+            <label for="decApprovalStatus" class="block text-gray-700">DEC Approval Status:</label>
+            <input type="text" id="decApprovalStatus" class="w-full border p-2" disabled>
+        </div>
 
-    <div class="mb-4">
-        <label for="supervisorApprovalStatus" class="block text-gray-700">Supervisor Approval Status:</label>
-        <input type="text" id="supervisorApprovalStatus" class="w-full border p-2" disabled>
+        <div class="mb-4" id="decApprovalDateDiv" style="display:none;">
+            <label for="decApprovalDate" class="block text-gray-700">DEC Approval Date:</label>
+            <input type="date" id="decApprovalDate" class="w-full border p-2" disabled>
+        </div>
     </div>
-
-    <div class="mb-4" id="supervisorApprovalDateDiv" style="display:none;">
-        <label for="supervisorApprovalDate" class="block text-gray-700">Supervisor Approval Date:</label>
-        <input type="date" id="supervisorApprovalDate" class="w-full border p-2" disabled>
-    </div>
-
-    <div class="mb-4">
-        <label for="decApprovalStatus" class="block text-gray-700">DEC Approval Status:</label>
-        <input type="text" id="decApprovalStatus" class="w-full border p-2" disabled>
-    </div>
-
-    <div class="mb-4" id="decApprovalDateDiv" style="display:none;">
-        <label for="decApprovalDate" class="block text-gray-700">DEC Approval Date:</label>
-        <input type="date" id="decApprovalDate" class="w-full border p-2" disabled>
-    </div>
-</div>
 
     <!-- Footer -->
     <footer class="bg-blue-500 text-white p-4 mt-8">
@@ -259,52 +255,53 @@
         // Initial render
         renderMembers();
         fetchDecApprovalStatus();
+
         function fetchSupervisorApprovalStatus() {
-        // Mocking the supervisor approval data fetch
-        const supervisorApprovalData = {
-            approved: true,
-            approvalDate: '2024-01-10'
-        };
+            // Mocking the supervisor approval data fetch
+            const supervisorApprovalData = {
+                approved: true,
+                approvalDate: '2024-01-10'
+            };
 
-        const supervisorApprovalStatusInput = document.getElementById('supervisorApprovalStatus');
-        const supervisorApprovalDateDiv = document.getElementById('supervisorApprovalDateDiv');
-        const supervisorApprovalDateInput = document.getElementById('supervisorApprovalDate');
+            const supervisorApprovalStatusInput = document.getElementById('supervisorApprovalStatus');
+            const supervisorApprovalDateDiv = document.getElementById('supervisorApprovalDateDiv');
+            const supervisorApprovalDateInput = document.getElementById('supervisorApprovalDate');
 
-        if (supervisorApprovalData.approved) {
-            supervisorApprovalStatusInput.value = 'Approved';
-            supervisorApprovalDateInput.value = supervisorApprovalData.approvalDate;
-            supervisorApprovalDateDiv.style.display = 'block';
-        } else {
-            supervisorApprovalStatusInput.value = 'Not Approved';
-            supervisorApprovalDateDiv.style.display = 'none';
+            if (supervisorApprovalData.approved) {
+                supervisorApprovalStatusInput.value = 'Approved';
+                supervisorApprovalDateInput.value = supervisorApprovalData.approvalDate;
+                supervisorApprovalDateDiv.style.display = 'block';
+            } else {
+                supervisorApprovalStatusInput.value = 'Not Approved';
+                supervisorApprovalDateDiv.style.display = 'none';
+            }
         }
-    }
 
-    function fetchDecApprovalStatus() {
-        // Mocking the DEC approval data fetch
-        const decApprovalData = {
-            approved: true,
-            approvalDate: '2024-01-15'
-        };
+        function fetchDecApprovalStatus() {
+            // Mocking the DEC approval data fetch
+            const decApprovalData = {
+                approved: true,
+                approvalDate: '2024-01-15'
+            };
 
-        const decApprovalStatusInput = document.getElementById('decApprovalStatus');
-        const decApprovalDateDiv = document.getElementById('decApprovalDateDiv');
-        const decApprovalDateInput = document.getElementById('decApprovalDate');
+            const decApprovalStatusInput = document.getElementById('decApprovalStatus');
+            const decApprovalDateDiv = document.getElementById('decApprovalDateDiv');
+            const decApprovalDateInput = document.getElementById('decApprovalDate');
 
-        if (decApprovalData.approved) {
-            decApprovalStatusInput.value = 'Approved';
-            decApprovalDateInput.value = decApprovalData.approvalDate;
-            decApprovalDateDiv.style.display = 'block';
-        } else {
-            decApprovalStatusInput.value = 'Not Approved';
-            decApprovalDateDiv.style.display = 'none';
+            if (decApprovalData.approved) {
+                decApprovalStatusInput.value = 'Approved';
+                decApprovalDateInput.value = decApprovalData.approvalDate;
+                decApprovalDateDiv.style.display = 'block';
+            } else {
+                decApprovalStatusInput.value = 'Not Approved';
+                decApprovalDateDiv.style.display = 'none';
+            }
         }
-    }
 
-    // Initial fetch
-    fetchSupervisorApprovalStatus();
-    fetchDecApprovalStatus();
+        // Initial fetch
+        fetchSupervisorApprovalStatus();
+        fetchDecApprovalStatus();
     </script>
-
 </body>
 </html>
+k
