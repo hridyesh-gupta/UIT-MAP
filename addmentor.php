@@ -33,7 +33,7 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
             <a href="viewstudent.php" class="text-lg">View Students</a>
             <a href="addmentor.php" class="text-lg font-bold underline">Add Mentor</a>
             <a href="viewmentor.php" class="text-lg">View Mentors</a>
-            <a href="" class="text-lg">Guidelines</a>
+            <a href="adminguidelines.php" class="text-lg">Guidelines</a>
             <a href="logout.php" class="text-lg">Logout</a>
         </div>
     </nav>
