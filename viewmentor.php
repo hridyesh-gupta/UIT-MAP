@@ -12,23 +12,8 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAP - View Mentor</title>
+    <title>MAP - View Mentors</title>
     <link href="https://unpkg.com/tailwindcss@^2.0/dist/tailwind.min.css" rel="stylesheet">
-    <script>
-        function searchMentors() {
-            let input = document.getElementById('searchInput').value.toLowerCase();
-            let mentors = document.getElementsByClassName('mentor-item');
-            
-            for (let i = 0; i < mentors.length; i++) {
-                let name = mentors[i].getElementsByClassName('mentor-name')[0].textContent.toLowerCase();
-                if (name.includes(input)) {
-                    mentors[i].style.display = "";
-                } else {
-                    mentors[i].style.display = "none";
-                }
-            }
-        }
-    </script>
 </head>
 <body class="bg-white text-gray-800 flex flex-col min-h-screen">
 
@@ -43,7 +28,7 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
 
     <!-- Sub-header -->
     <nav class="bg-blue-500 text-white">
-        <div class="max-w-6xl mx-auto p-4 flex justify-between">
+        <div class="max-w-6xl mx-auto p-4 flex flex-wrap justify-between">
             <a href="addstudent.php" class="text-lg">Add Student</a>
             <a href="viewstudent.php" class="text-lg">View Students</a>
             <a href="addmentor.php" class="text-lg">Add Mentor</a>
@@ -60,22 +45,20 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
 
             <!-- Search Box -->
             <div class="mb-6">
-                <input type="text" id="searchInput" onkeyup="searchMentors()" placeholder="Search for mentors.." class="w-full p-2 border rounded">
+                <input type="text" id="searchInput" placeholder="Search for mentors by name..." class="w-full p-2 border rounded">
             </div>
 
             <!-- Mentor List -->
             <div class="bg-white p-6 rounded-lg shadow-lg">
                 <ul>
-                    <li class="mentor-item">
-                        <span class="mentor-name">Mr.Maan Singh</span>
+                    <!-- Sample mentor items. Replace with actual mentor data. -->
+                    <li class="mentor-item mb-2">
+                        <span class="mentor-name">Dr. John Doe</span> - <span class="mentor-email">johndoe@example.com</span>
                     </li>
-                    <li class="mentor-item">
-                        <span class="mentor-name">Mr.Rohit Mishra</span>
+                    <li class="mentor-item mb-2">
+                        <span class="mentor-name">Dr. Jane Smith</span> - <span class="mentor-email">janesmith@example.com</span>
                     </li>
-                    <li class="mentor-item">
-                        <span class="mentor-name">Mr.Abhishek Malvia</span>
-                    </li>
-                    <!-- Add more mentors as needed -->
+                    <!-- Add more mentor items as needed -->
                 </ul>
             </div>
         </div>

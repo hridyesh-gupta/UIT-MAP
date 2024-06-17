@@ -14,21 +14,6 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MAP - View Students</title>
     <link href="https://unpkg.com/tailwindcss@^2.0/dist/tailwind.min.css" rel="stylesheet">
-    <script>
-        function searchStudents() {
-            let input = document.getElementById('searchInput').value.toLowerCase();
-            let students = document.getElementsByClassName('student-item');
-            
-            for (let i = 0; i < students.length; i++) {
-                let rollNumber = students[i].getElementsByClassName('student-roll-number')[0].textContent.toLowerCase();
-                if (rollNumber.includes(input)) {
-                    students[i].style.display = "";
-                } else {
-                    students[i].style.display = "none";
-                }
-            }
-        }
-    </script>
 </head>
 <body class="bg-white text-gray-800 flex flex-col min-h-screen">
 
@@ -60,17 +45,20 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
 
             <!-- Search Box -->
             <div class="mb-6">
-                <input type="text" id="searchInput" onkeyup="searchStudents()" placeholder="Search for students by roll number..." class="w-full p-2 border rounded">
+                <input type="text" id="searchInput" placeholder="Search for students by roll number..." class="w-full p-2 border rounded">
             </div>
 
             <!-- Student List -->
             <div class="bg-white p-6 rounded-lg shadow-lg">
                 <ul>
-                    <?php foreach ($students as $student): ?>
+                    <!-- Sample student items. Replace with actual student data. -->
                     <li class="student-item mb-2">
-                        <span class="student-roll-number"><?php echo htmlspecialchars($student['roll_number']); ?></span> - <span class="student-name"><?php echo htmlspecialchars($student['name']); ?></span>
+                        <span class="student-roll-number">12345</span> - <span class="student-name">John Doe</span>
                     </li>
-                    <?php endforeach; ?>
+                    <li class="student-item mb-2">
+                        <span class="student-roll-number">67890</span> - <span class="student-name">Jane Smith</span>
+                    </li>
+                    <!-- Add more student items as needed -->
                 </ul>
             </div>
         </div>
