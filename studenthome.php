@@ -21,7 +21,7 @@ elseif($_SESSION['usertype']!="student"){ //If the user is not student, then it 
     <header class="bg-blue-600 text-white p-4">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
             <img src="COLLEGE.png" alt="College Logo" class="h-12">
-            <h1 class="text-3xl font-bold">MAP - Student Home</h1>
+            <h1 class="text-3xl font-bold">MAP - Student Panel</h1>
             <div></div>
         </div>
     </header>
