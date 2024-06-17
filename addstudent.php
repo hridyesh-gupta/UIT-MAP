@@ -41,7 +41,7 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
     <!-- Main Content -->
     <main class="flex-grow bg-gray-100 p-8">
         <div class="max-w-6xl mx-auto">
-            <h2 class="text-2xl font-bold mb-6">Add Student</h2>
+            <center><h2 class="text-2xl font-bold mb-6">Add Student</h2></center>
 
             <!-- <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <button onclick="showForm('student')" class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300">Add Student</button>
@@ -54,7 +54,6 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
             <!-- Forms -->
             <div id="form-container" class="mt-8">
                 <div id="student-form" class="bg-white p-6 rounded-lg shadow-lg">
-                    <h3 class="text-xl font-bold mb-4">Add Student</h3>
                     <form>
                         <label class="block mb-2">Student Name:</label>
                         <input type="text" class="w-full p-2 border rounded mb-4" required>
