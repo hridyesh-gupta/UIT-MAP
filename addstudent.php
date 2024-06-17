@@ -6,6 +6,18 @@ if(!(isset($_SESSION['username']))){  //If the session variable is not set, then
 elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it means the user is student and is accessing this page through url editing as we have provided admin usertype to every user who logged in via admin credentials. So, redirecting to login page
     header("location: index.php");
 }
+
+// $host="localhost";
+// $user="root";
+// $password="";
+// $db="mapdb";
+
+// $data=mysqli_connect($host,$user,$password,$db); //To connect with mysql db
+
+
+// if(isset($_POST['add_student '])
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -55,15 +67,15 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
             <div id="form-container" class="mt-8">
                 <div id="student-form" class="bg-white p-6 rounded-lg shadow-lg">
                     <form>
-                        <label class="block mb-2">Student Name:</label>
-                        <input type="text" class="w-full p-2 border rounded mb-4" required>
-                        <label class="block mb-2">Student E-mail ID:</label>
-                        <input type="email" class="w-full p-2 border rounded mb-4" required>
-                        <label class="block mb-2">Student Login ID:</label>
-                        <input type="text" class="w-full p-2 border rounded mb-4" required>
-                        <label class="block mb-2">Student Password:</label>
-                        <input type="password" class="w-full p-2 border rounded mb-4" required>
-                        <button type="submit" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition duration-300">Submit</button>
+                        <label class="block mb-2">User Name:</label>
+                        <input type="text" name="name" class="w-full p-2 border rounded mb-4" required>
+                        <label class="block mb-2">Contact Number:</label>
+                        <input type="text" name="" class="w-full p-2 border rounded mb-4" required>
+                        <label class="block mb-2">E-mail ID:</label>
+                        <input type="email" name="email" class="w-full p-2 border rounded mb-4" required>
+                        <label class="block mb-2">Password:</label>
+                        <input type="password" name="" class="w-full p-2 border rounded mb-4" required>
+                        <button type="submit" name="add_student" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition duration-300">Submit</button>
                     </form>
                 </div>
             </div>

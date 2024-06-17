@@ -55,13 +55,13 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
             <div id="form-container" class="mt-8">
                 <div id="mentor-form" class="bg-white p-6 rounded-lg shadow-lg">
                     <form>
-                        <label class="block mb-2">Mentor Name:</label>
+                        <label class="block mb-2">User Name:</label>
                         <input type="text" class="w-full p-2 border rounded mb-4" required>
-                        <label class="block mb-2">Mentor E-mail ID:</label>
+                        <label class="block mb-2">Contact Number:</label>
                         <input type="email" class="w-full p-2 border rounded mb-4" required>
-                        <label class="block mb-2">Mentor Login ID:</label>
+                        <label class="block mb-2">E-mail:</label>
                         <input type="text" class="w-full p-2 border rounded mb-4" required>
-                        <label class="block mb-2">Mentor Password:</label>
+                        <label class="block mb-2">Password:</label>
                         <input type="password" class="w-full p-2 border rounded mb-4" required>
                         <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-300">Submit</button>
                     </form>
