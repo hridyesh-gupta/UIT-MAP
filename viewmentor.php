@@ -67,13 +67,13 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
             <div class="bg-white p-6 rounded-lg shadow-lg">
                 <ul>
                     <li class="mentor-item">
-                        <span class="mentor-name">John Doe</span>
+                        <span class="mentor-name">Mr.Maan Singh</span>
                     </li>
                     <li class="mentor-item">
-                        <span class="mentor-name">Jane Smith</span>
+                        <span class="mentor-name">Mr.Rohit Mishra</span>
                     </li>
                     <li class="mentor-item">
-                        <span class="mentor-name">Michael Johnson</span>
+                        <span class="mentor-name">Mr.Abhishek Malvia</span>
                     </li>
                     <!-- Add more mentors as needed -->
                 </ul>
