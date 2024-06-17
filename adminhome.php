@@ -12,7 +12,7 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAP - Admin Home</title>
+    <title>MAP - Admin Panel</title>
     <link href="https://unpkg.com/tailwindcss@^2.0/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-white text-gray-800 flex flex-col min-h-screen">
@@ -45,10 +45,10 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
             <h2 class="text-2xl font-bold mb-6">Admin Panel</h2>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <button class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300" onclick="location.href=''">Add Student</button>
-                <button class="bg-blue-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-blue-600 transition duration-300" onclick="location.href=''">View Student</button>
-                <button class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300" onclick="location.href=''">Add Teacher</button>
-                <button class="bg-blue-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-blue-600 transition duration-300" onclick="location.href=''">View Teacher</button>
+                <button class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300" onclick="location.href='addstudent.php'">Add Student</button>
+                <button class="bg-blue-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-blue-600 transition duration-300" onclick="location.href='viewstudent.php'">View Student</button>
+                <button class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300" onclick="location.href='addmentor.php'">Add Mentor</button>
+                <button class="bg-blue-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-blue-600 transition duration-300" onclick="location.href='viewstudent.php'">View Mentor</button>
                 <button class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300" onclick="location.href=''">Guidelines</button>
                 <button class="bg-red-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-red-600 transition duration-300 col-span-full sm:col-span-2 lg:col-span-1" onclick="location.href='logout.php'">Logout</button>
             </div>
