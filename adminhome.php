@@ -26,19 +26,6 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
         </div>
     </header>
 
-    <!-- Sub-header
-    <nav class="bg-blue-500 text-white">
-        <div class="max-w-6xl mx-auto p-4 flex justify-between">
-            <a href="1st.html" class="text-lg">Student Details</a>
-            <a href="2nd.html" class="text-lg">Guidelines</a>
-            <a href="3rd.html" class="text-lg">View Rubrics</a>
-            <a href="4th.html" class="text-lg">Project Details</a>
-            <a href="#" class="text-lg">Project Status</a>
-            <a href="#" class="text-lg">Evaluation</a>
-            <a href="#" class="text-lg">Project Marks</a>
-        </div>
-    </nav> -->
-
     <!-- Main Content -->
     <main class="flex-grow bg-gray-100 p-8">
         <div class="max-w-6xl mx-auto">
@@ -46,9 +33,7 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <button class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300" onclick="location.href='addstudent.php'">Add Student</button>
-                <button class="bg-blue-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-blue-600 transition duration-300" onclick="location.href='viewstudent.php'">View Student</button>
-                <button class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300" onclick="location.href='addmentor.php'">Add Mentor</button>
-                <button class="bg-blue-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-blue-600 transition duration-300" onclick="location.href='viewstudent.php'">View Mentor</button>
+                <button class="bg-blue-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-blue-600 transition duration-300" onclick="location.href='groups.php'">Groups</button>
                 <button class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300" onclick="location.href='adminguidelines.php'">Guidelines</button>
                 <button class="bg-red-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-red-600 transition duration-300 col-span-full sm:col-span-2 lg:col-span-1" onclick="location.href='logout.php'">Logout</button>
             </div>

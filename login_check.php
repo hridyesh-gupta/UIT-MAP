@@ -26,19 +26,19 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
     $row=mysqli_fetch_array($result); 
 
     if($row["usertype"]=="admin"){ 
-        $_SESSION['username']=$username; //Storing the username in session variable whenever the correct username and password is entered so that when we check those session variables in adminhome.php, we can know that the user is logged in and is not accessing th. 
+        $_SESSION['username']=$username; //Storing the username in session variable whenever the correct username and password is entered so that when we check those session variables in adminhome.php, we can know that the user is logged in and is not accessing through URL editing. 
         $_SESSION['usertype']="admin"; //Storing the usertype in session variable so that we can know that the user is admin
         header("location: adminhome.php"); //If the user is admin redirecting to adminhome.php
     }
     else if($row["usertype"]=="student"){ 
-        $_SESSION['username']=$username; //Storing the username in session variable whenever the correct username and password is entered so that when we check those session variables in studenthome.php, we can know that the user is logged in.
+        $_SESSION['username']=$username; //Storing the username in session variable whenever the correct username and password is entered so that when we check those session variables in studentdetails.php, we can know that the user is logged in and is not accessing through URL editing.
         $_SESSION['usertype']="student"; //Storing the usertype in session variable so that we can know that the user is student
-        header("location: 1st.html"); //If the user is student redirecting to 1st.html
+        header("location: studentdetails.php"); //If the user is student redirecting to studentdetails.php
     }
     else if($row["usertype"]=="mentor"){ 
-        $_SESSION['username']=$username; //Storing the username in session variable whenever the correct username and password is entered so that when we check those session variables in studenthome.php, we can know that the user is logged in.
+        $_SESSION['username']=$username; //Storing the username in session variable whenever the correct username and password is entered so that when we check those session variables in mentorhome.php, we can know that the user is logged in.
         $_SESSION['usertype']="mentor"; //Storing the usertype in session variable so that we can know that the user is student
-        header("location: 1st.html"); //If the user is student redirecting to 1st.html
+        header("location: mentorhome.php"); //If the user is mentor redirecting to 1st.html
     }
     else{
         $message= "Invalid username or password"; //If the username or password is incorrect
@@ -47,5 +47,3 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
     }
 }
 ?>
-
-
