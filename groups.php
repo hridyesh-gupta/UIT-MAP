@@ -13,35 +13,53 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAP - View Students</title>
+    <title>MAP - View Groups</title>
     <link href="https://unpkg.com/tailwindcss@^2.0/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-white text-gray-800 flex flex-col min-h-screen">
 
-<?php include 'adminheaders.php' ?>
-
     <!-- Main Content -->
     <main class="flex-grow bg-gray-100 p-8">
         <div class="max-w-6xl mx-auto">
-            <center><h2 class="text-2xl font-bold mb-6">View Students</h2></center>
+            <center><h2 class="text-2xl font-bold mb-6">View Groups</h2></center>
 
-            <!-- Search Box -->
-            <div class="mb-6">
-                <input type="text" id="searchInput" placeholder="Search for students by roll number..." class="w-full p-2 border rounded">
+            <!-- Filter Box -->
+            <div class="mb-6 flex justify-between">
+                <input type="text" id="searchInput" placeholder="Search for groups by Project Name..." class="w-full p-2 border rounded">
+                <button onclick="filterApproved()" class="bg-blue-500 text-white py-2 px-4 ml-4 rounded hover:bg-blue-600 transition duration-300">Show Approved Groups </button>
             </div>
 
-            <!-- Student List -->
+            <!-- Group List -->
             <div class="bg-white p-6 rounded-lg shadow-lg">
-                <ul>
-                    <!-- Sample student items. Replace with actual student data. -->
-                    <li class="student-item mb-2">
-                        <span class="student-roll-number">12345</span> - <span class="student-name">John Doe</span>
-                    </li>
-                    <li class="student-item mb-2">
-                        <span class="student-roll-number">67890</span> - <span class="student-name">Jane Smith</span>
-                    </li>
-                    <!-- Add more student items as needed -->
-                </ul>
+                <table class="min-w-full bg-white">
+                    <thead class="bg-gray-800 text-white">
+                        <tr>
+                            <th class="w-1/4 py-2">Group ID</th>
+                            <th class="w-1/4 py-2">Project Name</th>
+                            <th class="w-1/4 py-2">Project Members</th>
+                            <th class="w-1/4 py-2">Mentor Assigned</th>
+                            <th class="w-1/4 py-2">Select Group</th>
+                        </tr>
+                    </thead>
+                    <tbody id="groupTable">
+                        <!-- Sample group items. Replace with actual group data. -->
+                        <tr class="group-item" data-approved="true">
+                            <td class="border px-4 py-2">1</td>
+                            <td class="border px-4 py-2">Project Alpha</td>
+                            <td class="border px-4 py-2">Sarthak Singh, Sharad Srivastava</td>
+                            <td class="border px-4 py-2">Dr. Amit Kumar Tiwari</td>
+                            <td class="border px-4 py-2 text-center"><input type="radio" name="selectedGroup" value="1"></td>
+                        </tr>
+                        <tr class="group-item" data-approved="false">
+                            <td class="border px-4 py-2">2</td>
+                            <td class="border px-4 py-2">Project Beta</td>
+                            <td class="border px-4 py-2">Hridyesh Gupta, Harsh Kumar</td>
+                            <td class="border px-4 py-2">Prof.Sanjay Srivastava</td>
+                            <td class="border px-4 py-2 text-center"><input type="radio" name="selectedGroup" value="2"></td>
+                        </tr>
+                        <!-- Add more group items as needed -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </main>
@@ -52,6 +70,32 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
             <p>&copy; 2024 Your College Name. All rights reserved.</p>
         </div>
     </footer>
+
+    <script>
+        function filterApproved() {
+            const rows = document.querySelectorAll('.group-item');
+            rows.forEach(row => {
+                if (row.getAttribute('data-approved') === 'true') {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        document.getElementById('searchInput').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const rows = document.querySelectorAll('.group-item');
+            rows.forEach(row => {
+                const projectName = row.cells[1].textContent.toLowerCase();
+                if (projectName.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    </script>
 
 </body>
 </html>
