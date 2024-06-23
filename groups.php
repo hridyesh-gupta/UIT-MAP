@@ -18,6 +18,8 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
 </head>
 <body class="bg-white text-gray-800 flex flex-col min-h-screen">
 
+    <?php include 'adminheaders.php' ?>
+
     <!-- Main Content -->
     <main class="flex-grow bg-gray-100 p-8">
         <div class="max-w-6xl mx-auto">
