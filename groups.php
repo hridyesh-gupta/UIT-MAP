@@ -24,9 +24,12 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
             <center><h2 class="text-2xl font-bold mb-6">View Groups</h2></center>
 
             <!-- Filter Box -->
-            <div class="mb-6 flex justify-between">
+            <div class="mb-6 flex justify-between items-center">
                 <input type="text" id="searchInput" placeholder="Search for groups by Project Name..." class="w-full p-2 border rounded">
-                <button onclick="filterApproved()" class="bg-blue-500 text-white py-2 px-4 ml-4 rounded hover:bg-blue-600 transition duration-300">Show Approved Groups </button>
+                <label class="ml-4 flex items-center">
+                    <input type="checkbox" id="showApprovedCheckbox" class="mr-2">
+                    <span>Show Approved Groups</span>
+                </label>
             </div>
 
             <!-- Group List -->
@@ -38,24 +41,37 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
                             <th class="w-1/4 py-2">Project Name</th>
                             <th class="w-1/4 py-2">Project Members</th>
                             <th class="w-1/4 py-2">Mentor Assigned</th>
-                            <th class="w-1/4 py-2">Select Group</th>
+                            <th class="w-1/4 py-2">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="groupTable">
                         <!-- Sample group items. Replace with actual group data. -->
                         <tr class="group-item" data-approved="true">
-                            <td class="border px-4 py-2">1</td>
-                            <td class="border px-4 py-2">Project Alpha</td>
+                            <td class="border px-4 py-2"><a href="#" class="text-blue-500 hover:underline">1</a></td>
+                            <td class="border px-4 py-2"><a href="#" class="text-blue-500 hover:underline">Project Alpha</a></td>
                             <td class="border px-4 py-2">Sarthak Singh, Sharad Srivastava</td>
                             <td class="border px-4 py-2">Dr. Amit Kumar Tiwari</td>
-                            <td class="border px-4 py-2 text-center"><input type="radio" name="selectedGroup" value="1"></td>
+                            <td class="border px-4 py-2 text-center">
+                                <button onclick="deleteGroup(this)" class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300">Delete</button>
+                            </td>
                         </tr>
                         <tr class="group-item" data-approved="false">
-                            <td class="border px-4 py-2">2</td>
-                            <td class="border px-4 py-2">Project Beta</td>
+                            <td class="border px-4 py-2"><a href="#" class="text-blue-500 hover:underline">2</a></td>
+                            <td class="border px-4 py-2"><a href="#" class="text-blue-500 hover:underline">Project Beta</a></td>
                             <td class="border px-4 py-2">Hridyesh Gupta, Harsh Kumar</td>
-                            <td class="border px-4 py-2">Prof.Sanjay Srivastava</td>
-                            <td class="border px-4 py-2 text-center"><input type="radio" name="selectedGroup" value="2"></td>
+                            <td class="border px-4 py-2">Prof. Sanjay Srivastava</td>
+                            <td class="border px-4 py-2 text-center">
+                                <button onclick="deleteGroup(this)" class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300">Delete</button>
+                            </td>
+                        </tr>
+                        <tr class="group-item" data-approved="true">
+                            <td class="border px-4 py-2"><a href="#" class="text-blue-500 hover:underline">3</a></td>
+                            <td class="border px-4 py-2"><a href="#" class="text-blue-500 hover:underline">Project Gamma</a></td>
+                            <td class="border px-4 py-2">Harshit Singh, Ankit Gupta</td>
+                            <td class="border px-4 py-2">Mr. Man Singh</td>
+                            <td class="border px-4 py-2 text-center">
+                                <button onclick="deleteGroup(this)" class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300">Delete</button>
+                            </td>
                         </tr>
                         <!-- Add more group items as needed -->
                     </tbody>
@@ -72,16 +88,20 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
     </footer>
 
     <script>
-        function filterApproved() {
+        document.getElementById('showApprovedCheckbox').addEventListener('change', function() {
             const rows = document.querySelectorAll('.group-item');
             rows.forEach(row => {
-                if (row.getAttribute('data-approved') === 'true') {
-                    row.style.display = '';
+                if (this.checked) {
+                    if (row.getAttribute('data-approved') === 'true') {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
                 } else {
-                    row.style.display = 'none';
+                    row.style.display = '';
                 }
             });
-        }
+        });
 
         document.getElementById('searchInput').addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase();
@@ -95,6 +115,16 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
                 }
             });
         });
+
+        function deleteGroup(button) {
+            const row = button.closest('tr');
+            const groupId = row.cells[0].textContent;
+            const confirmDelete = confirm(`Are you sure you want to delete Group ID ${groupId}?`);
+            if (confirmDelete) {
+                row.remove();
+                // Add your deletion logic here
+            }
+        }
     </script>
 
 </body>
