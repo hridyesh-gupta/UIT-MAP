@@ -154,9 +154,9 @@
                 const row = document.createElement("tr");
                 row.innerHTML = `
                     <td class="border px-4 py-2">${record.semester}</td>
-                    <td class="border px-4 py-2">${record.marks}</td>
-                    <td class="border px-4 py-2">${record.cp}</td>
-                    <td class="border px-4 py-2">${record.paper}</td>
+                    <td class="border px-4 py-2"><span class="editable" contenteditable="false">${record.marks}</span></td>
+                    <td class="border px-4 py-2"><span class="editable" contenteditable="false">${record.cp}</span></td>
+                    <td class="border px-4 py-2"><span class="editable" contenteditable="false">${record.paper}</span></td>
                 `;
                 academicRecordTable.appendChild(row);
             });
@@ -188,7 +188,18 @@
                     marks10: document.getElementById("student-marks-10").innerText,
                     marks12: document.getElementById("student-marks-12").innerText,
                     diploma: document.getElementById("student-diploma").innerText,
+                    academicRecord: []
                 };
+                const academicRecordRows = document.getElementById("academic-record").rows;
+                for (let i = 0; i < academicRecordRows.length; i++) {
+const row = academicRecordRows[i];
+                    updatedData.academicRecord.push({
+                        semester: row.cells[0].innerText,
+                        marks: row.cells[1].firstChild.innerText,
+                        cp: row.cells[2].firstChild.innerText,
+                        paper: row.cells[3].firstChild.innerText
+                    });
+                }
                 console.log(updatedData);
             });
         });
