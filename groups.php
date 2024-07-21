@@ -41,18 +41,23 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
                         <tr>
                             <th class="w-1/4 py-2">Group ID</th>
                             <th class="w-1/4 py-2">Project Name</th>
-                            <th class="w-1/4 py-2">Project Members</th>
+                            <th class="w-1/4 py-2">Technology Used</th>
                             <th class="w-1/4 py-2">Mentor Assigned</th>
                             <th class="w-1/4 py-2">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="groupTable">
-                        <!-- Sample group items. Replace with actual group data. -->
                         <tr class="group-item" data-approved="true">
                             <td class="border px-4 py-2"><a href="#" class="text-blue-500 hover:underline">1</a></td>
                             <td class="border px-4 py-2"><a href="#" class="text-blue-500 hover:underline">Project Alpha</a></td>
-                            <td class="border px-4 py-2">Sarthak Singh, Sharad Srivastava</td>
-                            <td class="border px-4 py-2">Dr. Amit Kumar Tiwari</td>
+                            <td class="border px-4 py-2">Python, Django</td>
+                            <td class="border px-4 py-2">
+                                <select class="w-full p-2 border rounded">
+                                    <option>Dr. Amit Kumar Tiwari</option>
+                                    <option>Prof. Sanjay Srivastava</option>
+                                    <option>Mr. Man Singh</option>
+                                </select>
+                            </td>
                             <td class="border px-4 py-2 text-center">
                                 <button onclick="deleteGroup(this)" class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300">Delete</button>
                             </td>
@@ -60,8 +65,14 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
                         <tr class="group-item" data-approved="false">
                             <td class="border px-4 py-2"><a href="#" class="text-blue-500 hover:underline">2</a></td>
                             <td class="border px-4 py-2"><a href="#" class="text-blue-500 hover:underline">Project Beta</a></td>
-                            <td class="border px-4 py-2">Hridyesh Gupta, Harsh Kumar</td>
-                            <td class="border px-4 py-2">Prof. Sanjay Srivastava</td>
+                            <td class="border px-4 py-2">Java, Spring Boot</td>
+                            <td class="border px-4 py-2">
+                                <select class="w-full p-2 border rounded">
+                                    <option>Dr. Amit Kumar Tiwari</option>
+                                    <option>Prof. Sanjay Srivastava</option>
+                                    <option>Mr. Man Singh</option>
+                                </select>
+                            </td>
                             <td class="border px-4 py-2 text-center">
                                 <button onclick="deleteGroup(this)" class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300">Delete</button>
                             </td>
@@ -69,8 +80,14 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
                         <tr class="group-item" data-approved="true">
                             <td class="border px-4 py-2"><a href="#" class="text-blue-500 hover:underline">3</a></td>
                             <td class="border px-4 py-2"><a href="#" class="text-blue-500 hover:underline">Project Gamma</a></td>
-                            <td class="border px-4 py-2">Harshit Singh, Ankit Gupta</td>
-                            <td class="border px-4 py-2">Mr. Man Singh</td>
+                            <td class="border px-4 py-2">JavaScript, React</td>
+                            <td class="border px-4 py-2">
+                                <select class="w-full p-2 border rounded">
+                                    <option>Dr. Amit Kumar Tiwari</option>
+                                    <option>Prof. Sanjay Srivastava</option>
+                                    <option>Mr. Man Singh</option>
+                                </select>
+                            </td>
                             <td class="border px-4 py-2 text-center">
                                 <button onclick="deleteGroup(this)" class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300">Delete</button>
                             </td>
@@ -124,7 +141,6 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
             const confirmDelete = confirm(`Are you sure you want to delete Group ID ${groupId}?`);
             if (confirmDelete) {
                 row.remove();
-                // Add your deletion logic here
             }
         }
     </script>
