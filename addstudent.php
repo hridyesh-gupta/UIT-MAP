@@ -75,7 +75,7 @@ if(isset($_POST['add_student'])){
 
             <div id="form-container" class="mt-8">
                 <div id="file-upload-form" class="bg-white p-6 rounded-lg shadow-lg">
-                    <form action="#" method="POST" enctype="multipart/form-data">
+                    <form action="dbinsert.php" method="POST" enctype="multipart/form-data">
                         <label class="block mb-2">Upload File:</label>
                         <input type="file" name="uploaded_file" class="w-full p-2 border rounded mb-4" required>
                         <button type="submit" name="upload_file" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition duration-300">Submit</button>

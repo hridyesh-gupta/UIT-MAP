@@ -94,7 +94,6 @@
                             <th class="border px-4 py-2">Semester</th>
                             <th class="border px-4 py-2">Marks</th>
                             <th class="border px-4 py-2">CP</th>
-                            <th class="border px-4 py-2">Paper Name</th>
                         </tr>
                     </thead>
                     <tbody id="academic-record">
@@ -126,14 +125,14 @@
                 diploma: "",
                 photo: "https://via.placeholder.com/150",
                 academicRecord: [
-                    { semester: "I Semester", marks: " / 950", cp: "0", paper: "" },
-                    { semester: "II Semester", marks: " / 900", cp: "0", paper: "" },
-                    { semester: "III Semester", marks: " / 950", cp: "0", paper: "" },
-                    { semester: "IV Semester", marks: " / 900", cp: "0", paper: "" },
-                    { semester: "V Semester", marks: " / 950", cp: "0", paper: "" },
-                    { semester: "VI Semester", marks: " / 950", cp: "0", paper: "" },
-                    { semester: "VII Semester", marks: " / 950", cp: "0", paper: "" },
-                    { semester: "VIII Semester", marks: " / 950", cp: "0", paper: "" }
+                    { semester: "I Semester", marks: " / 900", cp: "0"},
+                    { semester: "II Semester", marks: " / 900", cp: "0"},
+                    { semester: "III Semester", marks: " / 950", cp: "0"},
+                    { semester: "IV Semester", marks: " / 900", cp: "0"},
+                    { semester: "V Semester", marks: " / 950", cp: "0"},
+                    { semester: "VI Semester", marks: " / 900", cp: "0"},
+                    { semester: "VII Semester", marks: " / 950", cp: "0"},
+                    { semester: "VIII Semester", marks: " / 900", cp: "0" }
                 ]
             };
 
@@ -156,7 +155,6 @@
                     <td class="border px-4 py-2">${record.semester}</td>
                     <td class="border px-4 py-2">${record.marks}</td>
                     <td class="border px-4 py-2">${record.cp}</td>
-                    <td class="border px-4 py-2">${record.paper}</td>
                 `;
                 academicRecordTable.appendChild(row);
             });

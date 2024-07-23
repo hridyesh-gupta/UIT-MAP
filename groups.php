@@ -144,6 +144,5 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
             }
         }
     </script>
-
 </body>
 </html>
