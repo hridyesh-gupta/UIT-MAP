@@ -1,4 +1,3 @@
-<!-- 1st page -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,7 +15,10 @@
             border-radius: 0.375rem;
             padding: 0.5rem;
             display: inline-block;
-            min-width: 150px;
+            min-width: 50px;
+        }
+        .static {
+            display: inline-block;
         }
         td {
             padding: 0.5rem;
@@ -81,10 +83,6 @@
                     </tr>
                 </tbody>
             </table>
-            <div class="flex justify-end mb-8">
-                <button id="edit-btn" class="bg-yellow-500 text-white px-4 py-2 rounded mr-2">Edit</button>
-                <button id="save-btn" class="bg-green-500 text-white px-4 py-2 rounded hidden">Save</button>
-            </div>
 
             <h2 class="text-2xl font-semibold text-gray-700 mb-4">B. Tech. (Obtained / Total)</h2>
             <div class="table-container mb-8">
@@ -94,12 +92,18 @@
                             <th class="border px-4 py-2">Semester</th>
                             <th class="border px-4 py-2">Marks</th>
                             <th class="border px-4 py-2">CP</th>
+                            <th class="border px-4 py-2">Paper Name</th>
                         </tr>
                     </thead>
                     <tbody id="academic-record">
                         <!-- Data will be inserted here dynamically -->
                     </tbody>
                 </table>
+            </div>
+
+            <div class="flex justify-end mb-8">
+                <button id="edit-btn" class="bg-yellow-500 text-white px-4 py-2 rounded mr-2">Edit</button>
+                <button id="save-btn" class="bg-green-500 text-white px-4 py-2 rounded hidden">Save</button>
             </div>
         </div>
     </main>
@@ -125,14 +129,14 @@
                 diploma: "",
                 photo: "https://via.placeholder.com/150",
                 academicRecord: [
-                    { semester: "I Semester", marks: " / 900", cp: "0"},
-                    { semester: "II Semester", marks: " / 900", cp: "0"},
-                    { semester: "III Semester", marks: " / 950", cp: "0"},
-                    { semester: "IV Semester", marks: " / 900", cp: "0"},
-                    { semester: "V Semester", marks: " / 950", cp: "0"},
-                    { semester: "VI Semester", marks: " / 900", cp: "0"},
-                    { semester: "VII Semester", marks: " / 950", cp: "0"},
-                    { semester: "VIII Semester", marks: " / 900", cp: "0" }
+                    { semester: "I Semester", obtained: "100", total: "900", cp: "0", paper: "Math" },
+                    { semester: "II Semester", obtained: "200", total: "900", cp: "0", paper: "Physics" },
+                    { semester: "III Semester", obtained: "300", total: "950", cp: "0", paper: "Chemistry" },
+                    { semester: "IV Semester", obtained: "400", total: "900", cp: "0", paper: "Biology" },
+                    { semester: "V Semester", obtained: "500", total: "950", cp: "0", paper: "English" },
+                    { semester: "VI Semester", obtained: "600", total: "900", cp: "0", paper: "History" },
+                    { semester: "VII Semester", obtained: "700", total: "950", cp: "0", paper: "Geography" },
+                    { semester: "VIII Semester", obtained: "800", total: "900", cp: "0", paper: "Economics" }
                 ]
             };
 
@@ -153,7 +157,10 @@
                 const row = document.createElement("tr");
                 row.innerHTML = `
                     <td class="border px-4 py-2">${record.semester}</td>
-                    <td class="border px-4 py-2"><span class="editable" contenteditable="false">${record.marks}</span></td>
+                    <td class="border px-4 py-2">
+                        <span class="editable" contenteditable="false">${record.obtained}</span>
+                        <span class="static"> / ${record.total}</span>
+                    </td>
                     <td class="border px-4 py-2"><span class="editable" contenteditable="false">${record.cp}</span></td>
                     <td class="border px-4 py-2"><span class="editable" contenteditable="false">${record.paper}</span></td>
                 `;
@@ -191,10 +198,11 @@
                 };
                 const academicRecordRows = document.getElementById("academic-record").rows;
                 for (let i = 0; i < academicRecordRows.length; i++) {
-const row = academicRecordRows[i];
+                    const row = academicRecordRows[i];
                     updatedData.academicRecord.push({
                         semester: row.cells[0].innerText,
-                        marks: row.cells[1].firstChild.innerText,
+                        obtained: row.cells[1].firstChild.innerText,
+                        total: row.cells[1].lastChild.innerText.replace(" / ", ""),
                         cp: row.cells[2].firstChild.innerText,
                         paper: row.cells[3].firstChild.innerText
                     });
