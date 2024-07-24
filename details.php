@@ -18,7 +18,7 @@ if ($conn->connect_error) {
 }
 
 // Define SQL query to select all student names from the 'students' table
-$sql = "SELECT name FROM info ORDER BY name ASC"; // Adjust the SQL query as needed for your table structure
+$sql = "SELECT roll FROM info ORDER BY roll ASC"; // Adjust the SQL query as needed for your table structure
 
 // Execute the SQL query on the database connection
 $result = $conn->query($sql);
@@ -30,7 +30,7 @@ if ($result->num_rows > 0) {
     // Loop through each row in the result set
     while($row = $result->fetch_assoc()) {
         // Add the student's name to the $students array
-        $students[] = $row['name'];
+        $students[] = $row['roll'];
     }
 }
 // Close the database connection
@@ -164,15 +164,15 @@ $conn->close();
     <script>
         const members = [];
         const maxMembers = 4;
-        const studentNames = <?php echo json_encode($students); ?>; //Converts the array into JSON(JS) format
+        const studentRolls = <?php echo json_encode($students); ?>; //Converts the array into JSON(JS) format
         const memberTemplate = (index) => `
             <div class="member-form p-4 border ${members[index]?.locked ? 'locked' : ''}">
                 <h4 class="text-lg font-bold">Project Member ${index + 1}</h4>
                 <div class="mb-2">
-                    <label class="block text-gray-700">Student Name:</label>
-                    <select class="w-full border p-2" ${members[index]?.locked ? 'disabled' : ''}> //Dropdown list of student names
-                        <option value="">Select Student...</option> //Default Option
-                        ${studentNames.map(name => `<option value="${name}" ${members[index]?.name === name ? 'selected' : ''}>${name}</option>`).join('')} 
+                    <label class="block text-gray-700">Student Roll Number:</label>
+                    <select class="w-full border p-2" ${members[index]?.locked ? 'disabled' : ''}> //Dropdown list of student roll numbers
+                        <option value="">Select Roll number...</option> //Default Option
+                        ${studentRolls.map(roll => `<option value="${roll}" ${members[index]?.roll === roll ? 'selected' : ''}>${roll}</option>`).join('')} 
                     </select>
                 </div>
                 <div class="mb-2">
