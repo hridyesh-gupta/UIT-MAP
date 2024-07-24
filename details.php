@@ -44,6 +44,12 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MAP - Project Details</title>
     <link href="https://unpkg.com/tailwindcss@^2.0/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Additional CSS styles */
+        .locked {
+            background-color: #f0f0f0;
+        }
+    </style>
 </head>
 <body class="bg-white text-gray-800 flex flex-col min-h-screen">
 
@@ -169,10 +175,10 @@ $conn->close();
             <div class="member-form p-4 border ${members[index]?.locked ? 'locked' : ''}">
                 <h4 class="text-lg font-bold">Project Member ${index + 1}</h4>
                 <div class="mb-2">
-                    <label class="block text-gray-700">Student Roll Number:</label>
-                    <select class="w-full border p-2" ${members[index]?.locked ? 'disabled' : ''}> //Dropdown list of student roll numbers
-                        <option value="">Select Roll number...</option> //Default Option
-                        ${studentRolls.map(roll => `<option value="${roll}" ${members[index]?.roll === roll ? 'selected' : ''}>${roll}</option>`).join('')} 
+                    <label class="block text-gray-700">Student Name:</label>
+                    <select class="w-full border p-2" ${members[index]?.locked ? 'disabled' : ''}>
+                        <option value="">Select Student...</option>
+                        ${studentNames.map(name => `<option value="${name}" ${members[index]?.name === name ? 'selected' : ''}>${name}</option>`).join('')}
                     </select>
                 </div>
                 <div class="mb-2">
@@ -326,4 +332,3 @@ $conn->close();
     </script>
 </body>
 </html>
-k

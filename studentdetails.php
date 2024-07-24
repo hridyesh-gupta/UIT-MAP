@@ -92,7 +92,6 @@
                             <th class="border px-4 py-2">Semester</th>
                             <th class="border px-4 py-2">Marks</th>
                             <th class="border px-4 py-2">CP</th>
-                            <th class="border px-4 py-2">Paper Name</th>
                         </tr>
                     </thead>
                     <tbody id="academic-record">
@@ -129,14 +128,14 @@
                 diploma: "",
                 photo: "https://via.placeholder.com/150",
                 academicRecord: [
-                    { semester: "I Semester", obtained: "100", total: "900", cp: "0", paper: "Math" },
-                    { semester: "II Semester", obtained: "200", total: "900", cp: "0", paper: "Physics" },
-                    { semester: "III Semester", obtained: "300", total: "950", cp: "0", paper: "Chemistry" },
-                    { semester: "IV Semester", obtained: "400", total: "900", cp: "0", paper: "Biology" },
-                    { semester: "V Semester", obtained: "500", total: "950", cp: "0", paper: "English" },
-                    { semester: "VI Semester", obtained: "600", total: "900", cp: "0", paper: "History" },
-                    { semester: "VII Semester", obtained: "700", total: "950", cp: "0", paper: "Geography" },
-                    { semester: "VIII Semester", obtained: "800", total: "900", cp: "0", paper: "Economics" }
+                    { semester: "I Semester", obtained: "100", total: "900", cp: "0" },
+                    { semester: "II Semester", obtained: "200", total: "900", cp: "0" },
+                    { semester: "III Semester", obtained: "300", total: "950", cp: "0" },
+                    { semester: "IV Semester", obtained: "400", total: "900", cp: "0" },
+                    { semester: "V Semester", obtained: "500", total: "950", cp: "0" },
+                    { semester: "VI Semester", obtained: "600", total: "900", cp: "0" },
+                    { semester: "VII Semester", obtained: "700", total: "950", cp: "0" },
+                    { semester: "VIII Semester", obtained: "800", total: "900", cp: "0" }
                 ]
             };
 
@@ -162,7 +161,6 @@
                         <span class="static"> / ${record.total}</span>
                     </td>
                     <td class="border px-4 py-2"><span class="editable" contenteditable="false">${record.cp}</span></td>
-                    <td class="border px-4 py-2"><span class="editable" contenteditable="false">${record.paper}</span></td>
                 `;
                 academicRecordTable.appendChild(row);
             });
@@ -203,8 +201,7 @@
                         semester: row.cells[0].innerText,
                         obtained: row.cells[1].firstChild.innerText,
                         total: row.cells[1].lastChild.innerText.replace(" / ", ""),
-                        cp: row.cells[2].firstChild.innerText,
-                        paper: row.cells[3].firstChild.innerText
+                        cp: row.cells[2].firstChild.innerText
                     });
                 }
                 console.log(updatedData);
