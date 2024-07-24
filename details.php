@@ -17,7 +17,7 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Define SQL query to select all student names from the 'students' table
+// Define SQL query to select all student roll numbers from the 'info' table
 $sql = "SELECT roll FROM info ORDER BY roll ASC"; // Adjust the SQL query as needed for your table structure
 
 // Execute the SQL query on the database connection
@@ -175,10 +175,10 @@ $conn->close();
             <div class="member-form p-4 border ${members[index]?.locked ? 'locked' : ''}">
                 <h4 class="text-lg font-bold">Project Member ${index + 1}</h4>
                 <div class="mb-2">
-                    <label class="block text-gray-700">Student Name:</label>
-                    <select class="w-full border p-2" ${members[index]?.locked ? 'disabled' : ''}>
-                        <option value="">Select Student...</option>
-                        ${studentNames.map(name => `<option value="${name}" ${members[index]?.name === name ? 'selected' : ''}>${name}</option>`).join('')}
+                    <label class="block text-gray-700">Student Roll Number:</label>
+                    <select class="w-full border p-2" ${members[index]?.locked ? 'disabled' : ''}> // Dropdown list
+                        <option value="">Select Student Roll Number...</option> // Default option
+                        ${studentRolls.map(roll => `<option value="${roll}" ${members[index]?.roll === roll ? 'selected' : ''}>${roll}</option>`).join('')} // Roll numbers from the database
                     </select>
                 </div>
                 <div class="mb-2">
