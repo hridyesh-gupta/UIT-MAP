@@ -1,4 +1,4 @@
-<!-- 4th page -->
+4th page
 <?php
 //PHP code to fetch student names from the database
 
@@ -17,8 +17,8 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Define SQL query to select all student roll numbers from the 'info' table
-$sql = "SELECT roll FROM info ORDER BY roll ASC"; // Adjust the SQL query as needed for your table structure
+// Define SQL query to select all student names from the 'students' table
+$sql = "SELECT name FROM info ORDER BY name ASC"; // Adjust the SQL query as needed for your table structure
 
 // Execute the SQL query on the database connection
 $result = $conn->query($sql);
@@ -30,7 +30,7 @@ if ($result->num_rows > 0) {
     // Loop through each row in the result set
     while($row = $result->fetch_assoc()) {
         // Add the student's name to the $students array
-        $students[] = $row['roll'];
+        $students[] = $row['name'];
     }
 }
 // Close the database connection
@@ -45,7 +45,6 @@ $conn->close();
     <title>MAP - Project Details</title>
     <link href="https://unpkg.com/tailwindcss@^2.0/dist/tailwind.min.css" rel="stylesheet">
     <style>
-        /* Additional CSS styles */
         .locked {
             background-color: #f0f0f0;
         }
@@ -168,75 +167,60 @@ $conn->close();
     </footer>
 
     <script>
-        const members = [];
-        const maxMembers = 4;
-        const studentRolls = <?php echo json_encode($students); ?>; //Converts the array into JSON(JS) format
-        const memberTemplate = (index) => `
+    const members = [];
+    const maxMembers = 4;
+    const studentNames = <?php echo json_encode($students); ?>; // Converts the array into JSON(JS) format
+
+    function memberTemplate(index) {
+        return `
             <div class="member-form p-4 border ${members[index]?.locked ? 'locked' : ''}">
                 <h4 class="text-lg font-bold">Project Member ${index + 1}</h4>
                 <div class="mb-2">
-                    <label class="block text-gray-700">Student Roll Number:</label>
-                    <select class="w-full border p-2" ${members[index]?.locked ? 'disabled' : ''}> // Dropdown list
-                        <option value="">Select Student Roll Number...</option> // Default option
-                        ${studentRolls.map(roll => `<option value="${roll}" ${members[index]?.roll === roll ? 'selected' : ''}>${roll}</option>`).join('')} // Roll numbers from the database
+                    <label class="block text-gray-700">Student Name:</label>
+                    <select class="w-full border p-2" ${members[index]?.locked ? 'disabled' : ''}>
+                        <option value="">Select Student...</option>
+                        ${studentNames.map(name => `<option value="${name}" ${members[index]?.name === name ? 'selected' : ''}>${name}</option>`).join('')}
                     </select>
-                </div>
-                <div class="mb-2">
-                    <label class="block text-gray-700">Roll Number:</label>
-                    <input type="text" class="w-full border p-2" value="${members[index]?.roll || ''}" ${members[index]?.locked ? 'disabled' : ''}>
-                </div>
-                <div class="mb-2">
-                    <label class="block text-gray-700">Branch:</label>
-                    <input type="text" class="w-full border p-2" value="${members[index]?.branch || ''}" ${members[index]?.locked ? 'disabled' : ''}>
-                </div>
-                <div class="mb-2">
-                    <label class="block text-gray-700">Section:</label>
-                    <input type="text" class="w-full border p-2" value="${members[index]?.section || ''}" ${members[index]?.locked ? 'disabled' : ''}>
-                </div>
-                <div class="mb-2">
-                    <label class="block text-gray-700">Signature of student:</label>
-                    <input type="file" class="w-full border p-2" ${members[index]?.locked ? 'disabled' : ''}>
                 </div>
                 <button class="lockMemberBtn bg-red-500 text-white px-4 py-2 mt-2" ${members[index]?.locked ? 'disabled' : ''}>Lock</button>
             </div>
         `;
+    }
 
-        const responsibilityTemplate = (member) => `
+    function responsibilityTemplate(member) {
+        return `
             <tr>
                 <td class="border px-4 py-2">${member.name}</td>
                 <td class="border px-4 py-2"><input type="text" class="w-full border p-2"></td>
             </tr>
         `;
+    }
 
-        function renderMembers() {
-            const membersDiv = document.getElementById('members');
-            membersDiv.innerHTML = members.map((_, i) => memberTemplate(i)).join('');
+    function renderMembers() {
+        const membersDiv = document.getElementById('members');
+        membersDiv.innerHTML = members.map((_, i) => memberTemplate(i)).join('');
+    }
+
+    function renderResponsibilities() {
+        const responsibilitiesTable = document.getElementById('responsibilitiesTable');
+        responsibilitiesTable.innerHTML = members.filter(member => member.locked).map(responsibilityTemplate).join('');
+    }
+
+    function lockMember(index) {
+        const memberForm = document.querySelectorAll('.member-form')[index];
+        const select = memberForm.querySelector('select');
+        members[index] = {
+            name: select.value,
+            locked: true
+        };
+        renderMembers();
+        if (members.filter(member => member.locked).length > 0) {
+            document.getElementById('responsibilitiesSection').style.display = 'block';
+            renderResponsibilities();
         }
+    }
 
-        function renderResponsibilities() {
-            const responsibilitiesTable = document.getElementById('responsibilitiesTable');
-            responsibilitiesTable.innerHTML = members.filter(member => member.locked).map(responsibilityTemplate).join('');
-        }
-
-        function lockMember(index) {
-            const memberForm = document.querySelectorAll('.member-form')[index];
-            const inputs = memberForm.querySelectorAll('input[type=text]');
-            const fileInput = memberForm.querySelector('input[type=file]');
-            members[index] = {
-                name: inputs[0].value,
-                roll: inputs[1].value,
-                branch: inputs[2].value,
-                section: inputs[3].value,
-                signature: fileInput.files[0],
-                locked: true
-            };
-            renderMembers();
-            if (members.filter(member => member.locked).length > 0) {
-                document.getElementById('responsibilitiesSection').style.display = 'block';
-                renderResponsibilities();
-            }
-        }
-
+    document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('addMemberBtn').addEventListener('click', () => {
             if (members.length < maxMembers) {
                 members.push({});
@@ -248,7 +232,7 @@ $conn->close();
 
         document.getElementById('members').addEventListener('click', (e) => {
             if (e.target.classList.contains('lockMemberBtn')) {
-                const index = Array.from(document.querySelectorAll('.lockMemberBtn')).indexOf(e.target);
+                const index = [...document.querySelectorAll('.lockMemberBtn')].indexOf(e.target);
                 lockMember(index);
             }
         });
@@ -258,31 +242,6 @@ $conn->close();
             groupCreationDateInput.disabled = true;
             document.getElementById('lockGroupCreationDateBtn').disabled = true;
         });
-
-        function fetchDecApprovalStatus() {
-            // Mocking the DEC approval data fetch
-            const decApprovalData = {
-                approved: true,
-                approvalDate: '2024-01-15'
-            };
-
-            const decApprovalStatusInput = document.getElementById('decApprovalStatus');
-            const approvalDateDiv = document.getElementById('approvalDateDiv');
-            const approvalDateInput = document.getElementById('approvalDate');
-
-            if (decApprovalData.approved) {
-                decApprovalStatusInput.value = 'Approved';
-                approvalDateInput.value = decApprovalData.approvalDate;
-                approvalDateDiv.style.display = 'block';
-            } else {
-                decApprovalStatusInput.value = 'Not Approved';
-                approvalDateDiv.style.display = 'none';
-            }
-        }
-
-        // Initial render
-        renderMembers();
-        fetchDecApprovalStatus();
 
         function fetchSupervisorApprovalStatus() {
             // Mocking the supervisor approval data fetch
@@ -326,9 +285,11 @@ $conn->close();
             }
         }
 
-        // Initial fetch
+        // Initial render and data fetch
+        renderMembers();
         fetchSupervisorApprovalStatus();
         fetchDecApprovalStatus();
-    </script>
+    });
+</script>
 </body>
 </html>
