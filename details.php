@@ -1,4 +1,42 @@
 <!-- 4th page -->
+<?php
+//PHP code to fetch student names from the database
+
+// Set database connection parameters
+$host = 'localhost'; // Database server address
+$username = 'root'; // Database username
+$password = ''; // Database password
+$database = 'mapdb'; // Database name
+
+// Establish a new database connection using MySQLi
+$conn = new mysqli($host, $username, $password, $database);
+
+// Check if the database connection was successful
+if ($conn->connect_error) {
+    // Terminate script and output connection error if connection failed
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Define SQL query to select all student names from the 'students' table
+$sql = "SELECT name FROM info ORDER BY name ASC"; // Adjust the SQL query as needed for your table structure
+
+// Execute the SQL query on the database connection
+$result = $conn->query($sql);
+
+// Initialize an array to hold the fetched student names
+$students = [];
+// Check if the query returned any rows
+if ($result->num_rows > 0) {
+    // Loop through each row in the result set
+    while($row = $result->fetch_assoc()) {
+        // Add the student's name to the $students array
+        $students[] = $row['name'];
+    }
+}
+// Close the database connection
+$conn->close();
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -126,13 +164,16 @@
     <script>
         const members = [];
         const maxMembers = 4;
-
+        const studentNames = <?php echo json_encode($students); ?>; //Converts the array into JSON(JS) format
         const memberTemplate = (index) => `
             <div class="member-form p-4 border ${members[index]?.locked ? 'locked' : ''}">
                 <h4 class="text-lg font-bold">Project Member ${index + 1}</h4>
                 <div class="mb-2">
                     <label class="block text-gray-700">Student Name:</label>
-                    <input type="text" class="w-full border p-2" value="${members[index]?.name || ''}" ${members[index]?.locked ? 'disabled' : ''}>
+                    <select class="w-full border p-2" ${members[index]?.locked ? 'disabled' : ''}> //Dropdown list of student names
+                        <option value="">Select Student...</option> //Default Option
+                        ${studentNames.map(name => `<option value="${name}" ${members[index]?.name === name ? 'selected' : ''}>${name}</option>`).join('')} 
+                    </select>
                 </div>
                 <div class="mb-2">
                     <label class="block text-gray-700">Roll Number:</label>
@@ -140,7 +181,7 @@
                 </div>
                 <div class="mb-2">
                     <label class="block text-gray-700">Branch:</label>
-                    <input type="text" class="w-full border p-2" value="${members[index]?.branch || 'Computer Science'}" ${members[index]?.locked ? 'disabled' : ''}>
+                    <input type="text" class="w-full border p-2" value="${members[index]?.branch || ''}" ${members[index]?.locked ? 'disabled' : ''}>
                 </div>
                 <div class="mb-2">
                     <label class="block text-gray-700">Section:</label>
