@@ -12,7 +12,7 @@
         <div class="max-w-6xl mx-auto p-4 flex justify-between">
             <a href="addstudent.php" class="text-lg">Add Students</a>
             <a href="groups.php" class="text-lg">Groups</a>
-            <a href="adminguidelines.php" class="text-lg">Guidelines</a>
+            <a href="guidelines.php" class="text-lg">Guidelines</a>
             <a href="logout.php" class="text-lg">Logout</a>
         </div>
     </nav>

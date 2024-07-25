@@ -1,4 +1,4 @@
-<?php 
+<?php
 //PHP code to insert the data from the CSV file into the database
 
 // Check if the form is submitted 

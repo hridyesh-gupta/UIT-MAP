@@ -11,7 +11,7 @@
 <nav class="bg-blue-500 text-white">
     <div class="max-w-6xl mx-auto p-4 flex justify-between">
         <a href="studentdetails.php" class="text-lg">Student Details</a>
-        <a href="studentguidelines.php" class="text-lg">Guidelines</a>
+        <a href="guidelines.php" class="text-lg">Guidelines</a>
         <a href="rubrics.php" class="text-lg">Rubrics</a>
         <a href="details.php" class="text-lg">Details</a>
         <a href="status.php" class="text-lg">Project Status</a>
