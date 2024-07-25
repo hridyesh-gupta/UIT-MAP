@@ -51,13 +51,13 @@ elseif($_SESSION['usertype']!="admin" && $_SESSION['usertype']!="student" && $_S
 
 
 <?php 
-if($_SESSION['usertype']="admin"){ //If the user is admin show the admin header
+if($_SESSION['usertype'] == "admin"){ //If the user is admin show the admin header
     include 'adminheaders.php';
 }
-elseif($_SESSION['usertype']="student"){ //If the user is student show the student header
+elseif($_SESSION['usertype'] == "student"){ //If the user is student show the student header
     include 'studentheaders.php';
 }
-elseif($_SESSION['usertype']="mentor"){ //If the user is mentor show the mentor header
+elseif($_SESSION['usertype'] == "mentor"){ //If the user is mentor show the mentor header
     include 'mentorheaders.php';
 }
 ?>
