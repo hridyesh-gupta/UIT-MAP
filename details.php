@@ -1,6 +1,6 @@
-4th page
+<!-- 4th page -->
 <?php
-//PHP code to fetch student names from the database
+//PHP code to fetch student roll numbers from the database
 
 // Set database connection parameters
 $host = 'localhost'; // Database server address
@@ -17,20 +17,20 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Define SQL query to select all student names from the 'students' table
-$sql = "SELECT name FROM info ORDER BY name ASC"; // Adjust the SQL query as needed for your table structure
+// Define SQL query to select all student roll numbers from the 'info' table
+$sql = "SELECT roll FROM info ORDER BY roll ASC"; 
 
 // Execute the SQL query on the database connection
 $result = $conn->query($sql);
 
-// Initialize an array to hold the fetched student names
+// Initialize an array to hold the fetched student roll numbers
 $students = [];
 // Check if the query returned any rows
 if ($result->num_rows > 0) {
     // Loop through each row in the result set
     while($row = $result->fetch_assoc()) {
-        // Add the student's name to the $students array
-        $students[] = $row['name'];
+        // Add the student's roll numbers to the $students array
+        $students[] = $row['roll'];
     }
 }
 // Close the database connection
@@ -78,7 +78,7 @@ $conn->close();
         <table class="min-w-full bg-white">
             <thead>
                 <tr>
-                    <th class="py-2">Project Member Name</th>
+                    <th class="py-2">Project Member Roll Number</th>
                     <th class="py-2">Responsibility</th>
                 </tr>
             </thead>
@@ -169,17 +169,17 @@ $conn->close();
     <script>
     const members = [];
     const maxMembers = 4;
-    const studentNames = <?php echo json_encode($students); ?>; // Converts the array into JSON(JS) format
+    const studentRolls = <?php echo json_encode($students); ?>; // Converts the students array into JSON(JS) format
 
     function memberTemplate(index) {
         return `
             <div class="member-form p-4 border ${members[index]?.locked ? 'locked' : ''}">
                 <h4 class="text-lg font-bold">Project Member ${index + 1}</h4>
                 <div class="mb-2">
-                    <label class="block text-gray-700">Student Name:</label>
+                    <label class="block text-gray-700">Student Roll Number:</label>
                     <select class="w-full border p-2" ${members[index]?.locked ? 'disabled' : ''}>
-                        <option value="">Select Student...</option>
-                        ${studentNames.map(name => `<option value="${name}" ${members[index]?.name === name ? 'selected' : ''}>${name}</option>`).join('')}
+                        <option value="">Select Roll number...</option>
+                        ${studentRolls.map(roll => `<option value="${roll}" ${members[index]?.roll === roll ? 'selected' : ''}>${roll}</option>`).join('')}
                     </select>
                 </div>
                 <button class="lockMemberBtn bg-red-500 text-white px-4 py-2 mt-2" ${members[index]?.locked ? 'disabled' : ''}>Lock</button>
@@ -190,7 +190,7 @@ $conn->close();
     function responsibilityTemplate(member) {
         return `
             <tr>
-                <td class="border px-4 py-2">${member.name}</td>
+                <td class="border px-4 py-2">${member.roll}</td>
                 <td class="border px-4 py-2"><input type="text" class="w-full border p-2"></td>
             </tr>
         `;
@@ -210,7 +210,7 @@ $conn->close();
         const memberForm = document.querySelectorAll('.member-form')[index];
         const select = memberForm.querySelector('select');
         members[index] = {
-            name: select.value,
+            roll: select.value,
             locked: true
         };
         renderMembers();
