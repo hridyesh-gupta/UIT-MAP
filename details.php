@@ -1,4 +1,4 @@
-<!-- 4th page -->
+4th page
 <?php
 session_start();
 if(!(isset($_SESSION['username']))){  //If the session variable is not set, then it means the user is not logged in and is accessing this page through url editing, as we have provided session username to every user who logged in. So, redirecting to login page
@@ -86,7 +86,10 @@ $conn->close();
         <table class="min-w-full bg-white">
             <thead>
                 <tr>
-                    <th class="py-2">Project Member Roll Number</th>
+                    <th class="py-2">Roll Number</th>
+                    <th class="py-2">Name</th>
+                    <th class="py-2">Section</th>
+                    <th class="py-2">Branch</th>
                     <th class="py-2">Responsibility</th>
                 </tr>
             </thead>
@@ -185,21 +188,41 @@ $conn->close();
                 <h4 class="text-lg font-bold">Project Member ${index + 1}</h4>
                 <div class="mb-2">
                     <label class="block text-gray-700">Student Roll Number:</label>
-                    <select class="w-full border p-2" ${members[index]?.locked ? 'disabled' : ''}>
+                    <select class="w-full border p-2 roll-number" ${members[index]?.locked ? 'disabled' : ''}>
                         <option value="">Select Roll number...</option>
                         ${studentRolls.map(roll => `<option value="${roll}" ${members[index]?.roll === roll ? 'selected' : ''}>${roll}</option>`).join('')}
                     </select>
                 </div>
-                <button class="lockMemberBtn bg-red-500 text-white px-4 py-2 mt-2" ${members[index]?.locked ? 'disabled' : ''}>Lock</button>
+                <div class="mb-2">
+                    <label class="block text-gray-700">Name:</label>
+                    <input type="text" class="w-full border p-2 name" ${members[index]?.locked ? 'disabled' : ''} value="${members[index]?.name || ''}">
+                </div>
+                <div class="mb-2">
+                    <label class="block text-gray-700">Section:</label>
+                    <input type="text" class="w-full border p-2 section" ${members[index]?.locked ? 'disabled' : ''} value="${members[index]?.section || ''}">
+                </div>
+                <div class="mb-2">
+                    <label class="block text-gray-700">Branch:</label>
+                    <input type="text" class="w-full border p-2 branch" ${members[index]?.locked ? 'disabled' : ''} value="${members[index]?.branch || ''}">
+                </div>
+                <div class="mb-2">
+                    <label class="block text-gray-700">Responsibility:</label>
+                    <input type="text" class="w-full border p-2 responsibility" ${members[index]?.locked ? 'disabled' : ''} value="${members[index]?.responsibility || ''}">
+                </div>
+                <button class="bg-green-500 text-white px-4 py-2 lockMemberBtn" ${members[index]?.locked ? 'disabled' : ''}>Lock Member</button>
             </div>
         `;
     }
 
-    function responsibilityTemplate(member) {
+    function responsibilityTemplate(index) {
+        const member = members[index];
         return `
             <tr>
                 <td class="border px-4 py-2">${member.roll}</td>
-                <td class="border px-4 py-2"><input type="text" class="w-full border p-2"></td>
+                <td class="border px-4 py-2">${member.name}</td>
+                <td class="border px-4 py-2">${member.section}</td>
+                <td class="border px-4 py-2">${member.branch}</td>
+                <td class="border px-4 py-2">${member.responsibility}</td>
             </tr>
         `;
     }
@@ -216,15 +239,28 @@ $conn->close();
 
     function lockMember(index) {
         const memberForm = document.querySelectorAll('.member-form')[index];
-        const select = memberForm.querySelector('select');
-        members[index] = {
-            roll: select.value,
-            locked: true
-        };
-        renderMembers();
-        if (members.filter(member => member.locked).length > 0) {
-            document.getElementById('responsibilitiesSection').style.display = 'block';
-            renderResponsibilities();
+        const roll = memberForm.querySelector('.roll-number').value;
+        const name = memberForm.querySelector('.name').value;
+        const section = memberForm.querySelector('.section').value;
+        const branch = memberForm.querySelector('.branch').value;
+        const responsibility = memberForm.querySelector('.responsibility').value;
+
+        if (roll && name && section && branch && responsibility) {
+            members[index] = {
+                roll,
+                name,
+                section,
+                branch,
+                responsibility,
+                locked: true
+            };
+            renderMembers();
+            if (members.filter(member => member.locked).length > 0) {
+                document.getElementById('responsibilitiesSection').style.display = 'block';
+                renderResponsibilities();
+            }
+        } else {
+            alert('Please fill in all fields');
         }
     }
 
@@ -293,11 +329,13 @@ $conn->close();
             }
         }
 
-        // Initial render and data fetch
-        renderMembers();
+        // Initial data fetch
         fetchSupervisorApprovalStatus();
         fetchDecApprovalStatus();
+
+        // Initial render after attaching event listeners
+        renderMembers();
     });
-</script>
+    </script>
 </body>
 </html>
