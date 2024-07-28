@@ -1,47 +1,32 @@
-4th page
 <?php
 session_start();
-if(!(isset($_SESSION['username']))){  //If the session variable is not set, then it means the user is not logged in and is accessing this page through url editing, as we have provided session username to every user who logged in. So, redirecting to login page
+if(!(isset($_SESSION['username']))){ 
     header("location: index.php");
 }
-elseif($_SESSION['usertype']!="admin" && $_SESSION['usertype']!="student" && $_SESSION['usertype']!="mentor"){ //If the user is not admin, student, or mentor, then it means the user is accessing this page through url editing. So, redirecting to login page
+elseif($_SESSION['usertype']!="admin" && $_SESSION['usertype']!="student" && $_SESSION['usertype']!="mentor"){
     header("location: index.php");
 }
 
-//PHP code to fetch student roll numbers from the database
+$host = 'localhost';
+$username = 'root';
+$password = '';
+$database = 'mapdb';
 
-// Set database connection parameters
-$host = 'localhost'; // Database server address
-$username = 'root'; // Database username
-$password = ''; // Database password
-$database = 'mapdb'; // Database name
-
-// Establish a new database connection using MySQLi
 $conn = new mysqli($host, $username, $password, $database);
 
-// Check if the database connection was successful
 if ($conn->connect_error) {
-    // Terminate script and output connection error if connection failed
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Define SQL query to select all student roll numbers from the 'info' table
-$sql = "SELECT roll FROM info ORDER BY roll ASC"; 
-
-// Execute the SQL query on the database connection
+$sql = "SELECT roll FROM info ORDER BY roll ASC";
 $result = $conn->query($sql);
 
-// Initialize an array to hold the fetched student roll numbers
 $students = [];
-// Check if the query returned any rows
 if ($result->num_rows > 0) {
-    // Loop through each row in the result set
     while($row = $result->fetch_assoc()) {
-        // Add the student's roll numbers to the $students array
         $students[] = $row['roll'];
     }
 }
-// Close the database connection
 $conn->close();
 ?>
 
@@ -56,13 +41,15 @@ $conn->close();
         .locked {
             background-color: #f0f0f0;
         }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body class="bg-white text-gray-800 flex flex-col min-h-screen">
 
 <?php include 'studentheaders.php' ?>
 
-    <!-- Main Content -->
     <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto">
         <h2 class="text-2xl font-bold mb-4">Student's Project Details</h2>
 
@@ -73,14 +60,11 @@ $conn->close();
 
         <h3 class="text-xl font-bold mb-2">Project Group Details</h3>
 
-        <div id="members" class="space-y-6">
-            <!-- Member forms will be dynamically added here -->
-        </div>
+        <div id="members" class="space-y-6"></div>
 
         <button id="addMemberBtn" class="bg-blue-500 text-white px-4 py-2 mt-4">Add Member</button>
     </div>
 
-    <!-- Responsibilities Section -->
     <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto" id="responsibilitiesSection" style="display:none;">
         <h2 class="text-2xl font-bold mb-4">Project Work Distribution</h2>
         <table class="min-w-full bg-white">
@@ -93,13 +77,11 @@ $conn->close();
                     <th class="py-2">Responsibility</th>
                 </tr>
             </thead>
-            <tbody id="responsibilitiesTable">
-                <!-- Responsibilities rows will be dynamically added here -->
-            </tbody>
+            <tbody id="responsibilitiesTable"></tbody>
         </table>
+        <button id="saveDetailsBtn" class="bg-green-500 text-white px-4 py-2 mt-4">Save Details</button>
     </div>
 
-    <!-- Group Details Section -->
     <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto">
         <h2 class="text-2xl font-bold mb-4">Group Details</h2>
 
@@ -120,7 +102,6 @@ $conn->close();
         </div>
     </div>
 
-    <!-- Project Information Section -->
     <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto">
         <h2 class="text-2xl font-bold mb-4">Project Information</h2>
 
@@ -145,7 +126,6 @@ $conn->close();
         </div>
     </div>
 
-    <!-- Approval Section -->
     <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto">
         <h2 class="text-2xl font-bold mb-4">Approval Status</h2>
 
@@ -170,7 +150,6 @@ $conn->close();
         </div>
     </div>
 
-    <!-- Footer -->
     <footer class="bg-blue-500 text-white p-4 mt-8">
         <div class="max-w-6xl mx-auto text-center">
             <p>&copy; 2024 Your College Name. All rights reserved.</p>
@@ -180,7 +159,7 @@ $conn->close();
     <script>
     const members = [];
     const maxMembers = 4;
-    const studentRolls = <?php echo json_encode($students); ?>; // Converts the students array into JSON(JS) format
+    const studentRolls = <?php echo json_encode($students); ?>;
 
     function memberTemplate(index) {
         return `
@@ -188,154 +167,119 @@ $conn->close();
                 <h4 class="text-lg font-bold">Project Member ${index + 1}</h4>
                 <div class="mb-2">
                     <label class="block text-gray-700">Student Roll Number:</label>
-                    <select class="w-full border p-2 roll-number" ${members[index]?.locked ? 'disabled' : ''}>
+                    <select class="w-full border p-2 roll-number" data-index="${index}">
                         <option value="">Select Roll number...</option>
                         ${studentRolls.map(roll => `<option value="${roll}" ${members[index]?.roll === roll ? 'selected' : ''}>${roll}</option>`).join('')}
                     </select>
                 </div>
-                <div class="mb-2">
-                    <label class="block text-gray-700">Name:</label>
-                    <input type="text" class="w-full border p-2 name" ${members[index]?.locked ? 'disabled' : ''} value="${members[index]?.name || ''}">
+                <div class="details ${members[index]?.roll ? '' : 'hidden'}">
+                    <div class="mb-2">
+                        <label class="block text-gray-700">Name:</label>
+                        <input type="text" class="w-full border p-2 name" ${members[index]?.locked ? 'disabled' : ''} value="${members[index]?.name || ''}">
+                    </div>
+                    <div class="mb-2">
+                        <label class="block text-gray-700">Section:</label>
+                        <input type="text" class="w-full border p-2 section" ${members[index]?.locked ? 'disabled' : ''} value="${members[index]?.section || ''}">
+                    </div>
+                    <div class="mb-2">
+                        <label class="block text-gray-700">Branch:</label>
+                        <input type="text" class="w-full border p-2 branch" ${members[index]?.locked ? 'disabled' : ''} value="${members[index]?.branch || ''}">
+                    </div>
+                    <div class="mb-2">
+                        <label class="block text-gray-700">Responsibility:</label>
+                        <input type="text" class="w-full border p-2 responsibility" ${members[index]?.locked ? 'disabled' : ''} value="${members[index]?.responsibility || ''}">
+                    </div>
                 </div>
-                <div class="mb-2">
-                    <label class="block text-gray-700">Section:</label>
-                    <input type="text" class="w-full border p-2 section" ${members[index]?.locked ? 'disabled' : ''} value="${members[index]?.section || ''}">
-                </div>
-                <div class="mb-2">
-                    <label class="block text-gray-700">Branch:</label>
-                    <input type="text" class="w-full border p-2 branch" ${members[index]?.locked ? 'disabled' : ''} value="${members[index]?.branch || ''}">
-                </div>
-                <div class="mb-2">
-                    <label class="block text-gray-700">Responsibility:</label>
-                    <input type="text" class="w-full border p-2 responsibility" ${members[index]?.locked ? 'disabled' : ''} value="${members[index]?.responsibility || ''}">
-                </div>
-                <button class="bg-green-500 text-white px-4 py-2 lockMemberBtn" ${members[index]?.locked ? 'disabled' : ''}>Lock Member</button>
+                <button class="bg-red-500 text-white px-4 py-2 mt-2 lock-member" data-index="${index}">${members[index]?.locked ? 'Unlock' : 'Lock'} Member</button>
             </div>
         `;
     }
 
-    function responsibilityTemplate(index) {
-        const member = members[index];
-        return `
-            <tr>
-                <td class="border px-4 py-2">${member.roll}</td>
-                <td class="border px-4 py-2">${member.name}</td>
-                <td class="border px-4 py-2">${member.section}</td>
-                <td class="border px-4 py-2">${member.branch}</td>
-                <td class="border px-4 py-2">${member.responsibility}</td>
-            </tr>
-        `;
-    }
-
-    function renderMembers() {
+    function updateMembersUI() {
         const membersDiv = document.getElementById('members');
-        membersDiv.innerHTML = members.map((_, i) => memberTemplate(i)).join('');
+        membersDiv.innerHTML = '';
+        members.forEach((member, index) => {
+            membersDiv.innerHTML += memberTemplate(index);
+        });
+        addEventListeners();
     }
 
-    function renderResponsibilities() {
-        const responsibilitiesTable = document.getElementById('responsibilitiesTable');
-        responsibilitiesTable.innerHTML = members.filter(member => member.locked).map(responsibilityTemplate).join('');
+    function addEventListeners() {
+        document.querySelectorAll('.roll-number').forEach(select => {
+            select.addEventListener('change', (e) => {
+                const index = e.target.dataset.index;
+                const roll = e.target.value;
+                if (roll) {
+                    members[index].roll = roll;
+                    members[index].name = '';  // Reset name, section, branch, responsibility
+                    members[index].section = '';
+                    members[index].branch = '';
+                    members[index].responsibility = '';
+                    e.target.closest('.member-form').querySelector('.details').classList.remove('hidden');
+                } else {
+                    members[index] = {};
+                    e.target.closest('.member-form').querySelector('.details').classList.add('hidden');
+                }
+                updateMembersUI();
+            });
+        });
+
+        document.querySelectorAll('.lock-member').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const index = e.target.dataset.index;
+                members[index].locked = !members[index]?.locked;
+                if (members[index].locked) {
+                    members[index].name = e.target.closest('.member-form').querySelector('.name').value;
+                    members[index].section = e.target.closest('.member-form').querySelector('.section').value;
+                    members[index].branch = e.target.closest('.member-form').querySelector('.branch').value;
+                    members[index].responsibility = e.target.closest('.member-form').querySelector('.responsibility').value;
+                }
+                updateMembersUI();
+                updateResponsibilitiesTable();
+                toggleResponsibilitiesSection();
+            });
+        });
     }
 
-    function lockMember(index) {
-        const memberForm = document.querySelectorAll('.member-form')[index];
-        const roll = memberForm.querySelector('.roll-number').value;
-        const name = memberForm.querySelector('.name').value;
-        const section = memberForm.querySelector('.section').value;
-        const branch = memberForm.querySelector('.branch').value;
-        const responsibility = memberForm.querySelector('.responsibility').value;
+    function updateResponsibilitiesTable() {
+        const tableBody = document.getElementById('responsibilitiesTable');
+        tableBody.innerHTML = '';
+        members.filter(member => member.locked).forEach(member => {
+            tableBody.innerHTML += `
+                <tr>
+                    <td class="py-2">${member.roll}</td>
+                    <td class="py-2">${member.name}</td>
+                    <td class="py-2">${member.section}</td>
+                    <td class="py-2">${member.branch}</td>
+                    <td class="py-2">${member.responsibility}</td>
+                </tr>
+            `;
+        });
+    }
 
-        if (roll && name && section && branch && responsibility) {
-            members[index] = {
-                roll,
-                name,
-                section,
-                branch,
-                responsibility,
-                locked: true
-            };
-            renderMembers();
-            if (members.filter(member => member.locked).length > 0) {
-                document.getElementById('responsibilitiesSection').style.display = 'block';
-                renderResponsibilities();
-            }
+    function toggleResponsibilitiesSection() {
+        const responsibilitiesSection = document.getElementById('responsibilitiesSection');
+        if (members.some(member => member.locked)) {
+            responsibilitiesSection.style.display = 'block';
         } else {
-            alert('Please fill in all fields');
+            responsibilitiesSection.style.display = 'none';
         }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('addMemberBtn').addEventListener('click', () => {
-            if (members.length < maxMembers) {
-                members.push({});
-                renderMembers();
-            } else {
-                alert('Maximum 4 members allowed');
-            }
-        });
-
-        document.getElementById('members').addEventListener('click', (e) => {
-            if (e.target.classList.contains('lockMemberBtn')) {
-                const index = [...document.querySelectorAll('.lockMemberBtn')].indexOf(e.target);
-                lockMember(index);
-            }
-        });
-
-        document.getElementById('lockGroupCreationDateBtn').addEventListener('click', () => {
-            const groupCreationDateInput = document.getElementById('groupCreationDate');
-            groupCreationDateInput.disabled = true;
-            document.getElementById('lockGroupCreationDateBtn').disabled = true;
-        });
-
-        function fetchSupervisorApprovalStatus() {
-            // Mocking the supervisor approval data fetch
-            const supervisorApprovalData = {
-                approved: true,
-                approvalDate: '2024-01-10'
-            };
-
-            const supervisorApprovalStatusInput = document.getElementById('supervisorApprovalStatus');
-            const supervisorApprovalDateDiv = document.getElementById('supervisorApprovalDateDiv');
-            const supervisorApprovalDateInput = document.getElementById('supervisorApprovalDate');
-
-            if (supervisorApprovalData.approved) {
-                supervisorApprovalStatusInput.value = 'Approved';
-                supervisorApprovalDateInput.value = supervisorApprovalData.approvalDate;
-                supervisorApprovalDateDiv.style.display = 'block';
-            } else {
-                supervisorApprovalStatusInput.value = 'Not Approved';
-                supervisorApprovalDateDiv.style.display = 'none';
-            }
+    document.getElementById('addMemberBtn').addEventListener('click', () => {
+        if (members.length < maxMembers) {
+            members.push({});
+            updateMembersUI();
         }
-
-        function fetchDecApprovalStatus() {
-            // Mocking the DEC approval data fetch
-            const decApprovalData = {
-                approved: true,
-                approvalDate: '2024-01-15'
-            };
-
-            const decApprovalStatusInput = document.getElementById('decApprovalStatus');
-            const decApprovalDateDiv = document.getElementById('decApprovalDateDiv');
-            const decApprovalDateInput = document.getElementById('decApprovalDate');
-
-            if (decApprovalData.approved) {
-                decApprovalStatusInput.value = 'Approved';
-                decApprovalDateInput.value = decApprovalData.approvalDate;
-                decApprovalDateDiv.style.display = 'block';
-            } else {
-                decApprovalStatusInput.value = 'Not Approved';
-                decApprovalDateDiv.style.display = 'none';
-            }
-        }
-
-        // Initial data fetch
-        fetchSupervisorApprovalStatus();
-        fetchDecApprovalStatus();
-
-        // Initial render after attaching event listeners
-        renderMembers();
     });
+
+    document.getElementById('saveDetailsBtn').addEventListener('click', () => {
+        // Save functionality can be implemented here
+        alert('Details saved successfully!');
+    });
+
+    updateMembersUI();
+    toggleResponsibilitiesSection();
     </script>
 </body>
 </html>
