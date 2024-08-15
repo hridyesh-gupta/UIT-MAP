@@ -1,4 +1,5 @@
 <?php
+//This code is for checking the login credentials of the user and redirecting to the respective page according to the usertype of the user.
 error_reporting(0); //To hide the errors
 session_start(); //To start the session
 

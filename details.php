@@ -1,4 +1,5 @@
 <?php
+//To fetch roll numbers from db to show in dropdown & to insert group details in db
 session_start();
 if(!(isset($_SESSION['username']))){ 
     header("location: index.php");
@@ -17,17 +18,51 @@ $conn = new mysqli($host, $username, $password, $database);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
+// Check if the request is to fetch student roll numbers or to save group details to the db
 
-$sql = "SELECT roll FROM info ORDER BY roll ASC";
-$result = $conn->query($sql);
+//To fetch the roll numbers of all the students from the info table in ascending order
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $sql = "SELECT roll FROM info ORDER BY roll ASC";
+    $result = $conn->query($sql);
 
-$students = [];
-if ($result->num_rows > 0) {
-    while($row = $result->fetch_assoc()) {
-        $students[] = $row['roll'];
+    $students = [];
+    if ($result->num_rows > 0) {
+        while($row = $result->fetch_assoc()) {
+            $students[] = $row['roll'];
+        }
     }
+    $conn->close();
 }
-$conn->close();
+//To save group details to the db(means when save details button is pressed)
+else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Decode the JSON received
+    $data = json_decode(file_get_contents('php://input'), true);
+    // Extract the members array
+    $members = $data['members'];    
+    // Loop through each member in the members array
+    foreach ($members as $member) {
+        // Get the member data from the request body
+        $roll = $member['roll'];
+        $name = $member['name'];
+        $branch = $member['branch'];
+        $section = $member['section'];
+        $responsibility = $member['responsibility'];
+        // Insert the member data into the groups table
+        $sql = "INSERT INTO groups (roll, name, branch, section, responsibility) VALUES ('$roll', '$name', '$branch', '$section', '$responsibility')";
+        
+        // Check if the query was successful
+        if (!$conn->query($sql)) {
+            // If the query failed, return an error response
+            echo json_encode(['success' => false, 'message' => 'Failed to insert data']);            
+            $conn->close();
+            exit;
+        }
+    }
+    // If everything went well, return a success response    
+    echo json_encode(['success' => true, 'message' => 'Data inserted successfully']);
+    // Close the database connection
+    $conn->close();
+}
 ?>
 
 <!DOCTYPE html>
@@ -67,19 +102,19 @@ $conn->close();
 
     <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto" id="responsibilitiesSection" style="display:none;">
         <h2 class="text-2xl font-bold mb-4">Project Work Distribution</h2>
-        <table class="min-w-full bg-white">
+        <table class="min-w-full bg-white border-2">
             <thead>
                 <tr>
-                    <th class="py-2">Roll Number</th>
-                    <th class="py-2">Name</th>
-                    <th class="py-2">Section</th>
-                    <th class="py-2">Branch</th>
-                    <th class="py-2">Responsibility</th>
+                    <th class="py-2 border">Roll Number</th>
+                    <th class="py-2 border">Name</th>
+                    <th class="py-2 border">Section</th>
+                    <th class="py-2 border">Branch</th>
+                    <th class="py-2 border">Responsibility</th>
                 </tr>
             </thead>
-            <tbody id="responsibilitiesTable"></tbody>
+            <tbody id="responsibilitiesTable" style="text-align: center;"></tbody>
         </table>
-        <button id="saveDetailsBtn" class="bg-green-500 text-white px-4 py-2 mt-4">Save Details</button>
+        <button type="submit" id="saveDetailsBtn" class="bg-green-500 text-white px-4 py-2 mt-4">Save Details</button>
     </div>
 
     <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto">
@@ -168,7 +203,7 @@ $conn->close();
                 <div class="mb-2">
                     <label class="block text-gray-700">Student Roll Number:</label>
                     <select class="w-full border p-2 roll-number" data-index="${index}">
-                        <option value="">Select Roll number...</option>
+                        <option value="">Select...</option>
                         ${studentRolls.map(roll => `<option value="${roll}" ${members[index]?.roll === roll ? 'selected' : ''}>${roll}</option>`).join('')}
                     </select>
                 </div>
@@ -247,11 +282,11 @@ $conn->close();
         members.filter(member => member.locked).forEach(member => {
             tableBody.innerHTML += `
                 <tr>
-                    <td class="py-2">${member.roll}</td>
-                    <td class="py-2">${member.name}</td>
-                    <td class="py-2">${member.section}</td>
-                    <td class="py-2">${member.branch}</td>
-                    <td class="py-2">${member.responsibility}</td>
+                    <td class="py-2 border center-align">${member.roll}</td>
+                    <td class="py-2 border center-align">${member.name}</td>
+                    <td class="py-2 border center-align">${member.section}</td>
+                    <td class="py-2 border center-align">${member.branch}</td>
+                    <td class="py-2 border center-align">${member.responsibility}</td>
                 </tr>
             `;
         });
@@ -273,9 +308,46 @@ $conn->close();
         }
     });
 
-    document.getElementById('saveDetailsBtn').addEventListener('click', () => {
-        // Save functionality can be implemented here
-        alert('Details saved successfully!');
+    document.getElementById('saveDetailsBtn').addEventListener('click', (event) => {
+        event.preventDefault();
+        const responsibilitiesTable = document.getElementById('responsibilitiesTable');
+        const rows = responsibilitiesTable.querySelectorAll('tr');
+        let allFieldsFilled = true;
+        const membersData = [];
+
+        rows.forEach(row => {
+            const roll = row.cells[0].innerText;
+            const name = row.cells[1].innerText;
+            const section = row.cells[2].innerText;
+            const branch = row.cells[3].innerText;
+            const responsibility = row.cells[4].innerText;
+
+            if (!roll || !name || !branch || !section || !responsibility) {
+                allFieldsFilled = false;
+            }
+
+            membersData.push({ roll, name, branch, section, responsibility });
+        });
+
+        if (!allFieldsFilled) {
+            alert('Please fill all fields.');
+            return;
+        }
+
+        // Send data to the server
+        fetch('details.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ members: membersData }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert('Details saved successfully.');
+        })
+        // .catch(error => console.error('Error:', error));
+        .catch(error => console.error('Error occured!'));
     });
 
     updateMembersUI();
