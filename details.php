@@ -1,5 +1,5 @@
 <?php
-//To fetch roll numbers from db to show in dropdown & to insert group details in db
+//To fetch roll numbers from db to show in dropdown & to insert group details in db & to show grp details if exists
 session_start();
 if(!(isset($_SESSION['username']))){ 
     header("location: index.php");
@@ -18,27 +18,66 @@ $conn = new mysqli($host, $username, $password, $database);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
-// Check if the request is to fetch student roll numbers or to save group details to the db
+// Function to generate a unique identifier with numbers and letters
+function generateUniqueId($length = 16) {
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $charactersLength = strlen($characters);
+    $randomString = '';
+    for ($i = 0; $i < $length; $i++) {
+        $randomString .= $characters[rand(0, $charactersLength - 1)];
+    }
+    return $randomString;
+}
 
-//To fetch the roll numbers of all the students from the info table in ascending order
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+// Check if a group already exists for the current user
+$user = $_SESSION['username'];
+$sql = "SELECT gnum FROM groups WHERE roll = '$user'";
+$userResult = $conn->query($sql);
+
+$groupExists = false;
+if ($userResult->num_rows > 0) {
+    $groupExists = true;
+    $gnum = $userResult->fetch_assoc()['gnum'];
+    // Fetch the group details
+    $sqlGroupDetails = "SELECT * FROM groups WHERE gnum = '$gnum'";
+    $groupResult = $conn->query($sqlGroupDetails);
+    $groupMembers = [];
+    if ($groupResult->num_rows > 0) {
+        while ($row = $groupResult->fetch_assoc()) {
+            $groupMembers[] = $row;
+        }
+    }
+    $getCreationDate = "SELECT date FROM groups WHERE roll = '$user'";//To fetch the group creation date from db
+    $dateResult = $conn->query($getCreationDate);//Executing the query and saving the resultset in $dateResult(even your result has 1 row $conn->query returns it as a set)
+    $groupCreationDate = $dateResult->fetch_assoc()['date'];//Fetching the date from the resultset and storing it in $groupCreationDate(fetch_assoc() fetches the first row of the resultset and in its index we have passed the 'date' column so it'll return the value of date column of the first row)
+}
+
+// If no group exist now check what we have to do next means to fetch student roll numbers or to save group details to the db
+
+//To fetch the roll numbers of all the students from db and store it in $students to show in dropdown(means when the page is loaded) 
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {//As the browser automatically sends a GET request when the page is loaded
     $sql = "SELECT roll FROM info ORDER BY roll ASC";
     $result = $conn->query($sql);
 
     $students = [];
     if ($result->num_rows > 0) {
         while($row = $result->fetch_assoc()) {
-            $students[] = $row['roll'];
+            $students[] = $row['roll']; //Roll numbers are stored in $students, so that can be used in the dropdown
         }
     }
     $conn->close();
 }
+
 //To save group details to the db(means when save details button is pressed)
 else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Decode the JSON received
     $data = json_decode(file_get_contents('php://input'), true);
     // Extract the members array
     $members = $data['members'];    
+    // Generate a unique group number (gnum)
+    $gnum = generateUniqueId();
+    $_SESSION['gnum']=$gnum; //Storing the group number in session variable so that we can use it in other pages
+
     // Loop through each member in the members array
     foreach ($members as $member) {
         // Get the member data from the request body
@@ -48,7 +87,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $section = $member['section'];
         $responsibility = $member['responsibility'];
         // Insert the member data into the groups table
-        $sql = "INSERT INTO groups (roll, name, branch, section, responsibility) VALUES ('$roll', '$name', '$branch', '$section', '$responsibility')";
+        $sql = "INSERT INTO groups (roll, name, branch, section, responsibility, gnum) VALUES ('$roll', '$name', '$branch', '$section', '$responsibility', '$gnum')";
         
         // Check if the query was successful
         if (!$conn->query($sql)) {
@@ -93,7 +132,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="text" id="groupCode" class="w-full border p-2" disabled>
         </div>
 
-        <h3 class="text-xl font-bold mb-2">Project Group Details</h3>
+        <h3 class="text-xl font-bold mb-2" id="grpDetails">Project Group Details</h3>
 
         <div id="members" class="space-y-6"></div>
 
@@ -122,11 +161,11 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="mb-4">
             <label for="groupCreationDate" class="block text-gray-700">Group Creation Date:</label>
-            <input type="date" id="groupCreationDate" class="w-full border p-2">
-            <button id="lockGroupCreationDateBtn" class="bg-red-500 text-white px-4 py-2 mt-2">Lock</button>
+            <input type="text" id="groupCreationDate" class="w-full border p-2" value="<?php echo htmlspecialchars($groupCreationDate); ?>">
+            <!-- <button id="lockGroupCreationDateBtn" class="bg-red-500 text-white px-4 py-2 mt-2">Lock</button> -->
         </div>
 
-        <div class="mb-4">
+        <!-- <div class="mb-4">
             <label for="decApprovalStatus" class="block text-gray-700">DEC Approval Status:</label>
             <input type="text" id="decApprovalStatus" class="w-full border p-2" disabled>
         </div>
@@ -134,7 +173,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="mb-4" id="approvalDateDiv" style="display:none;">
             <label for="approvalDate" class="block text-gray-700">Approval Date:</label>
             <input type="date" id="approvalDate" class="w-full border p-2" disabled>
-        </div>
+        </div> -->
     </div>
 
     <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto">
@@ -142,22 +181,22 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="mb-4">
             <label for="projectTitle" class="block text-gray-700">Project Title:</label>
-            <input type="text" id="projectTitle" class="w-full border p-2">
+            <input type="text" id="projectTitle" class="w-full border p-2" maxlength="50">
         </div>
 
         <div class="mb-4">
             <label for="briefIntroduction" class="block text-gray-700">Brief Introduction:</label>
-            <textarea id="briefIntroduction" class="w-full border p-2 h-20"></textarea>
+            <textarea id="briefIntroduction" class="w-full border p-2 h-20" maxlength="880"></textarea>
         </div>
 
         <div class="mb-4">
             <label for="objectiveStatement" class="block text-gray-700">Objective and Problem Statement:</label>
-            <textarea id="objectiveStatement" class="w-full border p-2 h-20"></textarea>
+            <textarea id="objectiveStatement" class="w-full border p-2 h-20" maxlength="880"></textarea>
         </div>
 
         <div class="mb-4">
             <label for="technologyUsed" class="block text-gray-700">Technology/Methodology Used:</label>
-            <textarea id="technologyUsed" class="w-full border p-2 h-20"></textarea>
+            <textarea id="technologyUsed" class="w-full border p-2 h-20" maxlength="880"></textarea>
         </div>
     </div>
 
@@ -195,6 +234,10 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     const members = [];
     const maxMembers = 4;
     const studentRolls = <?php echo json_encode($students); ?>;
+    <?php if ($groupExists): ?>
+    const groupExists = <?php echo json_encode($groupExists); ?>;
+    const groupMembers = <?php echo json_encode($groupMembers); ?>;
+    <?php endif; ?>
 
     function memberTemplate(index) {
         return `
@@ -264,6 +307,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 const index = e.target.dataset.index;
                 members[index].locked = !members[index]?.locked;
                 if (members[index].locked) {
+                    members[index].roll = e.target.closest('.member-form').querySelector('.roll-number').value;
                     members[index].name = e.target.closest('.member-form').querySelector('.name').value;
                     members[index].section = e.target.closest('.member-form').querySelector('.section').value;
                     members[index].branch = e.target.closest('.member-form').querySelector('.branch').value;
@@ -275,6 +319,30 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
         });
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+    if (groupExists) {
+        // Load the existing group members
+        groupMembers.forEach(member => {
+            members.push({
+                roll: member.roll,
+                name: member.name,
+                section: member.section,
+                branch: member.branch,
+                responsibility: member.responsibility,
+                locked: true // Lock the member's details as they are already set
+            });
+        });
+        document.getElementById('addMemberBtn').style.display = 'none';
+        document.getElementById('saveDetailsBtn').style.display = 'none';
+        document.getElementById('grpDetails').style.display = 'none';
+        document.getElementById('members').style.display = 'none';
+        // Update the UI
+        updateMembersUI();
+        updateResponsibilitiesTable();
+        toggleResponsibilitiesSection();
+    }
+});
 
     function updateResponsibilitiesTable() {
         const tableBody = document.getElementById('responsibilitiesTable');
@@ -290,11 +358,12 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </tr>
             `;
         });
+        toggleResponsibilitiesSection();
     }
 
     function toggleResponsibilitiesSection() {
         const responsibilitiesSection = document.getElementById('responsibilitiesSection');
-        if (members.some(member => member.locked)) {
+        if (members.some(member => member.locked) || groupExists) {
             responsibilitiesSection.style.display = 'block';
         } else {
             responsibilitiesSection.style.display = 'none';
@@ -345,6 +414,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .then(response => response.json())
         .then(data => {
             alert('Details saved successfully.');
+            window.location.reload(); // Refresh the page
         })
         // .catch(error => console.error('Error:', error));
         .catch(error => console.error('Error occured!'));

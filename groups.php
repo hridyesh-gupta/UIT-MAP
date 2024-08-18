@@ -4,7 +4,7 @@ session_start();
 if(!(isset($_SESSION['username']))){  //If the session variable is not set, then it means the user is not logged in and is accessing this page through url editing, as we have provided session username to every user who logged in. So, redirecting to login page
     header("location: index.php");
 }
-elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it means the user is student and is accessing this page through url editing as we have provided admin usertype to every user who logged in via admin credentials. So, redirecting to login page
+elseif($_SESSION['usertype']!="admin" && $_SESSION['usertype']!="mentor"){ //If the user is not admin or mentor, then it means the user is student and is accessing this page through url editing as we have provided admin usertype to every user who logged in via admin credentials. So, redirecting to login page
     header("location: index.php");
 }
 ?>
@@ -18,7 +18,17 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
 </head>
 <body class="bg-white text-gray-800 flex flex-col min-h-screen">
 
-    <?php include 'adminheaders.php' ?>
+<?php 
+if($_SESSION['usertype'] == "admin"){ //If the user is admin show the admin header
+    include 'adminheaders.php';
+}
+elseif($_SESSION['usertype'] == "student"){ //If the user is student show the student header
+    include 'studentheaders.php';
+}
+elseif($_SESSION['usertype'] == "mentor"){ //If the user is mentor show the mentor header
+    include 'mentorheaders.php';
+} 
+?>
 
     <!-- Main Content -->
     <main class="flex-grow bg-gray-100 p-8">
@@ -28,10 +38,14 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
             <!-- Filter Box -->
             <div class="mb-6 flex justify-between items-center">
                 <input type="text" id="searchInput" placeholder="Search for groups by Project Name..." class="w-full p-2 border rounded">
-                <label class="ml-4 flex items-center">
-                    <input type="checkbox" id="showApprovedCheckbox" class="mr-2">
-                    <span>Show Approved Groups</span>
-                </label>
+                <?php 
+                if($_SESSION['usertype'] == "admin"){?>
+                    <label class="ml-4 flex items-center">
+                        <input type="checkbox" id="showApprovedCheckbox" class="mr-2">
+                        <span>Show Approved Groups</span>
+                    </label>
+                <?php }
+                ?>
             </div>
 
             <!-- Group List -->
