@@ -1,5 +1,6 @@
 <?php
 //To fetch roll numbers from db to show in dropdown & to insert group details in db & to show grp details if exists
+// error_reporting(0); //To hide the errors
 session_start();
 if(!(isset($_SESSION['username']))){ 
     header("location: index.php");
@@ -18,6 +19,7 @@ $conn = new mysqli($host, $username, $password, $database);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
+
 // Function to generate a unique identifier with numbers and letters
 function generateUniqueId($length = 16) {
     $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -38,6 +40,7 @@ $groupExists = false;
 if ($userResult->num_rows > 0) {
     $groupExists = true;
     $gnum = $userResult->fetch_assoc()['gnum'];
+    $_SESSION['gnum'] = $gnum; //So we have saved 3 things for the whole session username, usertype and gnum
     // Fetch the group details
     $sqlGroupDetails = "SELECT * FROM groups WHERE gnum = '$gnum'";
     $groupResult = $conn->query($sqlGroupDetails);
@@ -51,12 +54,22 @@ if ($userResult->num_rows > 0) {
     $dateResult = $conn->query($getCreationDate);//Executing the query and saving the resultset in $dateResult(even your result has 1 row $conn->query returns it as a set)
     $groupCreationDate = $dateResult->fetch_assoc()['date'];//Fetching the date from the resultset and storing it in $groupCreationDate(fetch_assoc() fetches the first row of the resultset and in its index we have passed the 'date' column so it'll return the value of date column of the first row)
 }
+//Check for project details if the group exists
+$projectExists = false;    
+if ($groupExists) {
+    $sqlProjectDetails = "SELECT * FROM projinfo WHERE gnum = '$gnum'";
+    $projectResult = $conn->query($sqlProjectDetails);
+    if ($projectResult->num_rows > 0) {
+        $projectExists = true;
+        $projectDetails = $projectResult->fetch_assoc();
+    }
+}
 
-// If no group exist now check what we have to do next means to fetch student roll numbers or to save group details to the db
+// If no group exist now check what to do next, means whether we have to fetch student roll numbers or to save group details to the db
 
-//To fetch the roll numbers of all the students from db and store it in $students to show in dropdown(means when the page is loaded) 
+//Code to fetch the roll numbers of all the students from db and store it in $students to show in dropdown(means when the page is loaded then this request will get generated) 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {//As the browser automatically sends a GET request when the page is loaded
-    $sql = "SELECT roll FROM info ORDER BY roll ASC";
+    $sql = "SELECT roll FROM info WHERE roll NOT IN (SELECT roll FROM groups WHERE gnum IS NOT NULL) ORDER BY roll ASC";
     $result = $conn->query($sql);
 
     $students = [];
@@ -68,39 +81,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {//As the browser automatically sends 
     $conn->close();
 }
 
-//To save group details to the db(means when save details button is pressed)
+//Code to save group details to the db(means save details button is pressed)
 else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Decode the JSON received
     $data = json_decode(file_get_contents('php://input'), true);
-    // Extract the members array
-    $members = $data['members'];    
-    // Generate a unique group number (gnum)
-    $gnum = generateUniqueId();
-    $_SESSION['gnum']=$gnum; //Storing the group number in session variable so that we can use it in other pages
+    $action = $data['action'];
+    
+    //Code to be executed when the project details save button is pressed
+    if ($action === 'save_project') {
+        // Handle saving project details
+        $title = $data['title'];
+        $intro = $data['intro'];
+        $objective = $data['objective'];
+        $technology = $data['technology'];
 
-    // Loop through each member in the members array
-    foreach ($members as $member) {
-        // Get the member data from the request body
-        $roll = $member['roll'];
-        $name = $member['name'];
-        $branch = $member['branch'];
-        $section = $member['section'];
-        $responsibility = $member['responsibility'];
-        // Insert the member data into the groups table
-        $sql = "INSERT INTO groups (roll, name, branch, section, responsibility, gnum) VALUES ('$roll', '$name', '$branch', '$section', '$responsibility', '$gnum')";
-        
-        // Check if the query was successful
-        if (!$conn->query($sql)) {
-            // If the query failed, return an error response
-            echo json_encode(['success' => false, 'message' => 'Failed to insert data']);            
+        // Prepare the SQL query to insert the project details into the projinfo table
+        $sql = "INSERT INTO projinfo (gnum, title, intro, objective, technology) VALUES ('$gnum', '$title', '$intro', '$objective', '$technology')";
+        //Execute the query
+        if ($conn->query($sql)) {
+            echo json_encode(['success' => true, 'message' => 'Data inserted successfully']);            
             $conn->close();
             exit;
         }
     }
-    // If everything went well, return a success response    
-    echo json_encode(['success' => true, 'message' => 'Data inserted successfully']);
-    // Close the database connection
-    $conn->close();
+    //Code to be executed when the grp member details save button is pressed
+    else if ($action === 'save_group') {
+        // Extract the members array
+        $members = $data['members'];    
+        // Generate a unique group number (gnum)
+        $gnum = generateUniqueId();
+        $_SESSION['gnum']=$gnum; //Storing the group number in session variable so that we can use it in other pages
+
+        // Loop through each member in the members array
+        foreach ($members as $member) {
+            // Get the member data from the request body
+            $roll = $member['roll'];
+            $name = $member['name'];
+            $branch = $member['branch'];
+            $section = $member['section'];
+            $responsibility = $member['responsibility'];
+            // Insert the member data into the groups table
+            $sql = "INSERT INTO groups (roll, name, branch, section, responsibility, gnum) VALUES ('$roll', '$name', '$branch', '$section', '$responsibility', '$gnum')";
+            // Check if the insertion was successful means it will only enter in if block if the insertion was not successful as !conn->query($sql) will return true if the insertion was not successful
+            if (!$conn->query($sql)) {
+                // If there is an error during insertion, return an error response
+                echo json_encode(['success' => false, 'message' => 'Error inserting data: ' . $conn->error]);
+                $conn->close();
+                exit;
+            }
+        }
+        // If everything went well, return a success response    
+        echo json_encode(['success' => true, 'message' => 'Data inserted successfully']);
+        // Close the database connection
+        $conn->close();
+    }
 }
 ?>
 
@@ -126,12 +160,13 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto">
         <h2 class="text-2xl font-bold mb-4">Student's Project Details</h2>
-
+        <?php if ($groupExists): ?>
         <div class="mb-4">
             <label for="groupCode" class="block text-gray-700">Group Number:</label>
             <input type="text" id="groupCode" class="w-full border p-2" disabled>
         </div>
-
+        <?php endif; ?>
+        
         <h3 class="text-xl font-bold mb-2" id="grpDetails">Project Group Details</h3>
 
         <div id="members" class="space-y-6"></div>
@@ -155,13 +190,13 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </table>
         <button type="submit" id="saveDetailsBtn" class="bg-green-500 text-white px-4 py-2 mt-4">Save Details</button>
     </div>
-
+    <?php if ($groupExists): ?>
     <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto">
         <h2 class="text-2xl font-bold mb-4">Group Details</h2>
 
         <div class="mb-4">
             <label for="groupCreationDate" class="block text-gray-700">Group Creation Date:</label>
-            <input type="text" id="groupCreationDate" class="w-full border p-2" value="<?php echo htmlspecialchars($groupCreationDate); ?>">
+            <input type="text" id="groupCreationDate" class="w-full border p-2" value="<?php echo htmlspecialchars($groupCreationDate); ?>" disabled>
             <!-- <button id="lockGroupCreationDateBtn" class="bg-red-500 text-white px-4 py-2 mt-2">Lock</button> -->
         </div>
 
@@ -176,7 +211,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div> -->
     </div>
 
-    <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto">
+    <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto" id="projectInfo">
         <h2 class="text-2xl font-bold mb-4">Project Information</h2>
 
         <div class="mb-4">
@@ -198,31 +233,34 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label for="technologyUsed" class="block text-gray-700">Technology/Methodology Used:</label>
             <textarea id="technologyUsed" class="w-full border p-2 h-20" maxlength="880"></textarea>
         </div>
+
+        <button type="submit" id="saveProjDetailsBtn" class="bg-green-500 text-white px-4 py-2 mt-4">Save Details</button>
     </div>
 
     <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto">
         <h2 class="text-2xl font-bold mb-4">Approval Status</h2>
 
-        <div class="mb-4">
-            <label for="supervisorApprovalStatus" class="block text-gray-700">Supervisor Approval Status:</label>
+        <!-- <div class="mb-4">
+            <label for="supervisorApprovalStatus" class="block text-gray-700">Mentor Approval Status:</label>
             <input type="text" id="supervisorApprovalStatus" class="w-full border p-2" disabled>
+        </div> -->
+
+        <div class="mb-4" id="supervisorApprovalDateDiv"">
+            <label for="supervisorApprovalDate" class="block text-gray-700">Mentor Approval Date:</label>
+            <input type="text" id="supervisorApprovalDate" class="w-full border p-2" disabled>
         </div>
 
-        <div class="mb-4" id="supervisorApprovalDateDiv" style="display:none;">
-            <label for="supervisorApprovalDate" class="block text-gray-700">Supervisor Approval Date:</label>
-            <input type="date" id="supervisorApprovalDate" class="w-full border p-2" disabled>
-        </div>
-
-        <div class="mb-4">
+        <!-- <div class="mb-4">
             <label for="decApprovalStatus" class="block text-gray-700">DEC Approval Status:</label>
             <input type="text" id="decApprovalStatus" class="w-full border p-2" disabled>
-        </div>
+        </div> -->
 
-        <div class="mb-4" id="decApprovalDateDiv" style="display:none;">
+        <div class="mb-4" id="decApprovalDateDiv"">
             <label for="decApprovalDate" class="block text-gray-700">DEC Approval Date:</label>
-            <input type="date" id="decApprovalDate" class="w-full border p-2" disabled>
+            <input type="text" id="decApprovalDate" class="w-full border p-2" disabled>
         </div>
     </div>
+    <?php endif; ?>
 
     <footer class="bg-blue-500 text-white p-4 mt-8">
         <div class="max-w-6xl mx-auto text-center">
@@ -238,7 +276,8 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     const groupExists = <?php echo json_encode($groupExists); ?>;
     const groupMembers = <?php echo json_encode($groupMembers); ?>;
     <?php endif; ?>
-
+    
+    //Logic to create the member template when the add member button is pressed
     function memberTemplate(index) {
         return `
             <div class="member-form p-4 border ${members[index]?.locked ? 'locked' : ''}">
@@ -272,7 +311,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         `;
     }
-
+    //Logic to update the members UI when a new member is added
     function updateMembersUI() {
         const membersDiv = document.getElementById('members');
         membersDiv.innerHTML = '';
@@ -281,7 +320,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         });
         addEventListeners();
     }
-
+    //Logic to add event listeners to the dropdowns and lock/unlock buttons
     function addEventListeners() {
         document.querySelectorAll('.roll-number').forEach(select => {
             select.addEventListener('change', (e) => {
@@ -301,7 +340,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 updateMembersUI();
             });
         });
-
+        //Logic to lock/unlock the member details
         document.querySelectorAll('.lock-member').forEach(button => {
             button.addEventListener('click', (e) => {
                 const index = e.target.dataset.index;
@@ -319,7 +358,29 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
         });
     }
+    //Logic to update the project details UI when the page is loaded and project details exists
+    document.addEventListener('DOMContentLoaded', () => {
+    // This section assumes that the project details are available in $projectDetails in the PHP script
+    <?php if ($projectExists): ?>
+    const projectDetails = <?php echo json_encode($projectDetails); ?>;
 
+    // Fill the form fields automatically with the project details
+    document.getElementById('groupCode').value = projectDetails.number;
+    document.getElementById('projectTitle').value = projectDetails.title;
+    document.getElementById('briefIntroduction').value = projectDetails.intro;
+    document.getElementById('objectiveStatement').value = projectDetails.objective;
+    document.getElementById('technologyUsed').value = projectDetails.technology;
+    // Hide the save button as the details are already saved
+    document.getElementById('saveProjDetailsBtn').style.display = 'none';
+    // Disable the specified text input boxes
+    document.getElementById('projectTitle').disabled = true;
+    document.getElementById('briefIntroduction').disabled = true;
+    document.getElementById('objectiveStatement').disabled = true;
+    document.getElementById('technologyUsed').disabled = true;
+    <?php endif; ?>
+});
+
+    //Logic to update the members UI when the page is loaded and group exists
     document.addEventListener('DOMContentLoaded', () => {
     if (groupExists) {
         // Load the existing group members
@@ -343,7 +404,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         toggleResponsibilitiesSection();
     }
 });
-
+    //Logic to update the responsibilities table when a new member is added
     function updateResponsibilitiesTable() {
         const tableBody = document.getElementById('responsibilitiesTable');
         tableBody.innerHTML = '';
@@ -360,16 +421,22 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         });
         toggleResponsibilitiesSection();
     }
-
+    //Logic to define when to show the responsibilities section
     function toggleResponsibilitiesSection() {
         const responsibilitiesSection = document.getElementById('responsibilitiesSection');
-        if (members.some(member => member.locked) || groupExists) {
+        if (members.some(member => member.locked)) {
             responsibilitiesSection.style.display = 'block';
-        } else {
+        }
+        <?php if ($groupExists): ?>
+        else if (groupExists) {
+            responsibilitiesSection.style.display = 'block';
+        }
+        <?php endif; ?>
+        else {
             responsibilitiesSection.style.display = 'none';
         }
     }
-
+    //Logic to check whether a new member can be added or not when the add member button is pressed
     document.getElementById('addMemberBtn').addEventListener('click', () => {
         if (members.length < maxMembers) {
             members.push({});
@@ -377,6 +444,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     });
 
+    //Logic to save the group details to the db when save details button is pressed
     document.getElementById('saveDetailsBtn').addEventListener('click', (event) => {
         event.preventDefault();
         const responsibilitiesTable = document.getElementById('responsibilitiesTable');
@@ -402,14 +470,18 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             alert('Please fill all fields.');
             return;
         }
-
-        // Send data to the server
+        // Prepare the data to be sent to the server, including the action
+        const groupData = {
+            action: 'save_group',  // Indicate that this request is for saving group details
+            members: membersData,
+        };
+        // Send data to the server to save group member details
         fetch('details.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ members: membersData }),
+            body: JSON.stringify(groupData),
         })
         .then(response => response.json())
         .then(data => {
@@ -419,6 +491,48 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // .catch(error => console.error('Error:', error));
         .catch(error => console.error('Error occured!'));
     });
+    
+    //Logic to save the project details to the db when save details button is pressed
+    document.getElementById('saveProjDetailsBtn').addEventListener('click', (event) => {
+    event.preventDefault(); // Prevent the default form submission
+
+    // Collect the data from the form fields
+    const projectTitle = document.getElementById('projectTitle').value;
+    const briefIntroduction = document.getElementById('briefIntroduction').value;
+    const objectiveStatement = document.getElementById('objectiveStatement').value;
+    const technologyUsed = document.getElementById('technologyUsed').value;
+
+    // Ensure all fields are filled
+    if (!projectTitle || !briefIntroduction || !objectiveStatement || !technologyUsed) {
+        alert('Please fill all fields.');
+        return;
+    }
+
+    // Prepare the data to be sent to the server, including the action
+    const projectData = {
+        action: 'save_project',  // Indicate that this request is for saving project details
+        title: projectTitle,
+        intro: briefIntroduction,
+        objective: objectiveStatement,
+        technology: technologyUsed
+    };
+
+    // Send the data to the server to save project details
+    fetch('details.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(projectData),
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert('Project details saved successfully.');
+        window.location.reload(); // Refresh the page
+    })
+    // .catch(error => console.error('Error occurred:', error));
+    .catch(error => console.error('Error occured!'));
+});
 
     updateMembersUI();
     toggleResponsibilitiesSection();
