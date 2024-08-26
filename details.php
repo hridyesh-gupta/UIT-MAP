@@ -1,6 +1,6 @@
 <?php
 //To fetch roll numbers from db to show in dropdown & to insert group details in db & to show grp details if exists
-// error_reporting(0); //To hide the errors
+error_reporting(0); //To hide the errors
 session_start();
 if(!(isset($_SESSION['username']))){ 
     header("location: index.php");
@@ -65,11 +65,11 @@ if ($groupExists) {
     }
 }
 
-// If no group exist now check what to do next, means whether we have to fetch student roll numbers or to save group details to the db
+// If no group exist now check what to do next, means whether we have to fetch student roll numbers or to save details to the db
 
 //Code to fetch the roll numbers of all the students from db and store it in $students to show in dropdown(means when the page is loaded then this request will get generated) 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {//As the browser automatically sends a GET request when the page is loaded
-    $sql = "SELECT roll FROM info WHERE roll NOT IN (SELECT roll FROM groups WHERE gnum IS NOT NULL) ORDER BY roll ASC";
+    $sql = "SELECT roll FROM info WHERE roll NOT IN (SELECT roll FROM groups WHERE gnum IS NOT NULL) ORDER BY roll ASC";//To fetch the roll numbers of all the students who are not in any group
     $result = $conn->query($sql);
 
     $students = [];
@@ -93,10 +93,11 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $title = $data['title'];
         $intro = $data['intro'];
         $objective = $data['objective'];
+        $tech = $data['tech'];
         $technology = $data['technology'];
 
         // Prepare the SQL query to insert the project details into the projinfo table
-        $sql = "INSERT INTO projinfo (gnum, title, intro, objective, technology) VALUES ('$gnum', '$title', '$intro', '$objective', '$technology')";
+        $sql = "INSERT INTO projinfo (gnum, title, intro, objective, tech, technology) VALUES ('$gnum', '$title', '$intro', '$objective', '$tech', '$technology')";
         //Execute the query
         if ($conn->query($sql)) {
             echo json_encode(['success' => true, 'message' => 'Data inserted successfully']);            
@@ -121,7 +122,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $section = $member['section'];
             $responsibility = $member['responsibility'];
             // Insert the member data into the groups table
-            $sql = "INSERT INTO groups (roll, name, branch, section, responsibility, gnum) VALUES ('$roll', '$name', '$branch', '$section', '$responsibility', '$gnum')";
+            $sql = "INSERT INTO groups (roll, name, branch, section, responsibility, gnum, creator) VALUES ('$roll', '$name', '$branch', '$section', '$responsibility', '$gnum', '$user')";
             // Check if the insertion was successful means it will only enter in if block if the insertion was not successful as !conn->query($sql) will return true if the insertion was not successful
             if (!$conn->query($sql)) {
                 // If there is an error during insertion, return an error response
@@ -162,7 +163,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h2 class="text-2xl font-bold mb-4">Student's Project Details</h2>
         <?php if ($groupExists): ?>
         <div class="mb-4">
-            <label for="groupCode" class="block text-gray-700">Group Number:</label>
+            <label for="groupCode" class="block text-gray-700">Group ID:</label>
             <input type="text" id="groupCode" class="w-full border p-2" disabled>
         </div>
         <?php endif; ?>
@@ -228,12 +229,16 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label for="objectiveStatement" class="block text-gray-700">Objective and Problem Statement:</label>
             <textarea id="objectiveStatement" class="w-full border p-2 h-20" maxlength="880"></textarea>
         </div>
-
+        
         <div class="mb-4">
-            <label for="technologyUsed" class="block text-gray-700">Technology/Methodology Used:</label>
-            <textarea id="technologyUsed" class="w-full border p-2 h-20" maxlength="880"></textarea>
+            <label for="technology1Word" class="block text-gray-700">Technology Used (In Short):</label>
+            <input type="text" id="technology1Word" class="w-full border p-2" maxlength="50">
         </div>
 
+        <div class="mb-4">
+            <label for="technologyUsed" class="block text-gray-700">Technology/Methodology Used (In Detail):</label>
+            <textarea id="technologyUsed" class="w-full border p-2 h-20" maxlength="880"></textarea>
+        </div>
         <button type="submit" id="saveProjDetailsBtn" class="bg-green-500 text-white px-4 py-2 mt-4">Save Details</button>
     </div>
 
@@ -281,7 +286,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     function memberTemplate(index) {
         return `
             <div class="member-form p-4 border ${members[index]?.locked ? 'locked' : ''}">
-                <h4 class="text-lg font-bold">Project Member ${index + 1}</h4>
+                <h4 class="text-lg font-bold">Project Member ${index + 1} ${index === 0 ? '(Your Details)' : ''}</h4>
                 <div class="mb-2">
                     <label class="block text-gray-700">Student Roll Number:</label>
                     <select class="w-full border p-2 roll-number" data-index="${index}">
@@ -292,19 +297,19 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="details ${members[index]?.roll ? '' : 'hidden'}">
                     <div class="mb-2">
                         <label class="block text-gray-700">Name:</label>
-                        <input type="text" class="w-full border p-2 name" ${members[index]?.locked ? 'disabled' : ''} value="${members[index]?.name || ''}">
+                        <input type="text" class="w-full border p-2 name" maxlength="35" ${members[index]?.locked ? 'disabled' : ''} value="${members[index]?.name || ''}">
                     </div>
                     <div class="mb-2">
                         <label class="block text-gray-700">Section:</label>
-                        <input type="text" class="w-full border p-2 section" ${members[index]?.locked ? 'disabled' : ''} value="${members[index]?.section || ''}">
+                        <input type="text" class="w-full border p-2 section" maxlength="4" ${members[index]?.locked ? 'disabled' : ''} value="${members[index]?.section || ''}">
                     </div>
                     <div class="mb-2">
                         <label class="block text-gray-700">Branch:</label>
-                        <input type="text" class="w-full border p-2 branch" ${members[index]?.locked ? 'disabled' : ''} value="${members[index]?.branch || ''}">
+                        <input type="text" class="w-full border p-2 branch" maxlength="4" ${members[index]?.locked ? 'disabled' : ''} value="${members[index]?.branch || ''}">
                     </div>
                     <div class="mb-2">
                         <label class="block text-gray-700">Responsibility:</label>
-                        <input type="text" class="w-full border p-2 responsibility" ${members[index]?.locked ? 'disabled' : ''} value="${members[index]?.responsibility || ''}">
+                        <input type="text" class="w-full border p-2 responsibility" maxlength="35" ${members[index]?.locked ? 'disabled' : ''} value="${members[index]?.responsibility || ''}">
                     </div>
                 </div>
                 <button class="bg-red-500 text-white px-4 py-2 mt-2 lock-member" data-index="${index}">${members[index]?.locked ? 'Unlock' : 'Lock'} Member</button>
@@ -360,24 +365,26 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     //Logic to update the project details UI when the page is loaded and project details exists
     document.addEventListener('DOMContentLoaded', () => {
-    // This section assumes that the project details are available in $projectDetails in the PHP script
-    <?php if ($projectExists): ?>
-    const projectDetails = <?php echo json_encode($projectDetails); ?>;
+        // This section assumes that the project details are available in $projectDetails in the PHP script
+        <?php if ($projectExists): ?>
+        const projectDetails = <?php echo json_encode($projectDetails);?>;
 
-    // Fill the form fields automatically with the project details
-    document.getElementById('groupCode').value = projectDetails.number;
-    document.getElementById('projectTitle').value = projectDetails.title;
-    document.getElementById('briefIntroduction').value = projectDetails.intro;
-    document.getElementById('objectiveStatement').value = projectDetails.objective;
-    document.getElementById('technologyUsed').value = projectDetails.technology;
-    // Hide the save button as the details are already saved
-    document.getElementById('saveProjDetailsBtn').style.display = 'none';
-    // Disable the specified text input boxes
-    document.getElementById('projectTitle').disabled = true;
-    document.getElementById('briefIntroduction').disabled = true;
-    document.getElementById('objectiveStatement').disabled = true;
-    document.getElementById('technologyUsed').disabled = true;
-    <?php endif; ?>
+        // Fill the form fields automatically with the project details
+        document.getElementById('groupCode').value = projectDetails.number;
+        document.getElementById('projectTitle').value = projectDetails.title;
+        document.getElementById('briefIntroduction').value = projectDetails.intro;
+        document.getElementById('objectiveStatement').value = projectDetails.objective;
+        document.getElementById('technology1Word').value = projectDetails.tech;
+        document.getElementById('technologyUsed').value = projectDetails.technology;
+        // Hide the save button as the details are already saved
+        document.getElementById('saveProjDetailsBtn').style.display = 'none';
+        // Disable the specified text input boxes
+        document.getElementById('projectTitle').disabled = true;
+        document.getElementById('briefIntroduction').disabled = true;
+        document.getElementById('objectiveStatement').disabled = true;
+        document.getElementById('technology1Word').disabled = true;
+        document.getElementById('technologyUsed').disabled = true;
+        <?php endif; ?>
 });
 
     //Logic to update the members UI when the page is loaded and group exists
@@ -483,8 +490,8 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             },
             body: JSON.stringify(groupData),
         })
-        .then(response => response.json())
-        .then(data => {
+        .then(response => response.json())//It converts the response to JSON to make it more readable and to use it in the next .then block
+        .then(data => {//It is used to access the data returned by the previous .then block and then we can use this data to display the message. Also we can name the data anything we want, here we have named it as data
             alert('Details saved successfully.');
             window.location.reload(); // Refresh the page
         })
@@ -500,10 +507,11 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     const projectTitle = document.getElementById('projectTitle').value;
     const briefIntroduction = document.getElementById('briefIntroduction').value;
     const objectiveStatement = document.getElementById('objectiveStatement').value;
+    const technology1Word = document.getElementById('technology1Word').value;
     const technologyUsed = document.getElementById('technologyUsed').value;
 
     // Ensure all fields are filled
-    if (!projectTitle || !briefIntroduction || !objectiveStatement || !technologyUsed) {
+    if (!projectTitle || !briefIntroduction || !objectiveStatement || !technology1Word || !technologyUsed) {
         alert('Please fill all fields.');
         return;
     }
@@ -514,6 +522,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         title: projectTitle,
         intro: briefIntroduction,
         objective: objectiveStatement,
+        tech: technology1Word,
         technology: technologyUsed
     };
 

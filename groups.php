@@ -54,7 +54,7 @@ elseif($_SESSION['usertype'] == "mentor"){ //If the user is mentor show the ment
                     <thead class="bg-gray-800 text-white">
                         <tr>
                             <th class="w-1/4 py-2">Group ID</th>
-                            <th class="w-1/4 py-2">Project Name</th>
+                            <th class="w-1/4 py-2">Project Title</th>
                             <th class="w-1/4 py-2">Technology Used</th>
                             <th class="w-1/4 py-2">Mentor Assigned</th>
                             <th class="w-1/4 py-2">Actions</th>
@@ -62,44 +62,14 @@ elseif($_SESSION['usertype'] == "mentor"){ //If the user is mentor show the ment
                     </thead>
                     <tbody id="groupTable">
                         <tr class="group-item" data-approved="true">
-                            <td class="border px-4 py-2"><a href="#" class="text-blue-500 hover:underline">1</a></td>
-                            <td class="border px-4 py-2"><a href="#" class="text-blue-500 hover:underline">Project Alpha</a></td>
-                            <td class="border px-4 py-2">Python, Django</td>
+                            <td class="border px-4 py-2" id="gid"><a href="#" class="text-blue-500 hover:underline"></a></td>
+                            <td class="border px-4 py-2" id="ptitle"><a href="#" class="text-blue-500 hover:underline"></a></td>
+                            <td class="border px-4 py-2" id="ptech"></td>
                             <td class="border px-4 py-2">
-                                <select class="w-full p-2 border rounded">
-                                    <option>Dr. Amit Kumar Tiwari</option>
-                                    <option>Prof. Sanjay Srivastava</option>
-                                    <option>Mr. Man Singh</option>
-                                </select>
-                            </td>
-                            <td class="border px-4 py-2 text-center">
-                                <button onclick="deleteGroup(this)" class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300">Delete</button>
-                            </td>
-                        </tr>
-                        <tr class="group-item" data-approved="false">
-                            <td class="border px-4 py-2"><a href="#" class="text-blue-500 hover:underline">2</a></td>
-                            <td class="border px-4 py-2"><a href="#" class="text-blue-500 hover:underline">Project Beta</a></td>
-                            <td class="border px-4 py-2">Java, Spring Boot</td>
-                            <td class="border px-4 py-2">
-                                <select class="w-full p-2 border rounded">
-                                    <option>Dr. Amit Kumar Tiwari</option>
-                                    <option>Prof. Sanjay Srivastava</option>
-                                    <option>Mr. Man Singh</option>
-                                </select>
-                            </td>
-                            <td class="border px-4 py-2 text-center">
-                                <button onclick="deleteGroup(this)" class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300">Delete</button>
-                            </td>
-                        </tr>
-                        <tr class="group-item" data-approved="true">
-                            <td class="border px-4 py-2"><a href="#" class="text-blue-500 hover:underline">3</a></td>
-                            <td class="border px-4 py-2"><a href="#" class="text-blue-500 hover:underline">Project Gamma</a></td>
-                            <td class="border px-4 py-2">JavaScript, React</td>
-                            <td class="border px-4 py-2">
-                                <select class="w-full p-2 border rounded">
-                                    <option>Dr. Amit Kumar Tiwari</option>
-                                    <option>Prof. Sanjay Srivastava</option>
-                                    <option>Mr. Man Singh</option>
+                                <select class="w-full p-2 border rounded" id="mentor">
+                                    <option></option>
+                                    <option></option>
+                                    <option></option>
                                 </select>
                             </td>
                             <td class="border px-4 py-2 text-center">
