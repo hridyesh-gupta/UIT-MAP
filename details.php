@@ -32,7 +32,7 @@ function generateUniqueId($length = 16) {
 }
 
 // Check if a group already exists for the current user
-$user = $_SESSION['username'];
+$user = $_SESSION['username']; //As we have stored the username in session variable when the user logged in
 $sql = "SELECT gnum FROM groups WHERE roll = '$user'";
 $userResult = $conn->query($sql);
 
@@ -50,9 +50,16 @@ if ($userResult->num_rows > 0) {
             $groupMembers[] = $row;
         }
     }
-    $getCreationDate = "SELECT date FROM groups WHERE roll = '$user'";//To fetch the group creation date from db
-    $dateResult = $conn->query($getCreationDate);//Executing the query and saving the resultset in $dateResult(even your result has 1 row $conn->query returns it as a set)
+    //To fetch the creator of the group from db to declare him as the leader of the group
+    $getLeader = "SELECT creator FROM groups WHERE gnum = '$gnum'";
+    $leaderResult = $conn->query($getLeader);//Executing the query and saving the resultset in $leaderResult
+    $leader= $leaderResult->fetch_assoc()['creator'];//Fetching the creator from the resultset and storing it in $leader
+
+    //To fetch the group creation date from db
+    $getCreationDate = "SELECT date FROM groups WHERE roll = '$user'";
+    $dateResult = $conn->query($getCreationDate);//Executing the query and saving the resultset in $dateResult(even your result has 1 row $conn->query returns it as a associative set with 'date' as the key)
     $groupCreationDate = $dateResult->fetch_assoc()['date'];//Fetching the date from the resultset and storing it in $groupCreationDate(fetch_assoc() fetches the first row of the resultset and in its index we have passed the 'date' column so it'll return the value of date column of the first row)
+
 }
 //Check for project details if the group exists
 $projectExists = false;    
@@ -62,6 +69,19 @@ if ($groupExists) {
     if ($projectResult->num_rows > 0) {
         $projectExists = true;
         $projectDetails = $projectResult->fetch_assoc();
+    }
+    //To fetch the mentor assigned to the group
+    $getMentor = "SELECT mentor, dAppDate FROM projinfo WHERE gnum = '$gnum'";//To fetch the mentor assigned to the group
+    $mentorResult = $conn->query($getMentor);//Executing the query and saving the resultset in $mentorResult
+    $mentorExists=false;
+    if($mentorResult->num_rows > 0){
+        $mentorData = $mentorResult->fetch_assoc();//Fetching the mentorData(mentor and approval date) from the resultset and storing it in $mentorData
+        $mentor=$mentorData['mentor'];//Fetching the mentor value from the mentorData and storing it in $mentor
+        if($mentor!=NULL){
+            $mentorExists=true;
+            //Fetching the date of approval bcoz as soon as the mentor is assigned the date of approval is also assigned
+            $dAppDate=$mentorData['dAppDate'];//Fetching the date of approval from the mentorData and storing it in $dAppDate
+        }
     }
 }
 
@@ -75,13 +95,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {//As the browser automatically sends 
     $students = [];
     if ($result->num_rows > 0) {
         while($row = $result->fetch_assoc()) {
-            $students[] = $row['roll']; //Roll numbers are stored in $students, so that can be used in the dropdown
+            $students[] = $row['roll']; //Roll numbers(roll) from DB are stored in $students, so that can be used in the dropdown
         }
     }
     $conn->close();
 }
 
-//Code to save group details to the db(means save details button is pressed)
+//Code to save group or project details to the db(means save details button is pressed)
 else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Decode the JSON received
     $data = json_decode(file_get_contents('php://input'), true);
@@ -112,7 +132,12 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Generate a unique group number (gnum)
         $gnum = generateUniqueId();
         $_SESSION['gnum']=$gnum; //Storing the group number in session variable so that we can use it in other pages
-
+        
+        // Fetch the name of the present user so that he can be saved as the creator of the group
+        $creatorQuery= "SELECT name FROM info WHERE roll='$user'";//To fetch the name of the creator of the group
+        $creatorResult = $conn->query($creatorQuery);//Executing the query and saving the resultset in $creatorResult
+        $creator = $creatorResult->fetch_assoc()['name'];//Fetching the name from the resultset and storing it in $creator
+        
         // Loop through each member in the members array
         foreach ($members as $member) {
             // Get the member data from the request body
@@ -122,7 +147,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $section = $member['section'];
             $responsibility = $member['responsibility'];
             // Insert the member data into the groups table
-            $sql = "INSERT INTO groups (roll, name, branch, section, responsibility, gnum, creator) VALUES ('$roll', '$name', '$branch', '$section', '$responsibility', '$gnum', '$user')";
+            $sql = "INSERT INTO groups (roll, name, branch, section, responsibility, gnum, creator) VALUES ('$roll', '$name', '$branch', '$section', '$responsibility', '$gnum', '$creator')";
             // Check if the insertion was successful means it will only enter in if block if the insertion was not successful as !conn->query($sql) will return true if the insertion was not successful
             if (!$conn->query($sql)) {
                 // If there is an error during insertion, return an error response
@@ -160,11 +185,30 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php include 'studentheaders.php' ?>
 
     <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto">
-        <h2 class="text-2xl font-bold mb-4">Student's Project Details</h2>
-        <?php if ($groupExists): ?>
-        <div class="mb-4">
-            <label for="groupCode" class="block text-gray-700">Group ID:</label>
-            <input type="text" id="groupCode" class="w-full border p-2" disabled>
+    <center><h1 class="text-3xl font-bold mb-4">Student's Project Details</h1></center>
+    <?php if ($groupExists): ?>
+        <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto">
+            <h2 class="text-2xl font-bold mb-4">Group Details</h2>
+            <?php if ($groupExists): ?>
+                <div class="mb-4">
+                    <label for="groupCode" class="block text-gray-700">Group ID:</label>
+                    <input type="text" id="groupCode" class="w-full border p-2" disabled>
+                </div>
+            <?php endif; ?>
+            <?php if ($mentorExists): ?>
+            <div class="mb-4">
+                <label for="groupMentor" class="block text-gray-700">Group Mentor:</label>
+                <input type="text" id="groupMentor" class="w-full border p-2" value="<?php echo htmlspecialchars($mentor); ?>" disabled>
+            </div>
+            <?php endif; ?>
+            <div class="mb-4">
+                <label for="groupLeader" class="block text-gray-700">Group Leader:</label>
+                <input type="text" id="groupLeader" class="w-full border p-2" value="<?php echo htmlspecialchars($leader); ?>" disabled>
+            </div>
+            <div class="mb-4">
+                <label for="groupCreationDate" class="block text-gray-700">Group Creation Date:</label>
+                <input type="text" id="groupCreationDate" class="w-full border p-2" value="<?php echo htmlspecialchars($groupCreationDate); ?>" disabled>
+            </div>
         </div>
         <?php endif; ?>
         
@@ -192,26 +236,6 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <button type="submit" id="saveDetailsBtn" class="bg-green-500 text-white px-4 py-2 mt-4">Save Details</button>
     </div>
     <?php if ($groupExists): ?>
-    <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto">
-        <h2 class="text-2xl font-bold mb-4">Group Details</h2>
-
-        <div class="mb-4">
-            <label for="groupCreationDate" class="block text-gray-700">Group Creation Date:</label>
-            <input type="text" id="groupCreationDate" class="w-full border p-2" value="<?php echo htmlspecialchars($groupCreationDate); ?>" disabled>
-            <!-- <button id="lockGroupCreationDateBtn" class="bg-red-500 text-white px-4 py-2 mt-2">Lock</button> -->
-        </div>
-
-        <!-- <div class="mb-4">
-            <label for="decApprovalStatus" class="block text-gray-700">DEC Approval Status:</label>
-            <input type="text" id="decApprovalStatus" class="w-full border p-2" disabled>
-        </div>
-
-        <div class="mb-4" id="approvalDateDiv" style="display:none;">
-            <label for="approvalDate" class="block text-gray-700">Approval Date:</label>
-            <input type="date" id="approvalDate" class="w-full border p-2" disabled>
-        </div> -->
-    </div>
-
     <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto" id="projectInfo">
         <h2 class="text-2xl font-bold mb-4">Project Information</h2>
 
@@ -249,11 +273,12 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label for="supervisorApprovalStatus" class="block text-gray-700">Mentor Approval Status:</label>
             <input type="text" id="supervisorApprovalStatus" class="w-full border p-2" disabled>
         </div> -->
-
-        <div class="mb-4" id="supervisorApprovalDateDiv"">
-            <label for="supervisorApprovalDate" class="block text-gray-700">Mentor Approval Date:</label>
-            <input type="text" id="supervisorApprovalDate" class="w-full border p-2" disabled>
-        </div>
+        <?php if ($mentorExists): ?>
+            <div class="mb-4" id="supervisorApprovalDateDiv"">
+                <label for="supervisorApprovalDate" class="block text-gray-700">Mentor Approval Date:</label>
+                <input type="text" id="supervisorApprovalDate" class="w-full border p-2" disabled>
+            </div>
+        <?php endif; ?>
 
         <!-- <div class="mb-4">
             <label for="decApprovalStatus" class="block text-gray-700">DEC Approval Status:</label>
@@ -262,7 +287,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="mb-4" id="decApprovalDateDiv"">
             <label for="decApprovalDate" class="block text-gray-700">DEC Approval Date:</label>
-            <input type="text" id="decApprovalDate" class="w-full border p-2" disabled>
+            <input type="text" id="decApprovalDate" class="w-full border p-2" value="<?php echo htmlspecialchars($dAppDate); ?>" disabled>
         </div>
     </div>
     <?php endif; ?>
@@ -279,7 +304,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     const studentRolls = <?php echo json_encode($students); ?>;
     <?php if ($groupExists): ?>
     const groupExists = <?php echo json_encode($groupExists); ?>;
-    const groupMembers = <?php echo json_encode($groupMembers); ?>;
+    const groupMembers = <?php echo json_encode($groupMembers); ?>; //All the detail names getting stored in groupMembers will be same as the column names in the groups table as $groupMembers has fetched the data from the groups table and further it is being converted to JSON so names will be same
     <?php endif; ?>
     
     //Logic to create the member template when the add member button is pressed
@@ -291,7 +316,10 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <label class="block text-gray-700">Student Roll Number:</label>
                     <select class="w-full border p-2 roll-number" data-index="${index}">
                         <option value="">Select...</option>
-                        ${studentRolls.map(roll => `<option value="${roll}" ${members[index]?.roll === roll ? 'selected' : ''}>${roll}</option>`).join('')}
+                        ${studentRolls.map(roll => 
+                            `<option value="${roll}" ${members[index]?.roll === roll ? 'selected' : ''}>${roll}</option>
+                        `).join('')}
+                        //studentRolls.map(...): This returns an array of option tag HTML strings, where each element is an option tag for a student roll no. & join(''): This method is used to concatenate (join) all these strings together without any separator (since '' is an empty string).
                     </select>
                 </div>
                 <div class="details ${members[index]?.roll ? '' : 'hidden'}">
@@ -391,8 +419,8 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     document.addEventListener('DOMContentLoaded', () => {
     if (groupExists) {
         // Load the existing group members
-        groupMembers.forEach(member => {
-            members.push({
+        groupMembers.forEach(member => {//Loop through each member details in the groupMembers array
+            members.push({//Push the member details to the members array
                 roll: member.roll,
                 name: member.name,
                 section: member.section,

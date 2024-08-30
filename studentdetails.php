@@ -247,6 +247,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php if ($marksExists): ?>
             const marksDetails = <?php echo json_encode($marksDetails); ?>; 
         <?php endif; ?>
+        //To fill the student details in the input fields
         document.addEventListener('DOMContentLoaded', () => {
             // Fill the input fields with the student details if they exist
         <?php if ($studentExists): ?> 
