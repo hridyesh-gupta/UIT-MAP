@@ -6,6 +6,7 @@
     <title>MAP UIT Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
             background-color: #466079;
@@ -34,9 +35,9 @@
                     <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
                     <div class="mt-1 relative rounded-md shadow-sm">
                         <input type="password" name="password" id="password" class="block w-full pr-10 border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                            <i class="fas fa-lock text-gray-400"></i>
-                        </div>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer">
+                        <i class="fas fa-eye text-gray-400" id="togglePassword"></i>
+                    </div>
                         <h4>
                         <!-- To print error message if the username or password is incorrect -->
                         <?php
@@ -75,6 +76,19 @@
             </ul>
         </div>
     </div>
+    <script>
+        const passwordField = document.getElementById('password');
+        const togglePassword = document.getElementById('togglePassword');
 
+        togglePassword.addEventListener('click', function () {
+            // Toggle password visibility
+            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordField.setAttribute('type', type);
+            
+            // Toggle eye icon between open and closed
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+    </script>
 </body>
 </html>
