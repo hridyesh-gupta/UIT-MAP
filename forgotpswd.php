@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forgot Password - United Institute of Technology</title>
+    <title>Forgot Password</title>
     <style>
         body {
             margin: 0;
@@ -146,7 +146,7 @@
         <div class="left-side">
             <img src="COLLEGE.png" alt="United Institute of Technology Logo" class="logo">
             <h2 id="form-title">Forgot Your Password?</h2>
-            <p id="form-description">No worries! Enter your unique ID or email address, and we'll send you a link to reset your password.</p>
+            <p id="form-description">No worries! Enter your email address, and we'll send you a link to reset your password.</p>
 
             <form id="resetForm">
                 <div class="input-container" id="email-container">
