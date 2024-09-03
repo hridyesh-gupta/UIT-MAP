@@ -204,7 +204,7 @@
             if (uniqueId) {
                 // Simulate sending OTP
                 generatedOtp = Math.floor(100000 + Math.random() * 900000); // Generate a 6-digit OTP
-                alert(`OTP has been sent to ${uniqueId}. Your OTP is ${generatedOtp} (This is a simulation).`);
+                alert(`OTP has been sent to ${uniqueId}. Your OTP is ${generatedOtp}`);
 
                 // Update the form to ask for the OTP
                 emailContainer.style.display = 'none';
