@@ -10,80 +10,17 @@ elseif($_SESSION['usertype']!="admin" && $_SESSION['usertype']!="mentor"){ //If 
 
 include 'dbconnect.php'; //Database connection
 
-// To fetch mentors from the mentors table
-$sql = "SELECT mname FROM mentors ORDER BY mname ASC";
-$result = $conn->query($sql);
-
-$mentors = [];
-if ($result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        $mentors[] = $row['mname'];//mname is the column name in the mentors table
-    }
-}
+$username = $_SESSION['username'];
 
 //To fetch the group details from the projinfo table
 $groupExists=false;
-$sql = "SELECT * FROM projinfo"; 
+$sql = "SELECT * FROM projinfo WHERE mid='$username'"; //Query to fetch only those group details which are assigned to that mentor
 $groupResults = $conn->query($sql); //Executing the query
 $groupRows = [];
 if($groupResults->num_rows > 0){ //If there are groups in the projinfo table
     $groupExists=true;
     while($groupRow = $groupResults->fetch_assoc()){ //Fetching the group details
         $groupRows[] = $groupRow;
-    }
-}
-
-//To handle the incoming POST request and check if the request is to change the mentor or delete the group
-if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
-    $data = json_decode(file_get_contents('php://input'), true); //Decode the JSON payload sent from the client side
-    $action = $data['action']; //Get the action from the decoded JSON payload
-    $gnum = $data['gnum'];
-    if ($action === 'change') {
-        $mentor = $data['mentor']; // Get the selected mentor
-
-        $mIdQuery="SELECT mid FROM mentors where mname='$mentor'";//Get mentor ID of the selected mentor
-        $mIdResults=$conn->query($mIdQuery);
-        $mId= $mIdResults->fetch_assoc()['mid'];//As mid is the name of the column in the mentors table whose value is stored in the $mIdResults variable
-
-        // Update the mentor, its Id and DEC approval date for the group in the 'projinfo' table using gnum. DEC approval date also bcoz at the time when DEC allotted mentor it also approved the grp.
-        $updateMentor = "UPDATE projinfo SET mentor = '$mentor', mid = '$mId', dAppDate = CURDATE() WHERE gnum = '$gnum'";
-        $stmt = $conn->query($updateMentor);
-        // $stmt->bind_param("ss", $mentor, $gnum);
-        // $stmt->execute();
-
-        // if ($stmt->affected_rows > 0) {
-        //     header('Content-Type: text/plain');
-        //     echo 'success=true';
-        // } 
-        echo 'success=true';
-
-        // Close the statement and connection
-        $stmt->close();
-        $conn->close();
-    }
-    else if($action === 'delete'){
-        // Delete group members from 'groups' table
-        $deleteGroupMembers = "DELETE FROM groups WHERE gnum = '$gnum'";
-        $stmt1 = $conn->query($deleteGroupMembers);//Execute the query
-        // $stmt1->bind_param("s", $gnum);
-        // $stmt1->execute();
-
-        // Delete group info from 'projinfo' table
-        $deleteGroupInfo = "DELETE FROM projinfo WHERE gnum = '$gnum'";
-        $stmt2 = $conn->query($deleteGroupInfo);
-        // $stmt2->bind_param("s", $gnum);
-        // $stmt2->execute();
-        
-        // Check if both queries were successful
-        // if ($stmt1->affected_rows > 0 && $stmt2->affected_rows > 0) {
-        //     header('Content-Type: text/plain');
-        //     echo 'success=true';
-        // } 
-        echo 'success=true';
-        // Close the prepared statements and connection
-        $stmt1->close();
-        $stmt2->close();
-        $conn->close();
     }
 }
 ?>
@@ -117,10 +54,14 @@ elseif($_SESSION['usertype'] == "mentor"){ //If the user is mentor show the ment
             <!-- Filter Box -->
             <div class="mb-6 flex justify-between items-center">
                 <input type="text" id="searchInput" placeholder="Search for groups by Project Name..." class="w-full p-2 border rounded">
+                <?php 
+                if($_SESSION['usertype'] == "admin"){?>
                     <label class="ml-4 flex items-center">
                         <input type="checkbox" id="showApprovedCheckbox" class="mr-2">
                         <span>Show Approved Groups</span>
                     </label>
+                <?php }
+                ?>
             </div>
 
             <!-- Group List -->
@@ -131,8 +72,6 @@ elseif($_SESSION['usertype'] == "mentor"){ //If the user is mentor show the ment
                             <th class="px-4 py-2 text-center w-16">Group ID</th>
                             <th class="px-4 py-2 text-center w-48">Project Title</th>
                             <th class="px-4 py-2 text-center w-48">Technology Used</th>
-                            <th class="px-4 py-2 text-center w-56">Mentor Assigned</th>
-                            <th class="px-4 py-2 text-center w-16">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="groupTable" >
@@ -152,7 +91,6 @@ elseif($_SESSION['usertype'] == "mentor"){ //If the user is mentor show the ment
 
     <script>
         const groupRows = <?php echo json_encode($groupRows); ?>;
-        const mentors = <?php echo json_encode($mentors); ?>;
 
         // Populate the table when the page loads
         document.addEventListener('DOMContentLoaded', populateTable);
@@ -173,19 +111,6 @@ elseif($_SESSION['usertype'] == "mentor"){ //If the user is mentor show the ment
                     <td class="border px-4 py-2 text-center">${group.number}</td>
                     <td class="border px-4 py-2 text-center">${group.title}</td>
                     <td class="border px-4 py-2 text-center">${group.tech}</td>
-                    <td class="border px-4 py-2 text-center">
-                        <select class="p-2 border rounded">
-                            <option value="">Select mentor...</option>
-                            ${mentors.map(mentor => `
-                                <option value="${mentor}" ${group.mentor === mentor ? 'selected' : ''}>${mentor}</option>
-                            `).join('')}
-                            // studentRolls.map(...): This returns an array of option HTML strings, where each element is an option tag for a student roll no. & join(''): This method is used to concatenate (join) all these strings together without any separator (since '' is an empty string).
-                        </select>
-                        <button onclick="changeMentor(this)" class="bg-green-500 text-white py-1 px-3 rounded hover:bg-green-800 transition duration-300">Change</button>
-                    </td>
-                    <td class="border px-4 py-2 text-center">
-                        <button onclick="deleteGroup(this)" class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-800 transition duration-300">Delete</button>
-                    </td>
                 `;
                 // Append the row to the table
                 groupTable.appendChild(row);
