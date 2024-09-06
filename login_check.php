@@ -3,16 +3,9 @@
 error_reporting(0); //To hide the errors
 session_start(); //To start the session
 
-$host="localhost";
-$user="root";
-$password="";
-$db="mapdb";
+include 'dbconnect.php';
+//Including the database connection file in this file so that we can have access of the database
 
-$data=mysqli_connect($host,$user,$password,$db); //To connect with mysql db
-
-if($data===false){
-    die("ERROR in connection");
-}
 if($_SERVER["REQUEST_METHOD"]=="POST"){
     //Will only execute when someone clicks on login button of form on index.php
     //Getting the values from the form
@@ -20,8 +13,8 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
     $password=$_POST['password'];
     //Checking whether the entered username and password exists in the database or not
     $sql="SELECT * FROM user WHERE username='$username' AND password='$password'";
-    $result=mysqli_query($data,$sql); 
-    //Through $data parameter, the function knows which database connection to use when executing the query and through $sql parameter, the function knows which query to execute. And mysqli_query() function returns the whole result set of all those rows(users) which satisfy the condition in sql query. But this result set will only contain single row as the username is unique. 
+    $result=mysqli_query($conn,$sql); 
+    //Through $conn parameter(which is initialised in the dbconnect.php), the function knows which database connection to use when executing the query and through $sql parameter, the function knows which query to execute. And mysqli_query() function returns the whole result set of all those rows(users) which satisfy the condition in sql query. But this result set will only contain single row as the username is unique. 
     
     //And this fetched result set can't be used directly. So, we need to fetch the data from the result set using mysqli_fetch_array() function which will fetch the first row of result set. 
     $row=mysqli_fetch_array($result); 

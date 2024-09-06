@@ -8,16 +8,8 @@ elseif($_SESSION['usertype']!="admin" && $_SESSION['usertype']!="student" && $_S
     header("location: index.php");
 }
 
-$host = 'localhost';
-$username = 'root';
-$password = '';
-$database = 'mapdb';
+include 'dbconnect.php';
 
-$conn = new mysqli($host, $username, $password, $database);
-
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
 $username=$_SESSION['username'];
 
 //To fetch student details from the database
