@@ -1,9 +1,84 @@
 <?php
     include 'dbconnect.php';
     session_start();
+    
+    use PHPMailer\PHPMailer\PHPMailer;
+    use PHPMailer\PHPMailer\SMTP;
+    use PHPMailer\PHPMailer\Exception;
+
+    //Load Composer's autoloader
+    require 'C:/xampp/htdocs/UIT-MAP/vendor/autoload.php';
+
+    function send_password_reset($get_name, $get_email, $token){
+        $mail = new PHPMailer(true);
+        $mail->isSMTP();                                            //Send using SMTP
+        $mail->SMTPAuth   = true;                                   //Enable SMTP authentication
+
+        $mail->Host       = "smtp.gmail.com";                     //Set the SMTP server to send through
+        $mail->Username   = "work.hridyesh@gmail.com";                     //SMTP username
+        $mail->Password   = "eakqpwyyhpfzzef";                               //SMTP password
+        
+        $mail->SMTPSecure = "tls";            //Enable implicit TLS encryption
+        $mail->Port       = 587;                                    //TCP port to connect to; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
+    
+        //Recipients
+        $mail->setFrom("work.hridyesh@gmail.com", $get_name);
+        $mail->addAddress($get_email);               
+        
+        //Content
+        $mail->isHTML(true);                                  //Set email format to HTML
+        $mail->Subject = "Reset your UIT-MAP account password";
+
+        // $email_template = file_get_contents('email_template.html');
+        $email_template = "
+                <h1>Reset Your UIT-MAP Account Password</h1>
+                <p>Hello $get_name,</p>
+                <p>We have received a request to reset your password for your UIT-MAP account.</p>
+                <p>Please click on the link below to reset your password:</p>
+                <a href='http://localhost/UIT-MAP/changepassword.php?token=$token&email=$get_email'>Reset Password</a>
+                <p>If you did not request a password reset, please ignore this email.</p>
+                <p>Thank you,</p>
+                <p>The UIT-MAP Team</p>
+        ";
+        $mail->Body = $email_template;
+        $mail->send();
+
+    }
+
+    if(isset($_POST['reset-button'])){
+        $email= mysqli_real_escape_string($conn, $_POST['uniqueId']);
+        $token= md5(rand());
+
+        $check_email= "SELECT email FROM info WHERE email='$email' LIMIT 1";
+        $check_email_run= mysqli_query($conn, $check_email);
+        if(mysqli_num_rows($check_email_run) > 0){
+            $row=mysqli_fetch_array(check_email_run);
+            $get_name= $row['name'];
+            $get_email= $row['email'];
+
+            $update_token= "UPDATE info SET verify_token='$token' WHERE email='$get_email' LIMIT 1";
+            $update_token_run= mysqli_query($conn, $update_token);
+            if($update_token_run){
+                send_password_reset($get_name, $get_email, $token);
+                $_SESSION['status']="Password reset link has been sent to your email!";
+                // header('Location: forgotpassword.php');
+                exit(0);
+            }
+            else{
+                $_SESSION['status']="Something went wrong. Please try again!";
+                header('Location: forgotpassword.php');
+                exit(0);
+            }
+        }
+        else{
+            $_SESSION['status']="Email not found!";
+            header('Location: forgotpassword.php');
+            exit(0);
+        }
+    }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -75,9 +150,7 @@
             box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
         }
 
-        .reset-button,
-        .verify-button,
-        .change-password-button {
+        .reset-button {
             width: 100%;
             padding: 12px;
             background-color: #3498db;
@@ -88,9 +161,7 @@
             transition: background-color 0.3s ease;
         }
 
-        .reset-button:hover,
-        .verify-button:hover,
-        .change-password-button:hover {
+        .reset-button:hover {
             background-color: #2980b9;
         }
 
@@ -163,23 +234,6 @@
                 </div>
                 
             </form>
-            <form action="changepassword.php" id="changeForm" style="display: none;">
-                <div class="input-container" id="password-container" style="display: none;">
-                    <label for="newPassword">New Password</label>
-                    <input type="password" id="newPassword" name="newPassword" required>
-                </div>
-
-                <div class="input-container" id="confirm-password-container" style="display: none;">
-                    <label for="confirmPassword">Confirm New Password</label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" required>
-                </div>
-
-                <button type="submit" class="change-password-button" id="change-password-button" style="display: none;">Change Password</button>
-                <div class="back-to-login">
-                    <a href="index.php">Back to Login</a>
-                </div> 
-        </form>
-
         </div>
         
         <div class="right-side">
@@ -189,16 +243,8 @@
 
     <script>
         const resetForm = document.getElementById('resetForm');
-        const changeForm = document.getElementById('changeForm');
         const resetButton = document.getElementById('reset-button');
-        const changePasswordButton = document.getElementById('change-password-button');
         const emailContainer = document.getElementById('email-container');
-        const passwordContainer = document.getElementById('password-container');
-        const confirmPasswordContainer = document.getElementById('confirm-password-container');
-        const formTitle = document.getElementById('form-title');
-        const formDescription = document.getElementById('form-description');
-        const dynamicImage = document.getElementById('dynamic-image');
-        let generatedOtp = '';
 
         resetButton.addEventListener('click', function() {
             const uniqueId = document.getElementById('uniqueId').value;
@@ -206,36 +252,10 @@
             if (uniqueId) {
                 // Simulate sending OTP
                 alert(`A password reset link has been sent to ${uniqueId}.`);
-
-                // // Update the form to ask for the OTP
-                // resetForm.style.display = 'none';
-                // changeForm.style.display = 'block';
-                // emailContainer.style.display = 'none';
-                // passwordContainer.style.display = 'block';
-                // confirmPasswordContainer.style.display = 'block';
-                // resetButton.style.display = 'none';
-                // changePasswordButton.style.display = 'block';
-
-                // formTitle.textContent = 'Reset Your Password';
-                // formDescription.textContent = 'Please enter your new password and confirm it.';
-                // dynamicImage.src = 'resetpswd.gif';
             } else {
                 alert('Please enter a valid Unique ID or Email.');
             }
         }); 
-
-        changePasswordButton.addEventListener('click', function() {
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-
-            if (newPassword && confirmPassword && newPassword === confirmPassword) {
-                alert('Password has been successfully reset.');
-                // Redirect to the login page or update the password in the backend
-                window.location.href = 'index.php';
-            } else {
-                alert('Passwords do not match. Please try again.');
-            }
-        });
     </script>
 </body>
 </html>
