@@ -75,8 +75,6 @@
             box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
         }
 
-        .reset-button,
-        .verify-button,
         .change-password-button {
             width: 100%;
             padding: 12px;
@@ -88,8 +86,6 @@
             transition: background-color 0.3s ease;
         }
 
-        .reset-button:hover,
-        .verify-button:hover,
         .change-password-button:hover {
             background-color: #2980b9;
         }
@@ -173,22 +169,15 @@
         </div>
         
         <div class="right-side">
-            <img id="dynamic-image" src="Frgtpswd.gif" alt="Forgot Password Image">
+            <img id="dynamic-image" src="resetpswd.gif" alt="Forgot Password Image">
         </div>
     </div>
 
     <script>
-        const resetForm = document.getElementById('resetForm');
         const changeForm = document.getElementById('changeForm');
-        const resetButton = document.getElementById('reset-button');
         const changePasswordButton = document.getElementById('change-password-button');
-        const emailContainer = document.getElementById('email-container');
         const passwordContainer = document.getElementById('password-container');
         const confirmPasswordContainer = document.getElementById('confirm-password-container');
-        const formTitle = document.getElementById('form-title');
-        const formDescription = document.getElementById('form-description');
-        const dynamicImage = document.getElementById('dynamic-image');
-        let generatedOtp = ''; 
 
         changePasswordButton.addEventListener('click', function() {
             const newPassword = document.getElementById('newPassword').value;
