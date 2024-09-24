@@ -46,6 +46,10 @@
                                 echo '<span style="color: red;">' . $_SESSION['loginMessage'] . '</span>'; //Fetching the login error message from login check page and displaying it here if incorrect username or password is entered
                             }
                             session_destroy();
+                            if(isset($_SESSION['status'])){
+                                echo "<p style='color: red;'>" . $_SESSION['status'] . "</p>";
+                                unset($_SESSION['status']);
+                            }
                         ?>
                         </h4>
                     </div>

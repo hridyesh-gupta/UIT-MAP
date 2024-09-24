@@ -69,14 +69,16 @@
             return false;
         }
     }
-
+    //When the reset button is clicked
     if(isset($_POST['reset-button'])){
-        $email= mysqli_real_escape_string($conn, $_POST['uniqueId']);
+        $email= mysqli_real_escape_string($conn, $_POST['email']);
+        //To generate a unique token
         $token= md5(rand());
-        $_SESSION['debug_info'][] = "Attempting password reset for email: $email";
-
+        
         $check_email= "SELECT email, name FROM info WHERE email='$email' LIMIT 1";
         $check_email_run= mysqli_query($conn, $check_email);
+
+        //To check if the email is valid and exists in the database
         if(mysqli_num_rows($check_email_run) > 0){
             $row=mysqli_fetch_array($check_email_run);
             $get_name= $row['name'];
@@ -84,21 +86,28 @@
 
             $update_token= "UPDATE info SET verify_token='$token' WHERE email='$get_email' LIMIT 1";
             $update_token_run= mysqli_query($conn, $update_token);
+        
+            //To update the token in the database
             if($update_token_run){
+        
+                //To send the password reset link to the email along with the token to the user
                 if(send_password_reset($get_name, $get_email, $token)){
-                    $_SESSION['status']="Password reset link has been sent to your email! Do check your spam folder too.";
+                    $_SESSION['status']="Password reset link has been sent to $get_email! Do check your spam folder too.";
                     $_SESSION['debug_info'][] = "Password reset email sent successfully to $get_email";
                 }
+                //Means the password reset link is not sent to the user
                 else{
                     $_SESSION['status']="Failed to send password reset link. Please try again!";
                     $_SESSION['debug_info'][] = "Failed to send password reset email to $get_email";                    
                 }
             }
+            //Means the token is not updated in the database
             else {
                 $_SESSION['status'] = "Failed to update token. Please try again!";
                 $_SESSION['debug_info'][] = "Failed to update token for $get_email";
             }            
         }
+        //Means the email is not found in the database
         else{
             $_SESSION['status']="Email not found!";
             $_SESSION['debug_info'][] = "Email not found: $email";
@@ -272,8 +281,8 @@
             ?>
             <form action="forgotpassword.php" id="resetForm" method="POST">
                 <div class="input-container" id="email-container">
-                    <label for="uniqueId">Email Address</label>
-                    <input type="text" id="uniqueId" name="uniqueId" required>
+                    <label for="email">Email Address</label>
+                    <input type="text" id="email" name="email" required>
                 </div>
                 <button type="submit" class="reset-button" name="reset-button" id="reset-button">Send password reset link</button>
                 <div class="back-to-login">
@@ -288,21 +297,21 @@
         </div>
     </div>
 
-    <script>
+    <!-- <script>
         const resetForm = document.getElementById('resetForm');
         const resetButton = document.getElementById('reset-button');
         const emailContainer = document.getElementById('email-container');
 
         resetButton.addEventListener('click', function() {
-            const uniqueId = document.getElementById('uniqueId').value;
+            const email = document.getElementById('email').value;
 
-            if (uniqueId) {
+            if (email) {
                 // Simulate sending OTP
-                alert(`A password reset link has been sent to ${uniqueId}.`);
+                alert(`A password reset link has been sent to ${email}.`);
             } else {
                 alert('Please enter a valid Unique ID or Email.');
             }
         }); 
-    </script>
+    </script> -->
 </body>
 </html>
