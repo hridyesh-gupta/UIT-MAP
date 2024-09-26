@@ -61,6 +61,7 @@ elseif($_SESSION['usertype'] == "mentor"){ //If the user is mentor show the ment
     include 'mentorheaders.php';
 }
 ?>
+    <?php include 'footer.php' ?>
 
 
     <!-- Main Content -->
@@ -173,13 +174,6 @@ elseif($_SESSION['usertype'] == "mentor"){ //If the user is mentor show the ment
             <p class="text-justify">To maintain uniform evaluation criteria, the DEC has framed project evaluation rubrics, which will be used for evaluating the projects. The project evaluation rubrics will be shared with all the supervisors and students at the beginning of the project work.</p>
         </section>
     </main>
-
-    <!-- Footer -->
-    <footer class="bg-blue-600 text-white p-4 text-center">
-        <div class="max-w-6xl mx-auto text-center">
-            <p class="text-sm">&copy; 2024 College Name. All rights reserved.</p>
-        </div>
-    </footer>
 
 </body>
 </html>
