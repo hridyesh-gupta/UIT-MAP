@@ -21,6 +21,7 @@ elseif($_SESSION['usertype']!="admin" && $_SESSION['usertype']!="student" && $_S
 <body class="bg-gray-100 text-gray-800">
 
 <?php include 'studentheaders.php' ?>
+<?php include 'footer.php' ?>
 
     <!-- Main Content -->
     <main class="max-w-6xl mx-auto p-4">
@@ -106,13 +107,5 @@ elseif($_SESSION['usertype']!="admin" && $_SESSION['usertype']!="student" && $_S
             </table>
         </section>
     </main>
-
-    <!-- Footer -->
-    <footer class="bg-blue-600 text-white p-4 text-center"">
-        <div class="max-w-6xl mx-auto text-center">
-            <p class="text-sm">&copy; 2024 College Name. All rights reserved.</p>
-        </div>
-    </footer>
-
 </body>
 </html>
