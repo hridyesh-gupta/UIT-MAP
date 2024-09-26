@@ -108,6 +108,7 @@ elseif($_SESSION['usertype'] == "mentor"){ //If the user is mentor show the ment
     include 'mentorheaders.php';
 } 
 ?>
+    <?php include 'footer.php' ?>
 
     <!-- Main Content -->
     <main class="flex-grow bg-gray-100 p-8">
@@ -142,13 +143,6 @@ elseif($_SESSION['usertype'] == "mentor"){ //If the user is mentor show the ment
             </div>
         </div>
     </main>
-
-    <!-- Footer -->
-    <footer class="bg-blue-500 text-white p-4 mt-8">
-        <div class="max-w-6xl mx-auto text-center">
-            <p>&copy; 2024 Your College Name. All rights reserved.</p>
-        </div>
-    </footer>
 
     <script>
         const groupRows = <?php echo json_encode($groupRows); ?>;
