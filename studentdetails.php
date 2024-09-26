@@ -93,6 +93,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
 
     <?php include 'studentheaders.php' ?>
+    <?php include 'footer.php' ?>
+
 
     <!-- Main Content -->
     <main class="flex-grow">
@@ -223,13 +225,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
     </main>
-
-    <!-- Footer -->
-    <footer class="bg-blue-600 text-white p-4 text-center">
-        <div class="max-w-6xl mx-auto">
-            &copy; 2023 MAP College. All rights reserved.
-        </div>
-    </footer>
 
     <script>
         //Logic to fill the student details from the database
