@@ -7,6 +7,8 @@ elseif($_SESSION['usertype']!="mentor"){ //If the user is not mentor, then it me
     header("location: index.php");
 }
 ?>
+    <?php include 'footer.php' ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -38,13 +40,6 @@ elseif($_SESSION['usertype']!="mentor"){ //If the user is not mentor, then it me
             </div>
         </div>
     </main>
-
-    <!-- Footer -->
-    <footer class="bg-blue-500 text-white p-4 mt-8">
-        <div class="max-w-6xl mx-auto text-center">
-            <p>&copy; 2024 Your College Name. All rights reserved.</p>
-        </div>
-    </footer>
 
 </body>
 </html>
