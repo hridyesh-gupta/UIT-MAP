@@ -10,3 +10,4 @@
 <body class="bg-white text-gray-800 flex flex-col min-h-screen">
 
 <?php include 'studentheaders.php' ?>
+<?php include 'footer.php' ?>
