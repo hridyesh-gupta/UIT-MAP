@@ -16,15 +16,47 @@ elseif($_SESSION['usertype']!="admin" && $_SESSION['usertype']!="student" && $_S
     <title>MAP - Rubrics Review</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        /* Main content container */
+        .main-content {
+            filter: blur(10px);
+            opacity: 0.5;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
 
+        /* Overlay message */
+        .overlay-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            color: #333;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+
+        /* Make sure the header and footer are not blurred */
+        header, footer {
+            z-index: 1001;
+            position: relative;
+        }
+
+        /* Ensure the overlay message is on top */
+        .overlay {
+            position: relative;
+            z-index: 1002;
+        }
+    </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-<?php include 'studentheaders.php' ?>
-<?php include 'footer.php' ?>
+<?php include 'studentheaders.php'; ?>
 
     <!-- Main Content -->
-    <main class="max-w-6xl mx-auto p-4">
+    <main class="max-w-6xl mx-auto p-4 main-content">
         <!-- Subheader -->
         <section class="mb-8">
             <center><h2 class="text-2xl font-bold mb-4">Rubrics Review</h2></center>
@@ -107,5 +139,11 @@ elseif($_SESSION['usertype']!="admin" && $_SESSION['usertype']!="student" && $_S
             </table>
         </section>
     </main>
+
+    <!-- Overlay Message (Coming Soon) -->
+    <div class="overlay-message">
+        Coming Soon! Developers are Working On This Too!
+    </div>
+    <?php include 'footer.php'; ?>
 </body>
 </html>
