@@ -20,7 +20,6 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
 <body class="bg-white text-gray-800 flex flex-col min-h-screen">
 
 <?php include 'adminheaders.php' ?>
-<?php include 'studentheaders.php' ?>
     <!-- Main Content -->
     <main class="flex-grow bg-gray-100 p-8">
         <div class="max-w-6xl mx-auto">
@@ -39,5 +38,6 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
     </main>
 
     <!-- Refer to dbinsert.php to modify the backend process to add student in DB -->
+    <?php include 'footer.php' ?>
 </body>
 </html>
