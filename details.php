@@ -174,6 +174,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body class="bg-white text-gray-800 flex flex-col min-h-screen">
 
 <?php include 'studentheaders.php' ?>
+<?php include 'footer.php' ?>
 
     <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto">
     <center><h1 class="text-3xl font-bold mb-4">Student's Project Details</h1></center>
@@ -282,13 +283,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
     <?php endif; ?>
-
-    <footer class="bg-blue-500 text-white p-4 mt-8">
-        <div class="max-w-6xl mx-auto text-center">
-            <p>&copy; 2024 Your College Name. All rights reserved.</p>
-        </div>
-    </footer>
-
+    
     <script>
     const members = [];
     const maxMembers = 4;
