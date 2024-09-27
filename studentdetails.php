@@ -93,7 +93,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
 
     <?php include 'studentheaders.php' ?>
-    <?php include 'footer.php' ?>
 
 
     <!-- Main Content -->
@@ -321,5 +320,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // .catch(error => console.error('Error occured!'));          
         });
     </script>
+    <?php include 'footer.php' ?>
 </body>
 </html>
