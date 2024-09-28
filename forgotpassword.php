@@ -53,9 +53,7 @@
                         <p>Thank you,</p>
                         <p>The UIT-MAP Team</p>
                     </div>
-                    <div class='footer'>
-                            <center><p>© 2023 UIT-MAP. All rights reserved.</p></center>
-                    </div>
+                    <?php include 'footer.php' ?>
                 </body>
                 </html>
                 ";
