@@ -7,7 +7,6 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
     header("location: index.php");
 }
 ?>
-<?php include 'footer.php' ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,9 +35,10 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
                 <button class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300" onclick="location.href='addstudent.php'">Add Student</button>
                 <button class="bg-blue-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-blue-600 transition duration-300" onclick="location.href='groups.php'">Groups</button>
                 <button class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300" onclick="location.href='guidelines.php'">Guidelines</button>
-                <button class="bg-red-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-red-600 transition duration-300 col-span-full sm:col-span-2 lg:col-span-1" onclick="location.href='logout.php'">Logout</button>
+                <button class="bg-red-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-red-600 transition duration-300" onclick="location.href='logout.php'">Logout</button>
             </div>
         </div>
     </main>
+    <?php include 'footer.php' ?>
 </body>
 </html>
