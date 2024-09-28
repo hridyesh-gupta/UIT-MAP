@@ -174,7 +174,6 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body class="bg-white text-gray-800 flex flex-col min-h-screen">
 
 <?php include 'studentheaders.php' ?>
-<?php include 'footer.php' ?>
 
     <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto">
     <center><h1 class="text-3xl font-bold mb-4">Student's Project Details</h1></center>
@@ -560,5 +559,6 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     updateMembersUI();
     toggleResponsibilitiesSection();
     </script>
+<?php include 'footer.php' ?>
 </body>
 </html>
