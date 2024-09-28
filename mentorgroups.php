@@ -45,7 +45,6 @@ elseif($_SESSION['usertype'] == "mentor"){ //If the user is mentor show the ment
     include 'mentorheaders.php';
 } 
 ?>
-    <?php include 'footer.php' ?>
 
     <!-- Main Content -->
     <main class="flex-grow bg-gray-100 p-8">
@@ -206,5 +205,6 @@ elseif($_SESSION['usertype'] == "mentor"){ //If the user is mentor show the ment
                 }
             }   
     </script>
-</body>
+    <?php include 'footer.php' ?>
+    </body>
 </html>
