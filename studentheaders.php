@@ -14,7 +14,7 @@
 </header>
 
 <!-- Sub-header for large screens -->
-<nav class="hidden md:block bg-blue-500 text-white">
+<nav id="desktop-menu" class="md:block bg-blue-500 text-white">
     <div class="max-w-6xl mx-auto p-4 flex space-x-4 justify-between">
         <a href="studentdetails.php" class="text-lg">Student Details</a>
         <a href="guidelines.php" class="text-lg">Guidelines</a>
@@ -26,7 +26,7 @@
 </nav>
 
 <!-- Sub-header for small screens -->
-<nav id="mobile-menu" class="bg-blue-500 text-white hidden md:hidden">
+<nav id="mobile-menu" class="bg-blue-500 text-white hidden">
     <div class="max-w-6xl mx-auto p-4 flex flex-col space-y-4">
         <a href="studentdetails.php" class="text-lg">Student Details</a>
         <a href="guidelines.php" class="text-lg">Guidelines</a>
@@ -41,8 +41,27 @@
 <script>
     const menuToggle = document.getElementById('menu-toggle');
     const mobileMenu = document.getElementById('mobile-menu');
+    const desktopMenu = document.getElementById('desktop-menu');
+
+    function checkScreenSize() {
+        if (window.innerWidth >= 768) {
+            desktopMenu.classList.remove('hidden');
+            mobileMenu.classList.add('hidden');
+            menuToggle.classList.add('hidden');
+        } else {
+            desktopMenu.classList.add('hidden');
+            menuToggle.classList.remove('hidden');
+            // Don't automatically show mobile menu, keep it hidden until toggled
+        }
+    }
 
     menuToggle.addEventListener('click', () => {
         mobileMenu.classList.toggle('hidden');
     });
+
+    // Initial check
+    checkScreenSize();
+
+    // Check on resize
+    window.addEventListener('resize', checkScreenSize);
 </script>
