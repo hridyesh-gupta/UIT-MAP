@@ -1,9 +1,9 @@
 <?php
 session_start();
-if(!(isset($_SESSION['username']))){  //If the session variable is not set, then it means the user is not logged in and is accessing this page through url editing, as we have provided session username to every user who logged in. So, redirecting to login page
+if(!(isset($_SESSION['username']))){
     header("location: index.php");
 }
-elseif($_SESSION['usertype']!="admin" && $_SESSION['usertype']!="student" && $_SESSION['usertype']!="mentor"){ //If the user is not admin, student, or mentor, then it means the user is accessing this page through url editing. So, redirecting to login page
+elseif($_SESSION['usertype']!="admin" && $_SESSION['usertype']!="student" && $_SESSION['usertype']!="mentor"){
     header("location: index.php");
 }
 ?>
@@ -45,24 +45,38 @@ elseif($_SESSION['usertype']!="admin" && $_SESSION['usertype']!="student" && $_S
         footer {
             border-top: 2px solid #4b6cb7;
         }
+        @media (max-width: 768px) {
+            main {
+                padding: 1rem;
+            }
+            h2, h3 {
+                font-size: 1.25rem;
+            }
+            p, ul li {
+                font-size: 0.875rem;
+            }
+            table th, table td {
+                font-size: 0.875rem;
+                padding: 0.5rem;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-
 <?php 
-if($_SESSION['usertype'] == "admin"){ //If the user is admin show the admin header
+if($_SESSION['usertype'] == "admin"){
     include 'adminheaders.php';
 }
-elseif($_SESSION['usertype'] == "student"){ //If the user is student show the student header
+elseif($_SESSION['usertype'] == "student"){
     include 'studentheaders.php';
 }
-elseif($_SESSION['usertype'] == "mentor"){ //If the user is mentor show the mentor header
+elseif($_SESSION['usertype'] == "mentor"){
     include 'mentorheaders.php';
 }
 ?>
+    <?php include 'footer.php' ?>
 
-    <!-- Main Content -->
     <main class="max-w-4xl mx-auto p-4 bg-white shadow-md rounded-lg mt-8">
         <section class="mb-4">
         <center><h2 class="text-2xl font-bold mb-4">Project Guidelines</h2></center>
@@ -107,74 +121,18 @@ elseif($_SESSION['usertype'] == "mentor"){ //If the user is mentor show the ment
 
         <section class="mb-4">
             <h3 class="text-lg font-semibold mb-2">Evaluation Procedure:</h3>
-            <br>
             <p class="text-justify">To ensure proper conduction of each project, progress of each project should be monitored on a continuous basis, first by the supervisor and then by the DEC. In order to do so, it is planned to hold four presentations to be made by each project group in each Semester.</p>
             
-            <h4 class="text-md font-semibold mt-4 mb-2">First presentation:</h4>
+            <h4 class="text-md font-semibold mb-2">First presentation:</h4>
             <p class="text-justify">The first presentation will be purely for approval of the project proposal presentation, which DEC will take in the first week of the VII semester. The project proposal is considered to be approved if it is passed in this presentation. If the presentation is not up to the mark, either the Committee will ask the students and their supervisor to modify the project slightly within a week and present again or change the project (in case the Committee finds the project not of sufficient standard or not feasible). In this presentation, the DEC is supposed to mark each student/group based on their project proposal content, presentation made, queries answered, and attendance out of 18 marks (Evaluation is performed according to Project Evaluation Rubrics) and send it to DEC.</p>
             
-            <h4 class="text-md font-semibold mt-4 mb-2">Second presentation:</h4>
-            <p class="text-justify">The second presentation will be a purely synopsis presentation, which will be taken by an internal examiner appointed by DEC and scheduled by the supervisor. The project is assumed to be already selected by the students. In this presentation, they are required to show a brief presentation describing the main Aim/Objective of the project, division of objective into sub-objective, the methodology used, and implementation, which they will be pursuing. If the internal examiner is not satisfied with the presentation or feels that the project is not proceeding in the right direction, the same may be reported to DEC and their marks may be deducted.</p>
-            
-            <h4 class="text-md font-semibold mt-4 mb-2">Third presentation:</h4>
-            <p class="text-justify">The third presentation will be schedued after discussing it with the project Supervisor This presentation will be taken by an internal examiner appointed by DEC, all Supervisors, and co-supervisors prsent in their
-                presentation. The Committee will review the progress of the students.Each
-                group is required to make a project synopsis report showing the complete six
-                month progress of the project. This report should be brief and mainly contains
-                the detailed methodology/ algorithms adopted/ studies during the entire 
-                Semester. This report should be signed by the supervisors and submitted to the DEC at least two days before the final
-                presentation. The groups must also make a presentation (not more than 35-40 slides) and present it before the final
-                Committee. In this presentation, the internal examiner is supposed to mark each 
-                student/ group based on their project content, presentation made, project 
-                progress queries answercd, and attendance out of 100 marks (Evaluation is 
-                performed daccording to Project Evaluation Rubrics) and send it to DEC. 
-                The DEC shall finalize the marks just after the third presentation. The 
-                supervisor is also supposed to mark each student out of 8 marks (Evaluation is 
-                performed according to Project Evaluation Rubrics). DEC add all marks with 
-                fhe supervisor's mark, and these marks should be displayed along with the 
-                comments within one week from the date of the third presentation. 
-                </p>
-            
-            <h4 class="text-md font-semibold mt-4 mb-2">Fourth presentation:</h4>
-            <p class="text-justify">The groups are required to make a presentation 
-                (not more than 15-20 slides) along with running the project and preseting 
-                before the supervisor and internal examiner. In this presentation, the internal 
-                examiner is supposed to mark cach student group based on their project 
-                content, presentation made, project progress queries answered, and attendance 
-                out of 150 marks (Evalution is performed according to Project Evaluation 
-                Rubrics) and send it to DEC.</p>
-
-            <h4 class="text-md font-semibold mt-4 mb-2">Fifth presentation:</h4>
-            <p class="text-justify"> The groups are required to make a presentation (not 
-                more than 30-40 slides) along with running the project and presenting before 
-                the supervisor and internal examiner. ach group is required to make a project 
-                report showing the complete project. This report should be signed by the 
-                supervisors and should be submitted to the DEC at least two days before the 
-                final presentation. In this presentation, the internal examiner is supposed to 
-                mark each student/ group based on their project content, presentation made, 
-                project progress queries answered, and attendance out of 90 marks (Evaluation 
-                is performed according to Project Evaluation Rubrics) and send it to DEC.</p>
-            
-            
+            <h4 class="text-md font-semibold mb-2">Second presentation:</h4>
+            <p class="text-justify">The second presentation will be a purely synopsis presentation, which will be taken by an internal examiner appointed by DEC and scheduled by the supervisor. The project is assumed to be already selected by the students. In this presentation, they are required to show a brief presentation describing the main Aim/Objective of the project, division of objective into sub-objective, the methodology used, and implementation, which they will be pursuing. If the internal examiner is not satisfied with the presentation or feels that the project is not up to the mark, the examiner can reject the project. In this presentation, the DEC is supposed to mark each student/group out of 30 marks (Evaluation is performed according to Project Evaluation Rubrics). The DEC will then send it to DEC.</p>
         </section>
 
         <section class="mb-4">
-            <h3 class="text-lg font-semibold mb-2">Final Presentation:</h3>
-            <p class="text-justify">The final Internal presentation will be taken one week before the date of the 
-                final external presentation, which will be given in the project calendar already 
-                by the DEC. This presentation will be made before the DEC. Supervisors and 
-                co-supervisors should, be present in this presentation. All the sessional marks 
-                for Semester VII will be mainly given in this presentation, and the marks given 
-                in the first two presentations should also be added to make the final score. The 
-                Tnal project report should be extensively checked and signed by the supervisors 
-                and also by the DEC. The groups must also prepare a final presentation and present it before the final Committee. This presentation shall demonstrate the complete working project . In this presentation, the DEC is supposed to mark each studen/group based on their project content, presentation made, project progress queries answered, and attendance out of 50 marks (Evaluation is performed according to the project rubrics). The sessional marks of each shall be decided within two days from the date of the final presentation by the DEC.</p>
-        </section>
-        <section>
-            <h3 class="text-lg font-semibold mb-2">Sample Rubrics:</h3>
-            <p class="text-justify">To maintain uniform evaluation criteria, the DEC has framed project evaluation rubrics, which will be used for evaluating the projects. The project evaluation rubrics will be shared with all the supervisors and students at the beginning of the project work.</p>
-        </section>
-        <section class="mb-8">
-            <center><h2 class="text-2xl font-bold mb-4">Rubrics Review</h2></center>
+        <center><h2 class="text-2xl font-bold mb-4">Rubrics Review</h2></center>
+        <div class="overflow-x-auto">
             <table class="w-full border-collapse">
                 <thead>
                     <tr class="bg-gray-200">
@@ -252,8 +210,9 @@ elseif($_SESSION['usertype'] == "mentor"){ //If the user is mentor show the ment
                     </tr>
                 </tbody>
             </table>
+        </div>
         </section>
     </main>
-    <?php include 'footer.php' ?>
+
 </body>
 </html>
