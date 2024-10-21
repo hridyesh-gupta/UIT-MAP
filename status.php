@@ -6,26 +6,6 @@
     <title>MAP - Project Status</title>
     <link href="https://unpkg.com/tailwindcss@^2.0/dist/tailwind.min.css" rel="stylesheet">
     <style>
-        /* Main content container */
-        .main-content {
-            filter: blur(10px);
-            opacity: 0.5;
-            pointer-events: none;
-        }
-
-        /* Overlay message */
-        .overlay-message {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 48px;
-            font-weight: bold;
-            color: #333;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-            z-index: 1000;
-        }
-
         /* Make sure the header and footer are not blurred */
         header, footer {
             z-index: 1001;
@@ -38,68 +18,92 @@
     <!-- Include header (Visible) -->
     <?php include 'studentheaders.php'; ?>
 
-    <!-- Main Content (Blurred) -->
-    <div class="main-content container mx-auto py-8">
-        <h2 class="text-3xl font-bold mb-4">Week 1</h2>
-        <table class="w-full table-auto border-collapse border border-gray-200">
-            <thead>
-                <tr class="bg-gray-100">
-                    <th class="border border-gray-300 px-4 py-2">Student Name</th>
-                    <th class="border border-gray-300 px-4 py-2">Student Progress (Satisfactory / Not Satisfactory)</th>
-                    <th class="border border-gray-300 px-4 py-2">Supervisor Approval Status</th>
-                    <th class="border border-gray-300 px-4 py-2">Date/Time of Approval/Disapproval</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="border border-gray-300 px-4 py-2">Student 1</td>
-                    <td class="border border-gray-300 px-4 py-2">Satisfactory</td>
-                    <td class="border border-gray-300 px-4 py-2"><span class="approved">Approved</span></td>
-                    <td class="border border-gray-300 px-4 py-2">2024-09-19 10:00 AM</td>
-                </tr>
-                <tr>
-                    <td class="border border-gray-300 px-4 py-2">Student 2</td>
-                    <td class="border border-gray-300 px-4 py-2">Not Satisfactory</td>
-                    <td class="border border-gray-300 px-4 py-2"><span class="not-approved">Not Approved</span></td>
-                    <td class="border border-gray-300 px-4 py-2">2024-09-19 11:00 AM</td>
-                </tr>
-            </tbody>
-        </table>
+    <!-- Main Content (Dynamic) -->
+    <div class="container mx-auto py-8">
+        <div id="weeks-container">
+            <!-- Week 1 -->
+            <div class="week-section mt-8">
+                <h2 class="text-3xl font-bold mb-4">Week 1</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="border border-gray-300 p-4">
+                        <h3 class="font-bold">Student 1</h3>
+                        <p>Progress: Satisfactory</p>
+                        <p>Status: <span class="approved">Approved</span></p>
+                        <p>Date: 2024-09-19 10:00 AM</p>
+                    </div>
+                    <div class="border border-gray-300 p-4">
+                        <h3 class="font-bold">Student 2</h3>
+                        <p>Progress: Not Satisfactory</p>
+                        <p>Status: <span class="not-approved">Not Approved</span></p>
+                        <p>Date: 2024-09-19 11:00 AM</p>
+                    </div>
+                    <div class="border border-gray-300 p-4">
+                        <h3 class="font-bold">Student 3</h3>
+                        <p>Progress: Satisfactory</p>
+                        <p>Status: <span class="approved">Approved</span></p>
+                        <p>Date: 2024-09-19 12:00 PM</p>
+                    </div>
+                    <div class="border border-gray-300 p-4">
+                        <h3 class="font-bold">Student 4</h3>
+                        <p>Progress: Not Satisfactory</p>
+                        <p>Status: <span class="not-approved">Not Approved</span></p>
+                        <p>Date: 2024-09-19 01:00 PM</p>
+                    </div>
+                </div>
+            </div>
+            <!-- More week sections will be added here -->
+        </div>
 
-        <h2 class="text-3xl font-bold mt-8 mb-4">Week 2</h2>
-        <table class="w-full table-auto border-collapse border border-gray-200">
-            <thead>
-                <tr class="bg-gray-100">
-                    <th class="border border-gray-300 px-4 py-2">Student Name</th>
-                    <th class="border border-gray-300 px-4 py-2">Student Progress (Satisfactory / Not Satisfactory)</th>
-                    <th class="border border-gray-300 px-4 py-2">Supervisor Approval Status</th>
-                    <th class="border border-gray-300 px-4 py-2">Date/Time of Approval/Disapproval</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="border border-gray-300 px-4 py-2">Student 1</td>
-                    <td class="border border-gray-300 px-4 py-2">Satisfactory</td>
-                    <td class="border border-gray-300 px-4 py-2"><span class="approved">Approved</span></td>
-                    <td class="border border-gray-300 px-4 py-2">2024-09-26 10:00 AM</td>
-                </tr>
-                <tr>
-                    <td class="border border-gray-300 px-4 py-2">Student 2</td>
-                    <td class="border border-gray-300 px-4 py-2">Not Satisfactory</td>
-                    <td class="border border-gray-300 px-4 py-2"><span class="not-approved">Not Approved</span></td>
-                    <td class="border border-gray-300 px-4 py-2">2024-09-26 11:00 AM</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Overlay Message (Coming Soon) -->
-    <div class="overlay-message">
-        Coming Soon Developers are Working !
+        <!-- Button to add more weeks -->
+        <button id="add-week-button" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">
+            Add More Weeks
+        </button>
     </div>
 
     <!-- Include footer (Visible) -->
     <?php include 'footer.php'; ?>
 
+    <script>
+        let weekCount = 1; // Track the number of weeks
+
+        document.getElementById('add-week-button').addEventListener('click', function() {
+            weekCount++; // Increment week count
+            const weeksContainer = document.getElementById('weeks-container');
+
+            // Create new week section
+            const newWeekSection = document.createElement('div');
+            newWeekSection.className = 'week-section mt-8';
+            newWeekSection.innerHTML = `
+                <h2 class="text-3xl font-bold mb-4">Week ${weekCount}</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="border border-gray-300 p-4">
+                        <h3 class="font-bold">Student 1</h3>
+                        <p>Progress: Satisfactory</p>
+                        <p>Status: <span class="approved">Approved</span></p>
+                        <p>Date: 2024-09-26 10:00 AM</p>
+                    </div>
+                    <div class="border border-gray-300 p-4">
+                        <h3 class="font-bold">Student 2</h3>
+                        <p>Progress: Not Satisfactory</p>
+                        <p>Status: <span class="not-approved">Not Approved</span></p>
+                        <p>Date: 2024-09-26 11:00 AM</p>
+                    </div>
+                    <div class="border border-gray-300 p-4">
+                        <h3 class="font-bold">Student 3</h3>
+                        <p>Progress: Satisfactory</p>
+                        <p>Status: <span class="approved">Approved</span></p>
+                        <p>Date: 2024-09-26 12:00 PM</p>
+                    </div>
+                    <div class="border border-gray-300 p-4">
+                        <h3 class="font-bold">Student 4</h3>
+                        <p>Progress: Not Satisfactory</p>
+                        <p>Status: <span class="not-approved">Not Approved</span></p>
+                        <p>Date: 2024-09-26 01:00 PM</p>
+                    </div>
+                </div>
+            `;
+            weeksContainer.appendChild(newWeekSection); // Append new section
+        });
+    </script>
 </body>
 </html>
