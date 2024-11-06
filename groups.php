@@ -94,6 +94,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MAP - View Groups</title>
     <link href="https://unpkg.com/tailwindcss@^2.0/dist/tailwind.min.css" rel="stylesheet">
+    <?php include 'favicon.php' ?>
 </head>
 <body class="bg-white text-gray-800 flex flex-col min-h-screen">
 

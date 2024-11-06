@@ -14,6 +14,7 @@ elseif($_SESSION['usertype']!="admin" && $_SESSION['usertype']!="student" && $_S
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MAP - Project Guidelines</title>
     <link href="https://unpkg.com/tailwindcss@^2.0/dist/tailwind.min.css" rel="stylesheet">
+    <?php include 'favicon.php' ?>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
