@@ -23,7 +23,7 @@
             $mail->Port       = 587;                                    //TCP port to connect to; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
         
             //Recipients
-            $mail->setFrom("work.hridyesh@gmail.com", "UIT-MAP");
+            $mail->setFrom("work.hridyesh@gmail.com", "UIT-MAP Team");
             $mail->addAddress($get_email);               
             
             //Content
@@ -38,8 +38,8 @@
                         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
                         .container { max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; }
                         h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
-                        a { color: #3498db; text-decoration: none; }
                         .button { display: inline-block; padding: 10px 20px; background-color: #3498db; color: #ffffff; text-decoration: none; border-radius: 5px; }
+                        .button:hover { background-color: #2980b9; } 
                     </style>
                 </head>
                 <body>
@@ -48,7 +48,7 @@
                         <p>Hello $get_name,</p>
                         <p>We have received a request to reset your password for your UIT-MAP account.</p>
                         <p>Please click on the button below to reset your password:</p>
-                        <p><a href='http://localhost/UIT-MAP/UIT-MAP/changepassword.php?token=$token&email=$get_email' class='button'>Reset Password</a></p>
+                        <p><a href='http://localhost/UIT-MAP/UIT-MAP/changepassword.php?token=$token&email=$get_email' class='button' style='color: #ffffff;'>Reset Password</a></p>
                         <p>If you did not request a password reset, please ignore this email.</p>
                         <p>Thank you,</p>
                         <p>The UIT-MAP Team</p>

@@ -162,6 +162,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MAP - Project Details</title>
     <link href="https://unpkg.com/tailwindcss@^2.0/dist/tailwind.min.css" rel="stylesheet">
+    <?php include 'favicon.php' ?>
     <style>
         .locked {
             background-color: #f0f0f0;

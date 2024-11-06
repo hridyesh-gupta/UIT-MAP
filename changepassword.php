@@ -1,7 +1,7 @@
 <?php
     include 'dbconnect.php';
     session_start();
-
+    //When the change password button is clicked
     if(isset($_POST['change-password-button'])){
         $email=mysqli_real_escape_string($conn, $_POST['email']);
         $newPassword=mysqli_real_escape_string($conn, $_POST['newPassword']);
@@ -32,7 +32,7 @@
             
                         //To check if the password is updated or not
                         if($update_password_run){
-                            //To generate new token
+                            //To generate new token and update it in db
                             $new_token=md5(rand())."newtoken";
                             $update_token= "UPDATE info SET verify_token='$new_token' WHERE verify_token='$token' LIMIT 1";
                             $update_token_run= mysqli_query($conn, $update_token);
