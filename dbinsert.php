@@ -21,7 +21,8 @@ if (isset($_POST['upload_file']) && isset($_FILES['uploaded_file'])) { //When th
 
         // Prepare the SQL statement for inserting data into the info table
         $stmtInfo = $conn->prepare("INSERT INTO info (username, name, section, batch, roll, branch, dob, contact, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        //If you just want to insert some more columns to the data which are already there in the database then the previous query will throw duplicate key error(i.e. this primary key already exist) so use this query but with caution that this will take too much time: 
+        
+        //If you just want to insert some more new columns to the data which are already there in the database then the previous query will throw duplicate key error(i.e. this primary key already exist) so use this query but with caution that this will take too much time: 
         //$stmtInfo = $conn->prepare("INSERT INTO info (username, name, section, batch, roll, branch, dob, contact, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name), section = VALUES(section), batch = VALUES(batch), branch = VALUES(branch), dob = VALUES(dob), contact = VALUES(contact), email = VALUES(email)"); 
         
         // Continuing from second line of the CSV file

@@ -52,18 +52,18 @@ elseif($_SESSION['usertype'] == "mentor"){ //If the user is mentor show the ment
         <div class="max-w-6xl mx-auto">
             <center><h2 class="text-2xl font-bold mb-6">View Groups</h2></center>
 
-            <!-- Filter Box
+            <!-- Filter Box -->
             <div class="mb-6 flex justify-between items-center">
                 <input type="text" id="searchInput" placeholder="Search for groups by Project Name..." class="w-full p-2 border rounded">
                 <?php 
-                if($_SESSION['usertype'] == "admin"){?>
+                if($_SESSION['usertype'] == "mentor"){?>
                     <label class="ml-4 flex items-center">
                         <input type="checkbox" id="showApprovedCheckbox" class="mr-2">
                         <span>Show Approved Groups</span>
                     </label>
                 <?php }
                 ?>
-            </div> -->
+            </div>
 
             <!-- Group List -->
             <div class="bg-white p-6 rounded-lg shadow-lg">

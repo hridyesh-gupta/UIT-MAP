@@ -22,7 +22,7 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
     <header class="bg-blue-600 text-white p-4">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
             <img src="COLLEGE.png" alt="College Logo" class="h-12">
-            <h1 class="text-3xl font-bold">MAP - Admin Panel</h1>
+            <h1 class="text-3xl font-bold text-center">MAP - Admin Panel</h1>
             <div></div>
         </div>
     </header>

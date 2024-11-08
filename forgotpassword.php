@@ -9,6 +9,10 @@
     //Load Composer's autoloader
     require 'C:/xampp/htdocs/UIT-MAP/vendor/autoload.php';
 
+    //Load environment variables from .env file
+    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__, 'cred.env');
+    $dotenv->load();    
+
     function send_password_reset($get_name, $get_email, $token){
         $mail = new PHPMailer(true);
         try{
@@ -16,8 +20,8 @@
             $mail->SMTPAuth   = true;                                   //Enable SMTP authentication
 
             $mail->Host       = "smtp.gmail.com";                     //Set the SMTP server to send through
-            $mail->Username   = "work.hridyesh@gmail.com";                     //SMTP username
-            $mail->Password   = "ktmencggtyiiajue";                               //SMTP password
+            $mail->Username   = $_ENV['SMTP_USERNAME'];                     //SMTP username
+            $mail->Password   = $_ENV['SMTP_PASSWORD'];                     //SMTP password
             
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = 587;                                    //TCP port to connect to; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`

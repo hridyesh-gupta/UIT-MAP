@@ -109,12 +109,18 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Prepare the SQL query to insert the project details into the projinfo table
         $sql = "INSERT INTO projinfo (gnum, title, intro, objective, tech, technology) VALUES ('$gnum', '$title', '$intro', '$objective', '$tech', '$technology')";
-        //Execute the query
-        if ($conn->query($sql)) {
-            echo json_encode(['success' => true, 'message' => 'Data inserted successfully']);            
+        $sqlResult= $conn->query($sql);
+        // Check if the insertion of project details is successful or not means it will only enter in if block if the insertion was not successful
+        if (!$sqlResult) {
+            echo json_encode(['success' => false, 'message' => 'Error inserting data: ' . $conn->error]);
             $conn->close();
             exit;
         }
+        // If project details insertion went successful, return a success response    
+        echo json_encode(['success' => true, 'message' => 'Data inserted successfully']);
+        // Close the database connection
+        $conn->close();
+        exit;
     }
     //Code to be executed when the grp member details save button is pressed
     else if ($action === 'save_group') {
@@ -139,18 +145,21 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $responsibility = $member['responsibility'];
             // Insert the member data into the groups table
             $sql = "INSERT INTO groups (roll, name, branch, section, responsibility, gnum, creator) VALUES ('$roll', '$name', '$branch', '$section', '$responsibility', '$gnum', '$creator')";
-            // Check if the insertion was successful means it will only enter in if block if the insertion was not successful as !conn->query($sql) will return true if the insertion was not successful
-            if (!$conn->query($sql)) {
+            $sqlResult= $conn->query($sql);
+            // Check if the insertion of current member is successful or not means it will only enter in if block if the insertion was not successful
+            if (!$sqlResult) {
                 // If there is an error during insertion, return an error response
                 echo json_encode(['success' => false, 'message' => 'Error inserting data: ' . $conn->error]);
                 $conn->close();
                 exit;
             }
+            
         }
-        // If everything went well, return a success response    
+        // If all members details insertion went successful, return a success response    
         echo json_encode(['success' => true, 'message' => 'Data inserted successfully']);
         // Close the database connection
         $conn->close();
+        exit;
     }
 }
 ?>
@@ -506,56 +515,72 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         })
         .then(response => response.json())//It converts the response to JSON to make it more readable and to use it in the next .then block
         .then(data => {//It is used to access the data returned by the previous .then block and then we can use this data to display the message. Also we can name the data anything we want, here we have named it as data
-            alert('Details saved successfully.');
-            window.location.reload(); // Refresh the page
+            if (data.success) {
+                alert('Group Details saved successfully.');
+                window.location.reload(); // Refresh the page
+            } 
+            else {
+                alert('Something went wrong! Group Details not saved successfully.');
+                window.location.reload(); // Refresh the page
+            }
         })
-        // .catch(error => console.error('Error:', error));
-        .catch(error => console.error('Error occured!'));
+        .catch(error => {
+            console.error('Error occurred:', error);
+            alert('An unexpected error occurred. Please try again later.');
+        });
     });
     
     //Logic to save the project details to the db when save details button is pressed
     document.getElementById('saveProjDetailsBtn').addEventListener('click', (event) => {
-    event.preventDefault(); // Prevent the default form submission
+        event.preventDefault(); // Prevent the default form submission
 
-    // Collect the data from the form fields
-    const projectTitle = document.getElementById('projectTitle').value;
-    const briefIntroduction = document.getElementById('briefIntroduction').value;
-    const objectiveStatement = document.getElementById('objectiveStatement').value;
-    const technology1Word = document.getElementById('technology1Word').value;
-    const technologyUsed = document.getElementById('technologyUsed').value;
+        // Collect the data from the form fields
+        const projectTitle = document.getElementById('projectTitle').value;
+        const briefIntroduction = document.getElementById('briefIntroduction').value;
+        const objectiveStatement = document.getElementById('objectiveStatement').value;
+        const technology1Word = document.getElementById('technology1Word').value;
+        const technologyUsed = document.getElementById('technologyUsed').value;
 
-    // Ensure all fields are filled
-    if (!projectTitle || !briefIntroduction || !objectiveStatement || !technology1Word || !technologyUsed) {
-        alert('Please fill all fields.');
-        return;
-    }
+        // Ensure all fields are filled
+        if (!projectTitle || !briefIntroduction || !objectiveStatement || !technology1Word || !technologyUsed) {
+            alert('Please fill all fields.');
+            return;
+        }
 
-    // Prepare the data to be sent to the server, including the action
-    const projectData = {
-        action: 'save_project',  // Indicate that this request is for saving project details
-        title: projectTitle,
-        intro: briefIntroduction,
-        objective: objectiveStatement,
-        tech: technology1Word,
-        technology: technologyUsed
-    };
+        // Prepare the data to be sent to the server, including the action
+        const projectData = {
+            action: 'save_project',  // Indicate that this request is for saving project details
+            title: projectTitle,
+            intro: briefIntroduction,
+            objective: objectiveStatement,
+            tech: technology1Word,
+            technology: technologyUsed
+        };
 
-    // Send the data to the server to save project details
-    fetch('details.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(projectData),
-    })
-    .then(response => response.json())
-    .then(data => {
-        alert('Project details saved successfully.');
-        window.location.reload(); // Refresh the page
-    })
-    // .catch(error => console.error('Error occurred:', error));
-    .catch(error => console.error('Error occured!'));
-});
+        // Send the data to the server to save project details
+        fetch('details.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(projectData),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                    alert('Project Details saved successfully.');
+                    window.location.reload(); // Refresh the page
+                } 
+            else {
+                alert('Something went wrong! Project Details not saved successfully.');
+                window.location.reload(); // Refresh the page
+            }
+        })
+        .catch(error => {
+                console.error('Error occurred:', error);
+                alert('An unexpected error occurred. Please try again later.');
+        });
+    });
 
     updateMembersUI();
     toggleResponsibilitiesSection();

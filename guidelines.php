@@ -46,6 +46,12 @@ elseif($_SESSION['usertype']!="admin" && $_SESSION['usertype']!="student" && $_S
         footer {
             border-top: 2px solid #4b6cb7;
         }
+        .table-container {
+            overflow-x: auto;
+        }
+        td {
+            padding: 0.5rem;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -174,7 +180,7 @@ elseif($_SESSION['usertype'] == "mentor"){ //If the user is mentor show the ment
             <h3 class="text-lg font-semibold mb-2">Sample Rubrics:</h3>
             <p class="text-justify">To maintain uniform evaluation criteria, the DEC has framed project evaluation rubrics, which will be used for evaluating the projects. The project evaluation rubrics will be shared with all the supervisors and students at the beginning of the project work.</p>
         </section>
-        <section class="mb-8">
+        <section class="table-container mb-8">
             <center><h2 class="text-2xl font-bold mb-4">Rubrics Review</h2></center>
             <table class="w-full border-collapse">
                 <thead>
