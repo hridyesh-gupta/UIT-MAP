@@ -34,7 +34,7 @@ elseif($_SESSION['usertype']!="mentor"){ //If the user is not mentor, then it me
             <h2 class="text-2xl font-bold mb-6">Mentor Panel</h2>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <button class="bg-blue-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-blue-600 transition duration-300" onclick="location.href='mentorgroups.php'">Groups</button>
+                <button class="bg-blue-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-blue-600 transition duration-300" onclick="location.href='groups.php'">Groups</button>
                 <button class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300" onclick="location.href='guidelines.php'">Guidelines</button>
                 <button class="bg-red-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-red-600 transition duration-300" onclick="location.href='logout.php'">Logout</button>
             </div>
