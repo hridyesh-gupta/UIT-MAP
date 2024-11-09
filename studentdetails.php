@@ -265,6 +265,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             document.getElementById("cp6").value = marksDetails.cp6;
             document.getElementById("cp7").value = marksDetails.cp7;
             document.getElementById("cp8").value = marksDetails.cp8;
+            document.getElementById('student-marks-10').disabled = true;
+            document.getElementById('student-marks-12').disabled = true;
+            document.getElementById('m1').disabled = true;
+            document.getElementById('m2').disabled = true;
+            document.getElementById('m3').disabled = true;
+            document.getElementById('m4').disabled = true;
+            document.getElementById('m5').disabled = true;
+            document.getElementById('m6').disabled = true;
+            document.getElementById('m7').disabled = true;
+            document.getElementById('m8').disabled = true;
+            document.getElementById('cp1').disabled = true;
+            document.getElementById('cp2').disabled = true;
+            document.getElementById('cp3').disabled = true;
+            document.getElementById('cp4').disabled = true;
+            document.getElementById('cp5').disabled = true;
+            document.getElementById('cp6').disabled = true;
+            document.getElementById('cp7').disabled = true;
+            document.getElementById('cp8').disabled = true;
             // Hide the save button as the details are already saved
             document.getElementById('save-btn').style.display = 'none';
         <?php endif; ?>
