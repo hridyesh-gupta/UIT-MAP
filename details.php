@@ -28,7 +28,7 @@ $sql = "SELECT gnum FROM groups WHERE roll = '$user'";
 $userResult = $conn->query($sql);
 
 $groupExists = false;
-if ($userResult->num_rows > 0) {
+if ($userResult->num_rows > 0) {//If there is a group for the current user then it will enter in this block
     $groupExists = true;
     $gnum = $userResult->fetch_assoc()['gnum'];
     $_SESSION['gnum'] = $gnum; //So we have saved 3 things for the whole session username, usertype and gnum
@@ -107,8 +107,16 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $tech = $data['tech'];
         $technology = $data['technology'];
 
+        // Fetch the name of the creator & creation date of this grp from the groups table to save it along with the project details in the projinfo table
+        $creatorQuery= "SELECT creator, date FROM groups WHERE roll='$user' LIMIT 1"; //To fetch the name of the creator of the group
+        $creatorResult = $conn->query($creatorQuery); //Executing the query and saving the resultset in $creatorResult
+        $creatorData = $creatorResult->fetch_assoc(); //Fetching the data from the resultset
+        $creator = $creatorData['creator']; //Fetching the creator from the resultset and storing it in $creator
+        $date = $creatorData['date']; //Fetching the date from the resultset and storing it in $date
+        
+
         // Prepare the SQL query to insert the project details into the projinfo table
-        $sql = "INSERT INTO projinfo (gnum, title, intro, objective, tech, technology) VALUES ('$gnum', '$title', '$intro', '$objective', '$tech', '$technology')";
+        $sql = "INSERT INTO projinfo (gnum, title, intro, objective, tech, technology, creator, date) VALUES ('$gnum', '$title', '$intro', '$objective', '$tech', '$technology', '$creator', '$date')";
         $sqlResult= $conn->query($sql);
         // Check if the insertion of project details is successful or not means it will only enter in if block if the insertion was not successful
         if (!$sqlResult) {
