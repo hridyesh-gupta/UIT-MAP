@@ -1,3 +1,5 @@
+//As session variable, we have saved 3 things username, usertype, loginMessage. And if the user is in a group already then this number will increase to 4, i.e. gnum will also be added in this list.
+
 <?php
 //This code is for checking the login credentials of the user and redirecting to the respective page according to the usertype of the user.
 error_reporting(0); //To hide the errors
