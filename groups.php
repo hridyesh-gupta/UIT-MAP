@@ -158,6 +158,9 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
         .group-title:hover {
             color: darkblue;
         }
+        h1 {
+        font-size: 2em; /* Ensure h1 has a larger font size */
+        }        
         .table-container {
             overflow-x: auto;
         }
@@ -166,20 +169,12 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
 <body class="bg-white text-gray-800 flex flex-col min-h-screen">
 
 <?php 
-if($_SESSION['usertype'] == "admin"){ //If the user is admin show the admin header
-    include 'adminheaders.php';
-}
-elseif($_SESSION['usertype'] == "student"){ //If the user is student show the student header
-    include 'studentheaders.php';
-}
-elseif($_SESSION['usertype'] == "mentor"){ //If the user is mentor show the mentor header
-    include 'mentorheaders.php';
-} 
+include 'adminheaders.php';
 ?>
     <!-- Main Content -->
     <main class="flex-grow bg-gray-100 p-8">
         <div class="max-w-6xl mx-auto">
-            <center><h2 class="text-2xl font-bold mb-6">View Groups</h2></center>
+            <center><h2 class="text-2xl font-bold mb-6">Student Groups</h2></center>
 
             <!-- Filter Box -->
             <div class="mb-6 flex justify-between items-center">
@@ -235,7 +230,7 @@ elseif($_SESSION['usertype'] == "mentor"){ //If the user is mentor show the ment
     <div id="rubricsReviewModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h2>Rubrics Review</h2>
+            <center><h1>Rubrics Review</h1></center>
             <div id="rubricsReviewContent">
                 <!-- Rubrics review content will be dynamically added here -->
             </div>
