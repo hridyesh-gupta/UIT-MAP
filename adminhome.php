@@ -111,16 +111,15 @@ if ($yearsResult->num_rows > 0) {
     <!-- Main Content -->
     <main class="flex-grow bg-gray-100 p-8">
         <div class="max-w-6xl mx-auto">
-            <h2 class="text-2xl font-bold mb-6">Admin Panel</h2>
             <?php if($_SESSION['usertype'] == "admin"){ ?>                
-                <h2 class="text-2xl font-bold mb-6">Admin Panel</h2>
+                <h2 class="text-2xl font-bold mb-6">Admin Home</h2>
             <?php } ?>
             <?php if($_SESSION['usertype'] == "mentor"){ ?>                
-                <h2 class="text-2xl font-bold mb-6">Mentor Panel</h2>
+                <h2 class="text-2xl font-bold mb-6">Mentor Home</h2>
             <?php } ?>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <?php if($_SESSION['usertype'] == "admin"){ ?>                
-                <button class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300" onclick="location.href='addstudent.php'">Add Student</button>
+                <button class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300" onclick="location.href='addstudent.php'">Admin Controls</button>
             <?php } ?>
                 <button class="bg-blue-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-blue-600 transition duration-300" onclick="location.href='#'" id="groups-link">Groups</button>
                 <button class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300" onclick="location.href='guidelines.php'">Guidelines</button>
@@ -153,6 +152,7 @@ if ($yearsResult->num_rows > 0) {
             const button = document.createElement('button');
             button.classList.add('bg-blue-500', 'text-white', 'py-2', 'px-4', 'rounded', 'hover:bg-blue-700', 'transition', 'duration-300');
             button.textContent = year;
+            button.style.marginRight = '10px';
             button.addEventListener('click', () => {
                 // Handle year button click
                 console.log(`Year ${year} selected`);

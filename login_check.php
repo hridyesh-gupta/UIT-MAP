@@ -34,7 +34,7 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
     else if($row["usertype"]=="mentor"){ 
         $_SESSION['username']=$username; //Storing the username in session variable whenever the correct username and password is entered so that when we check those session variables in mentorhome.php, we can know that the user is logged in. Or we can also use it somewhere else in the whole session.
         $_SESSION['usertype']="mentor"; //Storing the usertype in session variable so that we can know that the user is student
-        header("location: mentorhome.php"); //If the user is mentor redirecting to 1st.html
+        header("location: adminhome.php"); //If the user is mentor redirecting to 1st.html
     }
     else{
         $message= "Invalid username or password"; //If the username or password is incorrect(means the username and password entered by user doesn't exist in database), then storing the error message in a variable

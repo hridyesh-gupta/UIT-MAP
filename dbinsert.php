@@ -20,10 +20,10 @@ if (isset($_POST['upload_file']) && isset($_FILES['uploaded_file'])) { //When th
         //$stmtUser = $conn->prepare("INSERT INTO user (username, usertype, password) VALUES (?, 'student', ?) ON DUPLICATE KEY UPDATE password = VALUES(password)"); 
 
         // Prepare the SQL statement for inserting data into the info table
-        $stmtInfo = $conn->prepare("INSERT INTO info (username, name, section, batch, roll, branch, dob, contact, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmtInfo = $conn->prepare("INSERT INTO info (username, name, section, batchyr, roll, branch, dob, contact, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
         
         //If you just want to insert some more new columns to the data which are already there in the database then the previous query will throw duplicate key error(i.e. this primary key already exist) so use this query but with caution that this will take too much time: 
-        //$stmtInfo = $conn->prepare("INSERT INTO info (username, name, section, batch, roll, branch, dob, contact, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name), section = VALUES(section), batch = VALUES(batch), branch = VALUES(branch), dob = VALUES(dob), contact = VALUES(contact), email = VALUES(email)"); 
+        //$stmtInfo = $conn->prepare("INSERT INTO info (username, name, section, batchyr, roll, branch, dob, contact, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name), section = VALUES(section), batchyr = VALUES(batchyr), branch = VALUES(branch), dob = VALUES(dob), contact = VALUES(contact), email = VALUES(email)"); 
         
         // Continuing from second line of the CSV file
         // Loop through each row of the CSV file 
@@ -37,7 +37,7 @@ if (isset($_POST['upload_file']) && isset($_FILES['uploaded_file'])) { //When th
             }            
             // Bind the data from the CSV row to the SQL query parameters for info table
             if (!empty($row[0])) {
-            // Assuming roll is at index 0, name is at index 1, section is at index 2, batch is at index 3 in the CSV and so on
+            // Assuming roll is at index 0, name is at index 1, section is at index 2, batchyr is at index 3 in the CSV and so on
             $stmtInfo->bind_param("sssssssss", $row[0], $row[1], $row[2], $row[3], $row[0], $row[5], $row[6], $row[7], $row[8]); 
             // Execute the SQL query to insert the data into info table
             $stmtInfo->execute(); 

@@ -171,6 +171,7 @@ if ($yearsResult->num_rows > 0) {
                 const button = document.createElement('button');
                 button.classList.add('bg-blue-500', 'text-white', 'py-2', 'px-4', 'rounded', 'hover:bg-blue-700', 'transition', 'duration-300');
                 button.textContent = year;
+                button.style.marginRight = '10px';
                 button.addEventListener('click', () => {
                     // Handle year button click
                     console.log(`Year ${year} selected`);

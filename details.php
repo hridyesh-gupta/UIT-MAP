@@ -107,16 +107,17 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $tech = $data['tech'];
         $technology = $data['technology'];
 
-        // Fetch the name of the creator & creation date of this grp from the groups table to save it along with the project details in the projinfo table
-        $creatorQuery= "SELECT creator, date FROM groups WHERE roll='$user' LIMIT 1"; //To fetch the name of the creator of the group
+        // Fetch the batchyr, name of the creator & creation date of this grp from the groups table to save it along with the project details in the projinfo table
+        $creatorQuery= "SELECT batchyr, creator, date FROM groups WHERE roll='$user' LIMIT 1"; 
         $creatorResult = $conn->query($creatorQuery); //Executing the query and saving the resultset in $creatorResult
         $creatorData = $creatorResult->fetch_assoc(); //Fetching the data from the resultset
         $creator = $creatorData['creator']; //Fetching the creator from the resultset and storing it in $creator
         $date = $creatorData['date']; //Fetching the date from the resultset and storing it in $date
+        $batchyr = $creatorData['batchyr']; //Fetching the batchyr from the resultset and storing it in $date
         
 
         // Prepare the SQL query to insert the project details into the projinfo table
-        $sql = "INSERT INTO projinfo (gnum, title, intro, objective, tech, technology, creator, date) VALUES ('$gnum', '$title', '$intro', '$objective', '$tech', '$technology', '$creator', '$date')";
+        $sql = "INSERT INTO projinfo (gnum, batchyr, title, intro, objective, tech, technology, creator, date) VALUES ('$gnum', '$batchyr', '$title', '$intro', '$objective', '$tech', '$technology', '$creator', '$date')";
         $sqlResult= $conn->query($sql);
         // Check if the insertion of project details is successful or not means it will only enter in if block if the insertion was not successful
         if (!$sqlResult) {
@@ -138,10 +139,12 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $gnum = generateUniqueId();
         $_SESSION['gnum']=$gnum; //Storing the group number in session variable so that we can use it in other pages
         
-        // Fetch the name of the present user so that he can be saved as the creator of the group
-        $creatorQuery= "SELECT name FROM info WHERE roll='$user'";//To fetch the name of the creator of the group
+        // Fetch the name and batchyr of the present user so that he can be saved as the creator of the group and his batch can be saved as the batchyr of the group
+        $creatorQuery= "SELECT name, batchyr FROM info WHERE roll='$user'";//To fetch the name of the creator of the group
         $creatorResult = $conn->query($creatorQuery);//Executing the query and saving the resultset in $creatorResult
-        $creator = $creatorResult->fetch_assoc()['name'];//Fetching the name from the resultset and storing it in $creator
+        $creatorData = $creatorResult->fetch_assoc();
+        $creator = $creatorData['name'];//Fetching the name from the resultset and storing it in $creator
+        $batchyr = $creatorData['batchyr'];//Fetching the batchyr from the resultset and storing it in $batchyr
         
         // Loop through each member in the members array
         foreach ($members as $member) {
@@ -152,7 +155,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $section = $member['section'];
             $responsibility = $member['responsibility'];
             // Insert the member data into the groups table
-            $sql = "INSERT INTO groups (roll, name, branch, section, responsibility, gnum, creator) VALUES ('$roll', '$name', '$branch', '$section', '$responsibility', '$gnum', '$creator')";
+            $sql = "INSERT INTO groups (roll, name, batchyr, branch, section, responsibility, gnum, creator) VALUES ('$roll', '$name', '$batchyr', '$branch', '$section', '$responsibility', '$gnum', '$creator')";
             $sqlResult= $conn->query($sql);
             // Check if the insertion of current member is successful or not means it will only enter in if block if the insertion was not successful
             if (!$sqlResult) {
@@ -416,31 +419,31 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         document.getElementById('technology1Word').disabled = true;
         document.getElementById('technologyUsed').disabled = true;
         <?php endif; ?>
-});
+    });
 
     //Logic to update the members UI when the page is loaded and group exists
     document.addEventListener('DOMContentLoaded', () => {
-    if (groupExists) {
-        // Load the existing group members
-        groupMembers.forEach(member => {//Loop through each member details in the groupMembers array
-            members.push({//Push the member details to the members array
-                roll: member.roll,
-                name: member.name,
-                section: member.section,
-                branch: member.branch,
-                responsibility: member.responsibility,
-                locked: true // Lock the member's details as they are already set
+        <?php if ($groupExists): ?>
+            // Load the existing group members
+            groupMembers.forEach(member => {//Loop through each member details in the groupMembers array
+                members.push({//Push the member details to the members array
+                    roll: member.roll,
+                    name: member.name,
+                    section: member.section,
+                    branch: member.branch,
+                    responsibility: member.responsibility,
+                    locked: true // Lock the member's details as they are already set
+                });
             });
-        });
-        document.getElementById('addMemberBtn').style.display = 'none';
-        document.getElementById('saveDetailsBtn').style.display = 'none';
-        document.getElementById('grpDetails').style.display = 'none';
-        document.getElementById('members').style.display = 'none';
-        // Update the UI
-        updateMembersUI();
-        updateResponsibilitiesTable();
-        toggleResponsibilitiesSection();
-    }
+            document.getElementById('addMemberBtn').style.display = 'none';
+            document.getElementById('saveDetailsBtn').style.display = 'none';
+            document.getElementById('grpDetails').style.display = 'none';
+            document.getElementById('members').style.display = 'none';
+            // Update the UI
+            updateMembersUI();
+            updateResponsibilitiesTable();
+            toggleResponsibilitiesSection();
+        <?php endif; ?>
 });
     //Logic to update the responsibilities table when a new member is added
     function updateResponsibilitiesTable() {
