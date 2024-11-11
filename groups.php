@@ -21,35 +21,40 @@ if ($result->num_rows > 0) {
     }
 }
 
-//To fetch the group details from the projinfo table
+// Extract the batch year from the URL
+$batchYear = isset($_GET['year']) ? $_GET['year'] : '';
+// Sanitize the input to prevent SQL injection
+$batchYear = mysqli_real_escape_string($conn, $batchYear);
+
+//To fetch the group details of that particular batch year from the projinfo table
 $groupExists=false;
 if($_SESSION['usertype'] == "admin"){
-    $sql = "SELECT * FROM projinfo"; 
+    $sql = "SELECT * FROM projinfo WHERE batchyr ='$batchYear' ORDER BY number ASC"; 
 }
 else if($_SESSION['usertype'] == "mentor"){
-    $sql = "SELECT * FROM projinfo WHERE mid='$_SESSION[username]'";
+    $sql = "SELECT * FROM projinfo WHERE batchyr ='$batchYear' AND mid='$_SESSION[username]' ORDER BY number ASC";
 }
 $groupResults = $conn->query($sql); //Executing the query
 $groupRows = [];
 if($groupResults->num_rows > 0){ //If there are groups in the projinfo table
     $groupExists=true;
-    while($groupRow = $groupResults->fetch_assoc()){ //Fetching the group details- Gnum, Group ID, Title, Intro, Tech, Technology, Creator, Mentor, Mentor ID, DEC Approval Date, and Mentor Approval Date
+    while($groupRow = $groupResults->fetch_assoc()){ //Fetching the group details from projinfo table- Gnum, Group ID, Batch, Title, Intro, Objective, Tech, Technology, Creator, Mentor, Mentor ID, Creation date, DEC Approval Date, and Mentor Approval Date
         $groupRows[] = $groupRow;
     }
 }
 
-//To fetch the group members details from the groups table
+//To fetch the group members details of that particular batch year from the groups table
 if($_SESSION['usertype'] == "admin"){
-    $sql2 = "SELECT * FROM groups"; 
+    $sql2 = "SELECT * FROM groups WHERE batchyr='$batchYear'"; 
 }
 else if($_SESSION['usertype'] == "mentor"){
-    $sql2 = "SELECT * FROM groups WHERE gnum IN (SELECT gnum FROM projinfo WHERE mid='$_SESSION[username]')"; //To fetch the group members details of the groups which are assigned to the mentor
+    $sql2 = "SELECT * FROM groups WHERE gnum IN (SELECT gnum FROM projinfo WHERE mid='$_SESSION[username]') AND batchyr='$batchYear'"; //To fetch the group members details of the groups which are assigned to the mentor
 }
 $memberResults = $conn->query($sql2); //Executing the query
 $memberRows = [];
 if($memberResults->num_rows > 0){ //If there are group members in the groups table
     $memberExists=true;
-    while($memberRow = $memberResults->fetch_assoc()){ //Fetching the group members details- Member's Roll Number, Member's Name, Section, Branch, Responsibility, Gnum, Creator and Creation Date
+    while($memberRow = $memberResults->fetch_assoc()){ //Fetching the group members details from groups table- Member's Roll Number, Member's Name, Batch, Section, Branch, Responsibility, Gnum, Creator and Creation Date
         $memberRows[] = $memberRow;
     }
 }
@@ -113,7 +118,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAP - View Groups</title>
+    <title>MAP - Groups</title>
     <link href="https://unpkg.com/tailwindcss@^2.0/dist/tailwind.min.css" rel="stylesheet">
     <?php include 'favicon.php' ?>
     <style>
@@ -190,13 +195,13 @@ include 'adminheaders.php';
                 <table class="min-w-full bg-white table-fixed">
                     <thead class="bg-gray-800 text-white">
                         <tr>
-                            <th class="px-4 py-2 text-center w-16">Group ID</th>
-                            <th class="px-4 py-2 text-center w-48">Project Title</th>
-                            <th class="px-4 py-2 text-center w-48">Group Leader</th>
+                            <th class="px-4 py-2 text-center w-12">Group ID</th>
+                            <th class="px-4 py-2 text-center w-1/3">Project Title</th>
+                            <th class="px-4 py-2 text-center w-1/3">Group Leader</th>
                             <?php if($_SESSION['usertype'] == "admin"){ ?>
-                                <th class="px-4 py-2 text-center w-56">Mentor Assigned</th>
+                                <th class="px-4 py-2 text-center w-1/5">Mentor Assigned</th>
                             <?php } ?>
-                            <th class="px-4 py-2 text-center w-16">Actions</th>
+                            <th class="px-4 py-2 text-center w-20">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="groupTable" >
@@ -239,8 +244,8 @@ include 'adminheaders.php';
     </div>
 
     <script>
-        const groupRows = <?php echo json_encode($groupRows); ?>; //Gnum, Group ID, Title, Intro, Tech, Technology, Creator, Mentor, Mentor ID, Creation Date, DEC Approval Date, and Mentor Approval Date
-        const memberRows = <?php echo json_encode($memberRows); ?>; //Member's Roll Number, Member's Name, Section, Branch, Responsibility, Gnum, Creator and Creation Date
+        const groupRows = <?php echo json_encode($groupRows); ?>; //Fetching the group details from projinfo table- Gnum, Group ID, Batch, Title, Intro, Objective, Tech, Technology, Creator, Mentor, Mentor ID, Creation date, DEC Approval Date, and Mentor Approval Date
+        const memberRows = <?php echo json_encode($memberRows); ?>; //Fetching the group members details from groups table- Member's Roll Number, Member's Name, Batch, Section, Branch, Responsibility, Gnum, Creator and Creation Date
         const mentors = <?php echo json_encode($mentors); ?>;
         const userType = "<?php echo $_SESSION['usertype']; ?>";
 
@@ -272,14 +277,14 @@ include 'adminheaders.php';
                             `).join('')}
                             // mentors.map(...): This returns an array of option HTML strings, where each element is an option tag for a mentor name & join(''): This method is used to concatenate (join) all these strings together without any separator (since '' is an empty string).
                         </select>
-                        <button onclick="changeMentor(this)" style="visibility: hidden;" class="bg-green-500 text-white py-1 px-3 rounded hover:bg-green-800 transition duration-300">Change</button>
+                        <button onclick="changeMentor(this)" style="visibility: hidden; margin-top: 5px;" class="bg-green-500 text-white py-1 px-3 rounded hover:bg-green-800 transition duration-300">Change Mentor</button>
                     </td>
                     ` : ''}
                     <td class="border px-4 py-2 text-center">
-                        <button onclick="openWeeklyAnalysisModal('${group.number}')" class="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-800 transition duration-300">Weekly Analysis</button>
-                        <button onclick="openRubricsReviewModal('${group.number}')" class="bg-purple-500 text-white py-1 px-3 rounded hover:bg-purple-800 transition duration-300">Rubrics Review</button>
+                        <button onclick="openWeeklyAnalysisModal('${group.number}')" class="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-800 transition duration-300" style="min-width: 140px;">Weekly Analysis</button>
+                        <button onclick="openRubricsReviewModal('${group.number}')" class="bg-green-500 text-white py-1 px-3 rounded hover:bg-green-800 transition duration-300" style="min-width: 140px; margin-top: 5px;">Rubrics Review</button>
                         ${userType == "admin" ? `
-                            <button onclick="deleteGroup(this)" class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-800 transition duration-300">Delete</button>
+                            <button onclick="deleteGroup(this)" class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-800 transition duration-300" style="min-width: 140px; margin-top: 5px;">Delete</button>
                         ` : ''}
                     </td>
                 `;
@@ -302,9 +307,9 @@ include 'adminheaders.php';
         // Function to open the group and project information modal
         function openGroupProjectInfoModal(event) {
             console.log('Cell clicked:', event.target.textContent); // Debugging line
-            const groupId = event.target.closest('tr').querySelector('.group-number').textContent;
-            const group = groupRows.find(group => group.number == groupId);
-            const creator = event.target.closest('tr').querySelector('.group-creator').textContent;
+            const groupId = event.target.closest('tr').querySelector('.group-number').textContent;//To get the group ID of the group whose title is clicked
+            const group = groupRows.find(group => group.number == groupId);//To get the more details of the group from the prjinfo table whose title is clicked using that group ID
+            const creator = event.target.closest('tr').querySelector('.group-creator').textContent;//To get the creator of the group whose title is clicked to further search the group members of that group from the groups table
 
             const modal = document.getElementById('groupProjectInfoModal');
             const groupProjectInfo = document.getElementById('groupProjectInfo');
