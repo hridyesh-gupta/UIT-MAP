@@ -19,7 +19,7 @@
         <a href="studentdetails.php" class="text-lg">Student Details</a>
         <a href="guidelines.php" class="text-lg">Guidelines</a>
         <a href="details.php" class="text-lg">Group Details</a>
-        <a href="status.php" class="text-lg">Weekly Analysis</a>
+        <a href="weekanalysis.php" class="text-lg">Weekly Analysis</a>
         <a href="rubrics.php" class="text-lg">Rubrics</a>
         <a href="logout.php" class="text-lg">Logout</a>
     </div>
@@ -31,7 +31,7 @@
         <a href="studentdetails.php" class="text-lg">Student Details</a>
         <a href="guidelines.php" class="text-lg">Guidelines</a>
         <a href="details.php" class="text-lg">Group Details</a>
-        <a href="status.php" class="text-lg">Weekly Analysis</a>
+        <a href="weekanalysis.php" class="text-lg">Weekly Analysis</a>
         <a href="rubrics.php" class="text-lg">Rubrics</a>
         <a href="logout.php" class="text-lg">Logout</a>
     </div>

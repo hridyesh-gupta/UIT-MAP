@@ -44,11 +44,12 @@ if($groupResults->num_rows > 0){ //If there are groups in the projinfo table
 }
 
 //To fetch the group members details of that particular batch year from the groups table
+$memberExists=false;
 if($_SESSION['usertype'] == "admin"){
     $sql2 = "SELECT * FROM groups WHERE batchyr='$batchYear'"; 
 }
 else if($_SESSION['usertype'] == "mentor"){
-    $sql2 = "SELECT * FROM groups WHERE gnum IN (SELECT gnum FROM projinfo WHERE mid='$_SESSION[username]') AND batchyr='$batchYear'"; //To fetch the group members details of the groups which are assigned to the mentor
+    $sql2 = "SELECT * FROM groups WHERE gnum IN (SELECT gnum FROM projinfo WHERE mid='$_SESSION[username]') AND batchyr='$batchYear'"; //To fetch the group members details of the groups which are assigned to the mentor(as mentor name is not present in groups table so we're fetching indirectly from projinfo table)
 }
 $memberResults = $conn->query($sql2); //Executing the query
 $memberRows = [];
@@ -57,6 +58,24 @@ if($memberResults->num_rows > 0){ //If there are group members in the groups tab
     while($memberRow = $memberResults->fetch_assoc()){ //Fetching the group members details from groups table- Member's Roll Number, Member's Name, Batch, Section, Branch, Responsibility, Gnum, Creator and Creation Date
         $memberRows[] = $memberRow;
     }
+}
+
+//To fetch the weekly analysis details from the wanalysis table
+$analysisExists=false;
+if($_SESSION['usertype'] == "admin"){
+    $sql3 = "SELECT * FROM wanalysis WHERE number IN (SELECT number FROM projinfo WHERE batchyr='$batchYear') ORDER BY weeknum ASC"; 
+}
+else if($_SESSION['usertype'] == "mentor"){
+    $sql3 = "SELECT * FROM wanalysis WHERE number IN (SELECT number FROM projinfo WHERE mid='$_SESSION[username]' AND batchyr='$batchYear') ORDER BY weeknum ASC"; //To fetch the weekly analysis details of the groups which are assigned to the mentor(as mentor name is not present in wanalysis table so we're fetching indirectly from projinfo table)
+}
+$analysisResults = $conn->query($sql3); //Executing the query
+$analysisRows = [];
+if($analysisResults->num_rows > 0){ //If there are weekly analysis details in the wanalysis table
+    $analysisExists=true;
+    $analysisRows[] = $analysisResults->fetch_all(MYSQLI_ASSOC);//Fast Method: Fetching the weekly analysis details from wanalysis table- Group Number, Week Number, Summary, Performance, Submission Date, Evaluation Date
+    // while($analysisRow = $analysisResults->fetch_assoc()){ //Slow Method: Fetching the weekly analysis details from wanalysis table- Group ID, Week Number, Summary, Performance, Date of Submission and Date of Evaluation
+    //     $analysisRows[] = $analysisRow;
+    // }
 }
 
 //To handle the incoming POST request and check if the request is to change the mentor or delete the group
@@ -109,6 +128,28 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
         // Close the prepared statements and connection
         $stmt1->close();
         $stmt2->close();
+        $conn->close();
+    }
+    else if($action === 'weekperformance'){
+        $groupId = $data['groupId'];
+        $weekNum = $data['weekNum'];
+        $summary = $data['summary'];
+        $performance = $data['performance'];
+
+        // Update the weekly analysis data in the 'wanalysis' table
+        $updateAnalysis = "UPDATE wanalysis SET summary = '$summary', performance = '$performance', dsub = CURDATE() WHERE number = '$groupId' AND weeknum = $weekNum";
+        $stmt = $conn->query($updateAnalysis);
+        // $stmt->bind_param("sssi", $summary, $performance, date('Y-m-d'), $groupId, $weekNum);
+        // $stmt->execute();
+
+        // if ($stmt->affected_rows > 0) {
+        //     header('Content-Type: text/plain');
+        //     echo 'success=true';
+        // } 
+        echo 'success=true';
+
+        // Close the statement and connection
+        $stmt->close();
         $conn->close();
     }
 }
@@ -224,7 +265,7 @@ include 'adminheaders.php';
     <div id="weeklyAnalysisModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h2>Weekly Analysis</h2>
+            <center><h1>Weekly Analysis</h1></center>
             <div id="weeklyAnalysisContent">
                 <!-- Weekly analysis content will be dynamically added here -->
             </div>
@@ -246,6 +287,7 @@ include 'adminheaders.php';
     <script>
         const groupRows = <?php echo json_encode($groupRows); ?>; //Fetching the group details from projinfo table- Gnum, Group ID, Batch, Title, Intro, Objective, Tech, Technology, Creator, Mentor, Mentor ID, Creation date, DEC Approval Date, and Mentor Approval Date
         const memberRows = <?php echo json_encode($memberRows); ?>; //Fetching the group members details from groups table- Member's Roll Number, Member's Name, Batch, Section, Branch, Responsibility, Gnum, Creator and Creation Date
+        const analysisRows = <?php echo json_encode($analysisRows); ?>; //Fetching the weekly analysis details from wanalysis table- Group ID, Week Number, Summary, Performance, Submission Date, Evaluation Date
         const mentors = <?php echo json_encode($mentors); ?>;
         const userType = "<?php echo $_SESSION['usertype']; ?>";
 
@@ -308,8 +350,9 @@ include 'adminheaders.php';
         function openGroupProjectInfoModal(event) {
             console.log('Cell clicked:', event.target.textContent); // Debugging line
             const groupId = event.target.closest('tr').querySelector('.group-number').textContent;//To get the group ID of the group whose title is clicked
-            const group = groupRows.find(group => group.number == groupId);//To get the more details of the group from the prjinfo table whose title is clicked using that group ID
-            const creator = event.target.closest('tr').querySelector('.group-creator').textContent;//To get the creator of the group whose title is clicked to further search the group members of that group from the groups table
+            const group = groupRows.find(group => group.number == groupId);//This 'group' variable contains all the details of that group whose title is clicked which we have filtered out from rest of the groups using that group ID
+            const members = memberRows.filter(member => member.gnum == group.gnum);//This 'member' variable contains all the member details of that group whose title is clicked which we have filtered out using the gnum
+            //const creator = event.target.closest('tr').querySelector('.group-creator').textContent;//To get the creator of the group whose title is clicked to further search the group members of that group from the groups table
 
             const modal = document.getElementById('groupProjectInfoModal');
             const groupProjectInfo = document.getElementById('groupProjectInfo');
@@ -330,7 +373,7 @@ include 'adminheaders.php';
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
-                            ${memberRows.filter(member => member.creator == creator).map((member, index) => `
+                            ${members.map((member, index) => `
                                 <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}">
                                     <td class="px-6 py-4 border">${member.name}</td>
                                     <td class="px-6 py-4 border">${member.roll}</td>
@@ -366,23 +409,53 @@ include 'adminheaders.php';
                 </div>
             `;
             modal.style.display = 'block';
+            modal.scrollTop = 0;
         }
 
         // Function to open the weekly analysis modal
         function openWeeklyAnalysisModal(groupId) {
             console.log('Opening weekly analysis for group:', groupId); // Debugging line
-            const group = groupRows.find(group => group.number == groupId);
-
+            const analysis = analysisRows.filter(analysis => analysis.number == groupId);
             const modal = document.getElementById('weeklyAnalysisModal');
             const modalContent = document.getElementById('weeklyAnalysisContent');
             modalContent.innerHTML = ''; // Clear existing content
 
-            // Populate modal with weekly analysis fields
-            for (let week = 1; week <= 36; week++) {
+            if (analysis.length > 0) {
+                // Get the maximum week number from the analysis data
+                const maxWeek = Math.max(...analysis.map(item => item.weeknum));
+
+                // Loop through the weeks to render the form for each week
+                for (let week = 1; week <= maxWeek; week++) {
+                    const weekData = analysis.find(item => item.weeknum === week);
+
+                    const weekDiv = document.createElement('div');
+                    weekDiv.classList.add('mb-4');
+                    weekDiv.innerHTML = `
+                        <h3 class="text-lg font-bold mb-2">Week ${week}</h3>
+                        <label class="block mb-2">Weekly Summary:</label>
+                        <textarea class="w-full p-2 border rounded mb-2" rows="3" disabled>${weekData ? weekData.summary : ''}</textarea>
+                        <label class="block mb-2">Performance:</label>
+                        <select class="w-full p-2 border rounded mb-2" ${weekData?.performance ? 'disabled' : ''}>
+                            <option value="satisfactory" ${weekData?.performance === 'satisfactory' ? 'selected' : ''}>Satisfactory</option>
+                            <option value="not_satisfactory" ${weekData?.performance === 'not_satisfactory' ? 'selected' : ''}>Not Satisfactory</option>
+                        </select>
+                        <label class="block mb-2">Date of Submission:</label>
+                        <input type="date" class="w-full p-2 border rounded mb-2" value="${weekData?.dsub || ''}" disabled>
+                        <label class="block mb-2">Date of Evaluation:</label>
+                        <input type="date" class="w-full p-2 border rounded mb-2" value="${weekData?.deval || ''}" ${weekData?.deval ? 'disabled' : ''}>
+                        <button class="bg-blue-500 text-white py-2 px-4 rounded mt-4 save-btn" 
+                                data-group-id="${groupId}" 
+                                data-week-num="${week}" 
+                                ${weekData?.deval ? 'disabled' : ''}>Save</button>
+                    `;
+                    modalContent.appendChild(weekDiv);
+                }
+            } else {
+                // If no data exists, show only the first week form
                 const weekDiv = document.createElement('div');
                 weekDiv.classList.add('mb-4');
                 weekDiv.innerHTML = `
-                    <h3 class="text-lg font-bold mb-2">Week ${week}</h3>
+                    <h3 class="text-lg font-bold mb-2">Week 1</h3>
                     <label class="block mb-2">Weekly Summary:</label>
                     <textarea class="w-full p-2 border rounded mb-2" rows="3"></textarea>
                     <label class="block mb-2">Performance:</label>
@@ -391,26 +464,71 @@ include 'adminheaders.php';
                         <option value="not_satisfactory">Not Satisfactory</option>
                     </select>
                     <label class="block mb-2">Date of Submission:</label>
-                    <input type="date" class="w-full p-2 border rounded mb-2">
+                    <input type="date" class="w-full p-2 border rounded mb-2" disabled>
                     <label class="block mb-2">Date of Evaluation:</label>
-                    <input type="date" class="w-full p-2 border rounded mb-2">
+                    <input type="date" class="w-full p-2 border rounded mb-2" disabled>
+                    <button class="bg-blue-500 text-white py-2 px-4 rounded mt-4 save-btn" 
+                            data-group-id="${groupId}" 
+                            data-week-num="1">Save</button>
                 `;
                 modalContent.appendChild(weekDiv);
             }
-            // Show existing data if present
-            // Assuming `group.weeklyData` contains the existing data for the weeks
-            if (group.weeklyData) {
-                group.weeklyData.forEach((weekData, index) => {
-                    const weekDiv = modalContent.children[index];
-                    weekDiv.querySelector('textarea').value = weekData.summary;
-                    weekDiv.querySelector('select').value = weekData.performance;
-                    weekDiv.querySelector('input[type="date"]').value = weekData.submissionDate;
-                    weekDiv.querySelectorAll('input[type="date"]')[1].value = weekData.evaluationDate;
-                });
-            }
-            modal.style.display = 'block';      
+
+            modal.style.display = 'block';
             modal.scrollTop = 0;
+
+            // Attach event listeners to the save buttons
+            const saveButtons = modal.querySelectorAll('.save-btn');
+            saveButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    const weekNum = this.getAttribute('data-week-num');
+                    const groupId = this.getAttribute('data-group-id');
+                    const weekDiv = this.closest('div');
+
+                    const summary = weekDiv.querySelector('textarea').value.trim();
+                    const performance = weekDiv.querySelector('select').value;
+
+                    if (!summary) {
+                        alert('Summary cannot be empty!');
+                        return;
+                    }
+
+                    // Prepare the data to send to the server
+                    const requestData = {
+                        groupId: groupId,
+                        weekNum: parseInt(weekNum, 10),
+                        summary: summary,
+                        performance: performance,
+                        action : 'weekperformance',
+                    };
+
+                    // Send the data to the server via Fetch API
+                    fetch('groups.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(requestData),
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert(`Details saved successfully for Week ${weekNum}`);
+                                weekDiv.querySelector('textarea').disabled = true;
+                                weekDiv.querySelector('select').disabled = true;
+                                this.disabled = true;
+                            } else {
+                                alert(`Error saving details for Week ${weekNum}: ${data.error}`);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('An error occurred while saving the details.');
+                        });
+                });
+            });
         }
+
         // Function to open the rubrics review modal
         function openRubricsReviewModal(groupNumber) {
             console.log('Button clicked for group:', groupNumber); // Debugging line
@@ -467,16 +585,14 @@ include 'adminheaders.php';
             }
 
             modal.style.display = 'block';
+            modal.scrollTop = 0;
         }
         // Close the modals when the close button is clicked
         document.querySelectorAll('.close').forEach(closeButton => {
             closeButton.addEventListener('click', () => {
                 // Close the modal
-        const modal = closeButton.closest('.modal');
-        modal.style.display = 'none';
-
-        // Reset the scroll position to the top of the page
-        window.scrollTo(0, 0);
+                const modal = closeButton.closest('.modal');
+                modal.style.display = 'none';
             });
         });
 
@@ -485,8 +601,6 @@ include 'adminheaders.php';
             document.querySelectorAll('.modal').forEach(modal => {
                 if (event.target == modal) {
                     modal.style.display = 'none';
-                    // Reset the scroll position to the top of the page
-        window.scrollTo(0, 0);
                 }
             });
         });

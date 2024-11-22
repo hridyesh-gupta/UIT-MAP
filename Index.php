@@ -22,7 +22,7 @@
                 <img src="COLLEGE.png" alt="United Group Of Institution logo" width="200" height="100">
             </div>
             <h1 class="text-center text-1.5xl font-bold mb-4">Login Here</h1>
-            <form action="login_check.php" method="POST">
+            <form action="login.php" method="POST">
                 <div class="mb-4">
                     <label for="uniqueId" class="block text-sm font-medium text-gray-700">Unique Id</label>
                     <div class="mt-1 relative rounded-md shadow-sm">

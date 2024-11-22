@@ -57,10 +57,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $stmt = $conn->prepare($query);
     $stmt->bind_param("sssssssssssssssssss", $username, $marks_10, $marks_12, $marks[0], $marks[1], $marks[2], $marks[3], $marks[4], $marks[5], $marks[6], $marks[7], $cp[0], $cp[1], $cp[2], $cp[3], $cp[4], $cp[5], $cp[6], $cp[7]);
-    $stmt->execute();
-    echo json_encode(['success' => true]);
+    $success= $stmt->execute();
     $stmt->close();
-    $conn->close();
+    if ($success) {
+        echo json_encode(['success' => 'true', 'message' => "Details saved successfully!"]);
+        exit;
+    }
+    else{
+        echo json_encode(['success' => 'false', 'message' => 'Failed to save details.']);
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -122,6 +127,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <td class="font-semibold text-gray-600">Batch</td>
                         <td>:</td>
                         <td><input type="text" id="student-batch" class="w-full border p-2" disabled></td>
+                    </tr>
+                    <tr>
+                        <td class="font-semibold text-gray-600">Branch</td>
+                        <td>:</td>
+                        <td><input type="text" id="student-branch" class="w-full border p-2" disabled></td>
                     </tr>
                     <tr>
                         <td class="font-semibold text-gray-600">DOB</td>
@@ -236,11 +246,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
         //To fill the student details in the input fields
         document.addEventListener('DOMContentLoaded', () => {
-            // Fill the input fields with the student details if they exist
+        // Fill the input fields with the student details if they exist
         <?php if ($studentExists): ?> 
             document.getElementById("student-name").value = studentDetails.name;
             document.getElementById("student-roll").value = studentDetails.roll;
-            document.getElementById("student-batch").value = studentDetails.batch;
+            document.getElementById("student-batch").value = studentDetails.batchyr;
+            document.getElementById("student-branch").value = studentDetails.branch;
             document.getElementById("student-dob").value = studentDetails.dob;
             document.getElementById("student-contact").value = studentDetails.contact;
             document.getElementById("student-email").value = studentDetails.email;
@@ -330,13 +341,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 },
                 body: JSON.stringify(data)
             })
-            .then(response => response.text())//It converts the response to text to make it more readable and to use it in the next .then block (Use response.text() when you expect the response from server to be plain text, such as HTML, XML, or plain text files. Use response.json() when you expect the response to be in JSON format.)
-            .then(data2 => {//It is used to access the data returned by the previous .then block and then we can use this data to display the message. Also we can name the data anything we want, here we have named it as data2
-                alert('Marks saved successfully!');
-                window.location.reload(); // Refresh the page
+            .then(response => response.json())//It converts the response to json to make it more readable and to use it in the next .then block (Use response.text() when you expect the response from server to be plain text, such as HTML, XML, or plain text files. Use response.json() when you expect the response to be in JSON format.)
+            .then(data => {//It is used to access the data returned by the previous .then block and then we can use this data to display the message. Also we can name the data anything we want, here we have named it as data
+                if (data.success) {
+                    alert(data.message);
+                    location.reload(); // Reload to display the newly updated data
+                } else {
+                    alert("Error: " + data.message);
+                }
             })
             .catch(error => console.error('Error occurred:', error));
-            // .catch(error => console.error('Error occured!'));          
         });
     </script>
     <?php include 'footer.php' ?>
