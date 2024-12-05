@@ -178,10 +178,11 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
         }
         .modal-content {
             background-color: #fefefe;
-            margin: 5% auto;
-            padding: 20px;
+            margin: 1% auto;
+            padding: 5px;
             border: 1px solid #888;
-            width: 80%;
+            width: 100%;
+            border-radius: 8px;
         }
         .close {
             color: #aaa;
@@ -276,7 +277,7 @@ include 'adminheaders.php';
     <div id="rubricsReviewModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <center><h1>Rubrics Review</h1></center>
+            <center><h1>&nbsp; Rubrics Review</h1></center>
             <div id="rubricsReviewContent">
                 <!-- Rubrics review content will be dynamically added here -->
             </div>
@@ -532,7 +533,9 @@ include 'adminheaders.php';
         // Function to open the rubrics review modal
         function openRubricsReviewModal(groupNumber) {
             console.log('Button clicked for group:', groupNumber); // Debugging line
-            const group = groupRows.find(group => group.number == groupNumber);
+            const group = groupRows.find(group => group.number == groupNumber);//We're receiving groupNumber as parameter when rubricsreview button is clicked and now we are finding that group which have same group number in the database using this line
+            const members = memberRows.filter(member => member.gnum == group.gnum);//This 'member' variable contains all the member details of that group whose title is clicked which we have filtered out using the gnum
+            const numberOfMembers = members.length;
 
             const modal = document.getElementById('rubricsReviewModal');
             const modalContent = document.getElementById('rubricsReviewContent');
@@ -544,8 +547,8 @@ include 'adminheaders.php';
                 rubricDiv.classList.add('mb-4', 'rubric-section');
                 rubricDiv.innerHTML = `
                     <div class="bg-beige shadow-xl rounded-xl p-6 mb-4 max-h-[500px] overflow-y-auto border-t-4 border-indigo-400">
-                        <h3 class="text-2xl font-serif text-gray-800 mb-6">Rubric R${i}</h3>
-
+                        <h3 class="text-2xl font-serif text-gray-800 mb-6"><center>Rubric R${i}</center></h3>
+                        ${i === 2 || i === 6 ? `
                         <!-- View PPT -->
                         <div class="mb-5">
                             <label for="ppt-upload" class="block text-gray-700 font-medium mb-2">View PPT:</label>
@@ -557,6 +560,7 @@ include 'adminheaders.php';
                             <label for="report-upload" class="block text-gray-700 font-medium mb-2">View Report:</label>
                             <input id="report-upload" type="file" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg">
                         </div>
+                        ` : ''}
 
                         <!-- Submission Date -->
                         <div class="mb-5">
@@ -579,6 +583,771 @@ include 'adminheaders.php';
                             </select>
                         </div>
                     </div>
+                    <div class="table-container overflow-auto mb-8 shadow-lg rounded-lg border border-gray-200">
+                    <table class="min-w-full bg-white rounded-lg text-gray-700" style="font-size: 15px !important;">
+                        ${i === 1 ? `
+                            <thead class="bg-blue-100 rounded-t-lg">
+                                <tr>
+                                    <th class="bg-blue-200 px-6 py-3 border-b-2 font-medium uppercase tracking-wider" style="font-size: 17px !important;" colspan="6">Level of Achievement</th>
+                                </tr>
+                                <tr>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Review Cases</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Good (6)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Average (5)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Poor (4)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Name</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Score</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><b>Identification of Problem Domain and Detailed Analysis</b></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Detailed and extensive explanation of the purpose and need of the project</td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Average explanation of the purpose and need of the project </td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Minimal explanation of the purpose and need of the project </td>
+                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border">
+                                        <select class="p-2 border rounded">
+                                            <option value="">...</option>
+                                            <option value="6" ${Number(members[0].r11) === 6 ? 'selected' : ''}>6</option> //Even the r11 in db is stored as integer but when we use it in JS it is sometimes stored as string so we need to convert it to number using Number() function to compare with numbers 6,5,4
+                                            <option value="5" ${Number(members[0].r11) === 5 ? 'selected' : ''}>5</option>
+                                            <option value="4" ${Number(members[0].r11) === 4 ? 'selected' : ''}>4</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                ${members.slice(1).map((member, index) => `
+                                    <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
+                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border">
+                                            <select class="p-2 border rounded">
+                                                <option value="">...</option>
+                                                <option value="6" ${Number(member.r11) === 6 ? 'selected' : ''}>6</option> //Even the r11 in db is stored as integer but when we use it in JS it is sometimes stored as string so we need to convert it to number using Number() function to compare with numbers 6,5,4
+                                                <option value="5" ${Number(member.r11) === 5 ? 'selected' : ''}>5</option>
+                                                <option value="4" ${Number(member.r11) === 4 ? 'selected' : ''}>4</option>
+                                            </select>
+                                        </td>                                        
+                                    </tr>
+                                `).join('')}
+                                <tr>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><b>Study of the Existing Systems and Feasibility of Project Proposal</b></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Detailed and extensive explanation of the specifications and the limitations of the existing systems</td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Moderate study of the existing systems; collects some basic information</td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Minimal explanation of the specifications and the limitations of the existing systems; incomplete information</td>
+                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border">
+                                        <select class="p-2 border rounded">
+                                            <option value="">...</option>
+                                            <option value="6" ${Number(members[0].r12) === 6 ? 'selected' : ''}>6</option> 
+                                            <option value="5" ${Number(members[0].r12) === 5 ? 'selected' : ''}>5</option>
+                                            <option value="4" ${Number(members[0].r12) === 4 ? 'selected' : ''}>4</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                ${members.slice(1).map((member, index) => `
+                                    <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
+                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border">
+                                            <select class="p-2 border rounded">
+                                                <option value="">...</option>
+                                                <option value="6" ${Number(member.r12) === 6 ? 'selected' : ''}>6</option> 
+                                                <option value="5" ${Number(member.r12) === 5 ? 'selected' : ''}>5</option>
+                                                <option value="4" ${Number(member.r12) === 4 ? 'selected' : ''}>4</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                                <tr>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><b>Objectives and Methodology of the Proposed Work</b></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">All objectives of the proposed work are well defined; steps to be followed to solve the defined problem are clearly specified</td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Incomplete justification to the objectives proposed; steps are mentioned but unclear; without justification to objectives</td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Objectives of the proposed work are either not identified or not well defined; incomplete and improper specification</td>
+                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border">
+                                        <select class="p-2 border rounded">
+                                            <option value="">...</option>
+                                            <option value="6" ${Number(members[0].r13) === 6 ? 'selected' : ''}>6</option> 
+                                            <option value="5" ${Number(members[0].r13) === 5 ? 'selected' : ''}>5</option>
+                                            <option value="4" ${Number(members[0].r13) === 4 ? 'selected' : ''}>4</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                ${members.slice(1).map((member, index) => `
+                                    <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
+                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border">
+                                            <select class="p-2 border rounded">
+                                                <option value="">...</option>
+                                                <option value="6" ${Number(member.r13) === 6 ? 'selected' : ''}>6</option> 
+                                                <option value="5" ${Number(member.r13) === 5 ? 'selected' : ''}>5</option>
+                                                <option value="4" ${Number(member.r13) === 4 ? 'selected' : ''}>4</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>        
+                        ` : ''}
+                        ${i === 2 ? `
+                            <thead class="bg-blue-100 rounded-t-lg">
+                                <tr>
+                                    <th class="bg-blue-200 px-6 py-3 border-b-2 font-medium uppercase tracking-wider" style="font-size: 17px !important;" colspan="7">Level of Achievement</th>
+                                </tr>
+                                <tr>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Review Cases</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Excellent (8)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Good (7)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Average (6)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Poor (5)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Name</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Score</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><b>Project Synopsis Report</b></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Project Synopsis report is according to the specified format</li><li>References and citations are appropriate and well mentioned</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Project Synopsis report is according to the specified format</li><li>References and citations are appropriate but not mentioned well</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Project Synopsis report is according to the specified format but with some mistakes</li><li>Insufficient references and citations</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Project Synopsis report not prepared according to the specified format</li><li>References and citations are not appropriate</li></ul></td>
+                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border">
+                                        <select class="p-2 border rounded">
+                                            <option value="">...</option>
+                                            <option value="8" ${Number(members[0].r21) === 8 ? 'selected' : ''}>8</option>
+                                            <option value="7" ${Number(members[0].r21) === 7 ? 'selected' : ''}>7</option>
+                                            <option value="6" ${Number(members[0].r21) === 6 ? 'selected' : ''}>6</option> 
+                                            <option value="5" ${Number(members[0].r21) === 5 ? 'selected' : ''}>5</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                ${members.slice(1).map((member, index) => `
+                                    <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
+                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border">
+                                            <select class="p-2 border rounded">
+                                                <option value="">...</option>
+                                                <option value="8" ${Number(member.r21) === 8 ? 'selected' : ''}>8</option>
+                                                <option value="7" ${Number(member.r21) === 7 ? 'selected' : ''}>7</option>
+                                                <option value="6" ${Number(member.r21) === 6 ? 'selected' : ''}>6</option> 
+                                                <option value="5" ${Number(member.r21) === 5 ? 'selected' : ''}>5</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                                <tr>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><b>Description of Concepts and Technical Details</b></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Complete explanation of the key concepts</li><li>Strong description of the technical requirements of the project</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Complete explanation of the key concepts</li><li>Insufficient description of the technical requirements of the project</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Complete explanation of the key concepts but little relevance to literature</li><li>Insufficient description of the technical requirements of the project</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Inappropiate explanation of the key concepts</li><li>Poor description of the technical requirements of the project</li></ul></td>
+                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border">
+                                        <select class="p-2 border rounded">
+                                            <option value="">...</option>
+                                            <option value="8" ${Number(members[0].r22) === 8 ? 'selected' : ''}>8</option>
+                                            <option value="7" ${Number(members[0].r22) === 7 ? 'selected' : ''}>7</option>
+                                            <option value="6" ${Number(members[0].r22) === 6 ? 'selected' : ''}>6</option> 
+                                            <option value="5" ${Number(members[0].r22) === 5 ? 'selected' : ''}>5</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                ${members.slice(1).map((member, index) => `
+                                    <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
+                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border">
+                                            <select class="p-2 border rounded">
+                                                <option value="">...</option>
+                                                <option value="8" ${Number(member.r22) === 8 ? 'selected' : ''}>8</option>
+                                                <option value="7" ${Number(member.r22) === 7 ? 'selected' : ''}>7</option>
+                                                <option value="6" ${Number(member.r22) === 6 ? 'selected' : ''}>6</option> 
+                                                <option value="5" ${Number(member.r22) === 5 ? 'selected' : ''}>5</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                                <tr>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><b>Planning of Project Work and Team Structure</b></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Time frame properly specified and being followed</li><li>Appropriate distribution of project work</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Time frame properly specified and being followed</li><li>Distribution of project work inappropriate</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Time frame properly specified, but not being followed</li><li>Distribution of project work uneven</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Time frame not properly specified</li><li>Inappropriate distribution of project work</li></ul></td>
+                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border">
+                                        <select class="p-2 border rounded">
+                                            <option value="">...</option>
+                                            <option value="8" ${Number(members[0].r23) === 8 ? 'selected' : ''}>8</option>
+                                            <option value="7" ${Number(members[0].r23) === 7 ? 'selected' : ''}>7</option>
+                                            <option value="6" ${Number(members[0].r23) === 6 ? 'selected' : ''}>6</option> 
+                                            <option value="5" ${Number(members[0].r23) === 5 ? 'selected' : ''}>5</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                ${members.slice(1).map((member, index) => `
+                                    <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
+                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border">
+                                            <select class="p-2 border rounded">
+                                                <option value="">...</option>
+                                                <option value="8" ${Number(member.r23) === 8 ? 'selected' : ''}>8</option>
+                                                <option value="7" ${Number(member.r23) === 7 ? 'selected' : ''}>7</option>
+                                                <option value="6" ${Number(member.r23) === 6 ? 'selected' : ''}>6</option> 
+                                                <option value="5" ${Number(member.r23) === 5 ? 'selected' : ''}>5</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        ` : ''}
+                        ${i === 3 ? `
+                            <thead class="bg-blue-100 rounded-t-lg">
+                                <tr>
+                                    <th class="bg-blue-200 px-6 py-3 border-b-2 font-medium uppercase tracking-wider" style="font-size: 17px !important;" colspan="6">Level of Achievement</th>
+                                </tr>
+                                <tr>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Review Cases</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Good (4)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Average (3)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Poor (2)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Name</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Score</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><b>Working within a Team</b></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Collaborates and communicates in a group situation and integrates the views of others</td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Exchanges some views but requires guidance to collaborate with others</td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Makes little or no attempt to collaborate in a group situation</td>
+                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border">
+                                        <select class="p-2 border rounded">
+                                            <option value="">...</option>
+                                            <option value="4" ${Number(members[0].r31) === 4 ? 'selected' : ''}>4</option>
+                                            <option value="3" ${Number(members[0].r31) === 3 ? 'selected' : ''}>3</option>
+                                            <option value="2" ${Number(members[0].r31) === 2 ? 'selected' : ''}>2</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                ${members.slice(1).map((member, index) => `
+                                    <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
+                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border">
+                                            <select class="p-2 border rounded">
+                                                <option value="">...</option>
+                                                <option value="4" ${Number(member.r31) === 4 ? 'selected' : ''}>4</option>
+                                                <option value="3" ${Number(member.r31) === 3 ? 'selected' : ''}>3</option>
+                                                <option value="2" ${Number(member.r31) === 2 ? 'selected' : ''}>2</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                                <tr>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><b>Regularity</b></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Reports to the guide regularly and consistent in work</td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Not very regular but consistent in the work</td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Irregular in attendance and inconsistent in work</td>
+                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border">
+                                        <select class="p-2 border rounded">
+                                            <option value="">...</option>
+                                            <option value="4" ${Number(members[0].r32) === 4 ? 'selected' : ''}>4</option>
+                                            <option value="3" ${Number(members[0].r32) === 3 ? 'selected' : ''}>3</option>
+                                            <option value="2" ${Number(members[0].r32) === 2 ? 'selected' : ''}>2</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                ${members.slice(1).map((member, index) => `
+                                    <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
+                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border">
+                                            <select class="p-2 border rounded">
+                                                <option value="">...</option>
+                                                <option value="4" ${Number(member.r32) === 4 ? 'selected' : ''}>4</option>
+                                                <option value="3" ${Number(member.r32) === 3 ? 'selected' : ''}>3</option>
+                                                <option value="2" ${Number(member.r32) === 2 ? 'selected' : ''}>2</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>        
+                        ` : ''}
+                        ${i === 4 ? `
+                            <thead class="bg-blue-100 rounded-t-lg">
+                                <tr>
+                                    <th class="bg-blue-200 px-6 py-3 border-b-2 font-medium uppercase tracking-wider" style="font-size: 17px !important;" colspan="7">Level of Achievement</th>
+                                </tr>
+                                <tr>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Review Cases</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Excellent (50)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Good (45)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Average (40)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Poor (35)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Name</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Score</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><b>Design Methodology </b></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Divison of problem into modules and good selection of computing framework</li><li>Appropriate design methodology and properly justification</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Divison of problem into modules and good selection of computing framework</li><li>Design methodology not properly justified</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Divison of problem into modules but inappropriate selection of computing framework</li><li>Design methodology not defined properly</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Modular approach not adopted </li><li>Design methodology not defined</li></ul></td>
+                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border">
+                                        <select class="p-2 border rounded">
+                                            <option value="">...</option>
+                                            <option value="50" ${Number(members[0].r41) === 50 ? 'selected' : ''}>50</option>
+                                            <option value="45" ${Number(members[0].r41) === 45 ? 'selected' : ''}>45</option>
+                                            <option value="40" ${Number(members[0].r41) === 40 ? 'selected' : ''}>40</option> 
+                                            <option value="35" ${Number(members[0].r41) === 35 ? 'selected' : ''}>35</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                ${members.slice(1).map((member, index) => `
+                                    <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
+                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border">
+                                            <select class="p-2 border rounded">
+                                                <option value="">...</option>
+                                                <option value="50" ${Number(member.r41) === 50 ? 'selected' : ''}>50</option>
+                                                <option value="45" ${Number(member.r41) === 45 ? 'selected' : ''}>45</option>
+                                                <option value="40" ${Number(member.r41) === 40 ? 'selected' : ''}>40</option> 
+                                                <option value="35" ${Number(member.r41) === 35 ? 'selected' : ''}>35</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                                <tr>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><b>Demonstration and Presentation </b></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Objectives achieved as per time frame</li><li>Contents of presentations are appropriate and well arranged</li><li>Proper eye contact with audience and clear voice with good spoken language </li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Objectives achieved as per time frame</li><li>Contents of presentations are appropriate but not well arranged</li><li>Satisfactory demonstration, clear voice with good spoken language but eye contact not proper</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Objectives achieved as per time frame</li><li>Contents of presentations are appropriate but not well arranged</li><li>Presentation not satisfactory and average demonstration</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>No objectives achieved</li><li>Contents of presentations are not appropriate and not well delivered </li><li>Poor delivery of presentation</li></ul></td>
+                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border">
+                                        <select class="p-2 border rounded">
+                                            <option value="">...</option>
+                                            <option value="50" ${Number(members[0].r42) === 50 ? 'selected' : ''}>50</option>
+                                            <option value="45" ${Number(members[0].r42) === 45 ? 'selected' : ''}>45</option>
+                                            <option value="40" ${Number(members[0].r42) === 40 ? 'selected' : ''}>40</option> 
+                                            <option value="35" ${Number(members[0].r42) === 35 ? 'selected' : ''}>35</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                ${members.slice(1).map((member, index) => `
+                                    <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
+                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border">
+                                            <select class="p-2 border rounded">
+                                                <option value="">...</option>
+                                                <option value="50" ${Number(member.r42) === 50 ? 'selected' : ''}>50</option>
+                                                <option value="45" ${Number(member.r42) === 45 ? 'selected' : ''}>45</option>
+                                                <option value="40" ${Number(member.r42) === 40 ? 'selected' : ''}>40</option> 
+                                                <option value="35" ${Number(member.r42) === 35 ? 'selected' : ''}>35</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        ` : ''}
+                        ${i === 5 ? `
+                            <thead class="bg-blue-100 rounded-t-lg">
+                                <tr>
+                                    <th class="bg-blue-200 px-6 py-3 border-b-2 font-medium uppercase tracking-wider" style="font-size: 17px !important;" colspan="7">Level of Achievement</th>
+                                </tr>
+                                <tr>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Review Cases</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Excellent (50)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Good (45)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Average (40)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Poor (35)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Name</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Score</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><b>Incorporation of Suggestions</b></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Changes are made as per modifications suggested during mid term evaluation and new innovations added</td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Changes are made as per modifications suggested during mid term evaluation and good justification</td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Few changes are made as per modifications suggested during mid term evaluation</td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Suggestions during mid term evaluation are not incorporated</td>
+                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border">
+                                        <select class="p-2 border rounded">
+                                            <option value="">...</option>
+                                            <option value="50" ${Number(members[0].r51) === 50 ? 'selected' : ''}>50</option>
+                                            <option value="45" ${Number(members[0].r51) === 45 ? 'selected' : ''}>45</option>
+                                            <option value="40" ${Number(members[0].r51) === 40 ? 'selected' : ''}>40</option> 
+                                            <option value="35" ${Number(members[0].r51) === 35 ? 'selected' : ''}>35</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                ${members.slice(1).map((member, index) => `
+                                    <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
+                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border">
+                                            <select class="p-2 border rounded">
+                                                <option value="">...</option>
+                                                <option value="50" ${Number(member.r51) === 50 ? 'selected' : ''}>50</option>
+                                                <option value="45" ${Number(member.r51) === 45 ? 'selected' : ''}>45</option>
+                                                <option value="40" ${Number(member.r51) === 40 ? 'selected' : ''}>40</option> 
+                                                <option value="35" ${Number(member.r51) === 35 ? 'selected' : ''}>35</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                                <tr>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><b>Project Demonstration </b></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>All defined objectives are achieved</li><li>Each module working well and properly demonstrated</li><li>All modules of project are well integrated and system working is accurate</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>All defined objectives are achieved</li><li>Each module working well and properly demonstrated</li><li>Integration of all modules not done and system working is not veey satisfactory</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Some of the defined objectives are achieved</li><li>Modules are working well in isolation and properly demonstrated</li><li>Modules of project are not properly integrated</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Defined objectives are not achieved</li><li>Modules are not in proper working form that further leads to failure of integrated system</li></ul></td>
+                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border">
+                                        <select class="p-2 border rounded">
+                                            <option value="">...</option>
+                                            <option value="50" ${Number(members[0].r52) === 50 ? 'selected' : ''}>50</option>
+                                            <option value="45" ${Number(members[0].r52) === 45 ? 'selected' : ''}>45</option>
+                                            <option value="40" ${Number(members[0].r52) === 40 ? 'selected' : ''}>40</option> 
+                                            <option value="35" ${Number(members[0].r52) === 35 ? 'selected' : ''}>35</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                ${members.slice(1).map((member, index) => `
+                                    <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
+                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border">
+                                            <select class="p-2 border rounded">
+                                                <option value="">...</option>
+                                                <option value="50" ${Number(member.r52) === 50 ? 'selected' : ''}>50</option>
+                                                <option value="45" ${Number(member.r52) === 45 ? 'selected' : ''}>45</option>
+                                                <option value="40" ${Number(member.r52) === 40 ? 'selected' : ''}>40</option> 
+                                                <option value="35" ${Number(member.r52) === 35 ? 'selected' : ''}>35</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                                <tr>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><b>Presentation</b></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Contents of presentations are appropriate and well delivered</li><li>Proper eye contact with audience and clear voice with good spoken language</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Contents of presentations are appropriate and well delivered</li><li>Clear voice with good spoken language but less eye contact with audience</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Contents of presentations are not appropriate</li><li>Eye contact with few people and unclear voice</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Contents of presentations are not appropriate and not well delivered</li><li>Poor delivery of presentation</li></ul></td>
+                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border">
+                                        <select class="p-2 border rounded">
+                                            <option value="">...</option>
+                                            <option value="50" ${Number(members[0].r53) === 50 ? 'selected' : ''}>50</option>
+                                            <option value="45" ${Number(members[0].r53) === 45 ? 'selected' : ''}>45</option>
+                                            <option value="40" ${Number(members[0].r53) === 40 ? 'selected' : ''}>40</option> 
+                                            <option value="35" ${Number(members[0].r53) === 35 ? 'selected' : ''}>35</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                ${members.slice(1).map((member, index) => `
+                                    <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
+                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border">
+                                            <select class="p-2 border rounded">
+                                                <option value="">...</option>
+                                                <option value="50" ${Number(member.r53) === 50 ? 'selected' : ''}>50</option>
+                                                <option value="45" ${Number(member.r53) === 45 ? 'selected' : ''}>45</option>
+                                                <option value="40" ${Number(member.r53) === 40 ? 'selected' : ''}>40</option> 
+                                                <option value="35" ${Number(member.r53) === 35 ? 'selected' : ''}>35</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        ` : ''}
+                        ${i === 6 ? `
+                            <thead class="bg-blue-100 rounded-t-lg">
+                                <tr>
+                                    <th class="bg-blue-200 px-6 py-3 border-b-2 font-medium uppercase tracking-wider" style="font-size: 17px !important;" colspan="7">Level of Achievement</th>
+                                </tr>
+                                <tr>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Review Cases</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Excellent (30)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Good (27)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Average (24)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Poor (21)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Name</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Score</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><b>Project Report</b></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Project report is according to the specified format</li><li>References and citations are appropriate  and well mentioned</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Project report is according to the specified format</li><li>References and citations are appropriate but not mentioned well </li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Project report is according to the specified format but some mistakes</li><li>In-sufficient references and citations</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Project report not prepared according to the specified format</li><li>References and citations are not  appropriate</li></ul></td>
+                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border">
+                                        <select class="p-2 border rounded">
+                                            <option value="">...</option>
+                                            <option value="30" ${Number(members[0].r61) === 30 ? 'selected' : ''}>30</option>
+                                            <option value="27" ${Number(members[0].r61) === 27 ? 'selected' : ''}>27</option>
+                                            <option value="24" ${Number(members[0].r61) === 24 ? 'selected' : ''}>24</option> 
+                                            <option value="21" ${Number(members[0].r61) === 21 ? 'selected' : ''}>21</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                ${members.slice(1).map((member, index) => `
+                                    <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
+                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border">
+                                            <select class="p-2 border rounded">
+                                                <option value="">...</option>
+                                                <option value="30" ${Number(member.r61) === 30 ? 'selected' : ''}>30</option>
+                                                <option value="27" ${Number(member.r61) === 27 ? 'selected' : ''}>27</option>
+                                                <option value="24" ${Number(member.r61) === 24 ? 'selected' : ''}>24</option> 
+                                                <option value="21" ${Number(member.r61) === 21 ? 'selected' : ''}>21</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                                <tr>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><b>Description of Concepts and Technical Details </b></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Complete explanation of the key concepts</li><li>Strong description of the technical requirements of the project</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Complete explanation of the key concepts</li><li>In-sufficient description of the technical requirements of the project</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Complete explanation of the key concepts but little relevance to literature</li><li>In-sufficient description of the technical requirements of the project</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Inapproiate explanation of the key concepts</li><li>Poor description of the technical requirements of the project</li></ul></td>
+                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border">
+                                        <select class="p-2 border rounded">
+                                            <option value="">...</option>
+                                            <option value="30" ${Number(members[0].r62) === 30 ? 'selected' : ''}>30</option>
+                                            <option value="27" ${Number(members[0].r62) === 27 ? 'selected' : ''}>27</option>
+                                            <option value="24" ${Number(members[0].r62) === 24 ? 'selected' : ''}>24</option> 
+                                            <option value="21" ${Number(members[0].r62) === 21 ? 'selected' : ''}>21</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                ${members.slice(1).map((member, index) => `
+                                    <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
+                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border">
+                                            <select class="p-2 border rounded">
+                                                <option value="">...</option>
+                                                <option value="30" ${Number(member.r62) === 30 ? 'selected' : ''}>30</option>
+                                                <option value="27" ${Number(member.r62) === 27 ? 'selected' : ''}>27</option>
+                                                <option value="24" ${Number(member.r62) === 24 ? 'selected' : ''}>24</option> 
+                                                <option value="21" ${Number(member.r62) === 21 ? 'selected' : ''}>21</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                                <tr>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><b>Conclusion and Discussion</b></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Results are presented in very appropriate manner </li><li>Project work is well summarized and concluded</li><li>Future extensions in the project are well specified</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Results are presented in good manner </li><li>Project work summary and conclusion not very appropriate</li><li>Future extensions in the project are  specified </li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Results presented are not much satisfactory</li><li>Project work summary and conclusion not very appropriate</li><li>Future extensions in the project are specified</li></ul></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Results are not presented properly</li><li>Project work is not  summarized and concluded</li><li>Future extensions in the project are not specified</li></ul></td>
+                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border">
+                                        <select class="p-2 border rounded">
+                                            <option value="">...</option>
+                                            <option value="30" ${Number(members[0].r63) === 30 ? 'selected' : ''}>30</option>
+                                            <option value="27" ${Number(members[0].r63) === 27 ? 'selected' : ''}>27</option>
+                                            <option value="24" ${Number(members[0].r63) === 24 ? 'selected' : ''}>24</option> 
+                                            <option value="21" ${Number(members[0].r63) === 21 ? 'selected' : ''}>21</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                ${members.slice(1).map((member, index) => `
+                                    <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
+                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border">
+                                            <select class="p-2 border rounded">
+                                                <option value="">...</option>
+                                                <option value="30" ${Number(member.r63) === 30 ? 'selected' : ''}>30</option>
+                                                <option value="27" ${Number(member.r63) === 27 ? 'selected' : ''}>27</option>
+                                                <option value="24" ${Number(member.r63) === 24 ? 'selected' : ''}>24</option> 
+                                                <option value="21" ${Number(member.r63) === 21 ? 'selected' : ''}>21</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        ` : ''}
+                        ${i === 7 ? `
+                            <thead class="bg-blue-100 rounded-t-lg">
+                                <tr>
+                                    <th class="bg-blue-200 px-6 py-3 border-b-2 font-medium uppercase tracking-wider" style="font-size: 17px !important;" colspan="6">Level of Achievement</th>
+                                </tr>
+                                <tr>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Review Cases</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Good (35)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Average (30)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Poor (25)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Name</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Score</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><b>Writing Research Paper related to work done in Project</b></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Written Research paper related to Project and communicated in any Conference/ Journal</td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Written Research paper related to Project but not communicated in any Conference/ Journal</td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Not written Research paper related to Project</td>
+                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border">
+                                        <select class="p-2 border rounded">
+                                            <option value="">...</option>
+                                            <option value="35" ${Number(members[0].r71) === 35 ? 'selected' : ''}>35</option>
+                                            <option value="30" ${Number(members[0].r71) === 30 ? 'selected' : ''}>30</option>
+                                            <option value="25" ${Number(members[0].r71) === 25 ? 'selected' : ''}>25</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                ${members.slice(1).map((member, index) => `
+                                    <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
+                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border">
+                                            <select class="p-2 border rounded">
+                                                <option value="">...</option>
+                                                <option value="35" ${Number(member.r71) === 35 ? 'selected' : ''}>35</option>
+                                                <option value="30" ${Number(member.r71) === 30 ? 'selected' : ''}>30</option>
+                                                <option value="25" ${Number(member.r71) === 25 ? 'selected' : ''}>25</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                                <tr>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><b>Research paper</b></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Research paper published in international Conference/Journal <br> <b>OR</b> <br> Research paper published in national Conference/Journal and placed in any company</td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Research paper published in national Conference/Journal</td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Research paper not published</td>
+                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border">
+                                        <select class="p-2 border rounded">
+                                            <option value="">...</option>
+                                            <option value="35" ${Number(members[0].r72) === 35 ? 'selected' : ''}>35</option>
+                                            <option value="30" ${Number(members[0].r72) === 30 ? 'selected' : ''}>30</option>
+                                            <option value="25" ${Number(members[0].r72) === 25 ? 'selected' : ''}>25</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                ${members.slice(1).map((member, index) => `
+                                    <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
+                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border">
+                                            <select class="p-2 border rounded">
+                                                <option value="">...</option>
+                                                <option value="35" ${Number(member.r72) === 35 ? 'selected' : ''}>35</option>
+                                                <option value="30" ${Number(member.r72) === 30 ? 'selected' : ''}>30</option>
+                                                <option value="25" ${Number(member.r72) === 25 ? 'selected' : ''}>25</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>        
+                        ` : ''}
+                        ${i === 8 ? `
+                            <thead class="bg-blue-100 rounded-t-lg">
+                                <tr>
+                                    <th class="bg-blue-200 px-6 py-3 border-b-2 font-medium uppercase tracking-wider" style="font-size: 17px !important;" colspan="6">Level of Achievement</th>
+                                </tr>
+                                <tr>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Review Cases</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Good (30)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Average (25)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Poor (20)</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Name</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Score</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><b>Working within a Team</b></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Collaborates and communicates in a group situation and integrates the views of others</td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Exchanges some views but requires guidance to collaborate with others</td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Makes little or no attempt to collaborate in a group situation</td>
+                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border">
+                                        <select class="p-2 border rounded">
+                                            <option value="">...</option>
+                                            <option value="30" ${Number(members[0].r81) === 30 ? 'selected' : ''}>30</option>
+                                            <option value="25" ${Number(members[0].r81) === 25 ? 'selected' : ''}>25</option>
+                                            <option value="20" ${Number(members[0].r81) === 20 ? 'selected' : ''}>20</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                ${members.slice(1).map((member, index) => `
+                                    <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
+                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border">
+                                            <select class="p-2 border rounded">
+                                                <option value="">...</option>
+                                                <option value="30" ${Number(member.r81) === 30 ? 'selected' : ''}>30</option>
+                                                <option value="25" ${Number(member.r81) === 25 ? 'selected' : ''}>25</option>
+                                                <option value="20" ${Number(member.r81) === 20 ? 'selected' : ''}>20</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                                <tr>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><b>Technical  Knowledge and Awareness related to the Project</b></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Extensive knowledge related to the project</td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Fair knowledge related to the project</td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Lacks sufficient knowledge</td>
+                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border">
+                                        <select class="p-2 border rounded">
+                                            <option value="">...</option>
+                                            <option value="30" ${Number(members[0].r82) === 30 ? 'selected' : ''}>30</option>
+                                            <option value="25" ${Number(members[0].r82) === 25 ? 'selected' : ''}>25</option>
+                                            <option value="20" ${Number(members[0].r82) === 20 ? 'selected' : ''}>20</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                ${members.slice(1).map((member, index) => `
+                                    <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
+                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border">
+                                            <select class="p-2 border rounded">
+                                                <option value="">...</option>
+                                                <option value="30" ${Number(member.r82) === 30 ? 'selected' : ''}>30</option>
+                                                <option value="25" ${Number(member.r82) === 25 ? 'selected' : ''}>25</option>
+                                                <option value="20" ${Number(member.r82) === 20 ? 'selected' : ''}>20</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                                <tr>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><b>Regularity</b></td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Reports to the guide regularly and consistent in work</td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Not very regular  but consistent in the work</td>
+                                    <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Irregular in attendance and inconsistent in work</td>
+                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border">
+                                        <select class="p-2 border rounded">
+                                            <option value="">...</option>
+                                            <option value="30" ${Number(members[0].r83) === 30 ? 'selected' : ''}>30</option>
+                                            <option value="25" ${Number(members[0].r83) === 25 ? 'selected' : ''}>25</option>
+                                            <option value="20" ${Number(members[0].r83) === 20 ? 'selected' : ''}>20</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                ${members.slice(1).map((member, index) => `
+                                    <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
+                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border">
+                                            <select class="p-2 border rounded">
+                                                <option value="">...</option>
+                                                <option value="30" ${Number(member.r83) === 30 ? 'selected' : ''}>30</option>
+                                                <option value="25" ${Number(member.r83) === 25 ? 'selected' : ''}>25</option>
+                                                <option value="20" ${Number(member.r83) === 20 ? 'selected' : ''}>20</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>        
+                        ` : ''}
+                    </table>
+                </div>
                 `;
 
                 modalContent.appendChild(rubricDiv);
