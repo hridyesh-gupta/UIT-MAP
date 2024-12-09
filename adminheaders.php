@@ -139,7 +139,7 @@ if ($yearsResult->num_rows > 0) {
             
             //Variables for year selection modal
             const years = <?php echo json_encode($years); ?>;//Contains the years from the batches table
-            const groupsLink = document.getElementById('groups-link');
+            const groupsLink = document.querySelectorAll('#groups-link');
             const yearSelectionModal = document.getElementById('yearSelectionModal');
             const yearButtonsContainer = document.getElementById('yearButtonsContainer');
             const closeModal = document.querySelector('.close');
@@ -181,10 +181,12 @@ if ($yearsResult->num_rows > 0) {
                 yearButtonsContainer.appendChild(button);
             });
 
-            // Show the modal when the "Groups" link is clicked
-            groupsLink.addEventListener('click', (event) => {
-                event.preventDefault();
-                yearSelectionModal.style.display = 'flex';
+            // Attach the click event listener to each 'groups-link' element
+            groupsLink.forEach(link => {
+                link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    yearSelectionModal.style.display = 'flex';
+                });
             });
 
             // Close the modal when the close button is clicked
