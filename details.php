@@ -113,13 +113,13 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $creatorData = $creatorResult->fetch_assoc(); //Fetching the data from the resultset
         $creator = $creatorData['creator']; //Fetching the creator from the resultset and storing it in $creator
         $date = $creatorData['date']; //Fetching the date from the resultset and storing it in $date
-        $batchyr = $creatorData['batchyr']; //Fetching the batchyr from the resultset and storing it in $date
+        $batchyr = $creatorData['batchyr']; //Fetching the batchyr from the resultset and storing it in $batchyr
         
 
         // Prepare the SQL query to insert the project details into the projinfo table
         $sql = "INSERT INTO projinfo (gnum, batchyr, title, intro, objective, tech, technology, creator, date) VALUES ('$gnum', '$batchyr', '$title', '$intro', '$objective', '$tech', '$technology', '$creator', '$date')";
         $sqlResult= $conn->query($sql);
-        // Check if the insertion of project details is successful or not means it will only enter in if block if the insertion was not successful
+        // If the insertion was not successful it'll enter in this block
         if (!$sqlResult) {
             echo json_encode(['success' => false, 'message' => 'Error inserting data: ' . $conn->error]);
             $conn->close();
@@ -195,114 +195,118 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body class="bg-white text-gray-800 flex flex-col min-h-screen">
 
 <?php include 'studentheaders.php' ?>
-
-    <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto">
-    <center><h1 class="text-3xl font-bold mb-4">Student's Project Details</h1></center>
-    <?php if ($groupExists): ?>
-        <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto">
-            <h2 class="text-2xl font-bold mb-4">Group Details</h2>
+    <main class="flex-grow">
+    <div class="flex-grow bg-white p-6 rounded shadow">
+        <center><h1 class="text-3xl font-bold mb-4">Student's Project Details</h1></center>
+        <hr class="my-2 border-black-300">
+        <div class="w-full bg-white pb-4 pr-4 pl-4 shadow-lg mb-2 mx-auto">
             <?php if ($groupExists): ?>
+            <div class="w-full bg-white p-4 shadow-lg mx-auto">
+                <h2 class="text-2xl font-bold mb-4">Group Details</h2>
+                <?php if ($groupExists): ?>
+                    <div class="mb-4">
+                        <label for="groupCode" class="block text-gray-700">Group ID:</label>
+                        <input type="text" id="groupCode" class="w-full border p-2" disabled>
+                    </div>
+                <?php endif; ?>
+                <?php if ($mentorExists): ?>
                 <div class="mb-4">
-                    <label for="groupCode" class="block text-gray-700">Group ID:</label>
-                    <input type="text" id="groupCode" class="w-full border p-2" disabled>
+                    <label for="groupMentor" class="block text-gray-700">Group Mentor:</label>
+                    <input type="text" id="groupMentor" class="w-full border p-2" value="<?php echo htmlspecialchars($mentor); ?>" disabled>
                 </div>
-            <?php endif; ?>
-            <?php if ($mentorExists): ?>
-            <div class="mb-4">
-                <label for="groupMentor" class="block text-gray-700">Group Mentor:</label>
-                <input type="text" id="groupMentor" class="w-full border p-2" value="<?php echo htmlspecialchars($mentor); ?>" disabled>
+                <?php endif; ?>
+                <div class="mb-4">
+                    <label for="groupLeader" class="block text-gray-700">Group Leader:</label>
+                    <input type="text" id="groupLeader" class="w-full border p-2" value="<?php echo htmlspecialchars($leader); ?>" disabled>
+                </div>
+                <div class="mb-4">
+                    <label for="groupCreationDate" class="block text-gray-700">Group Creation Date:</label>
+                    <input type="text" id="groupCreationDate" class="w-full border p-2" value="<?php echo htmlspecialchars($groupCreationDate); ?>" disabled>
+                </div>
             </div>
             <?php endif; ?>
-            <div class="mb-4">
-                <label for="groupLeader" class="block text-gray-700">Group Leader:</label>
-                <input type="text" id="groupLeader" class="w-full border p-2" value="<?php echo htmlspecialchars($leader); ?>" disabled>
-            </div>
-            <div class="mb-4">
-                <label for="groupCreationDate" class="block text-gray-700">Group Creation Date:</label>
-                <input type="text" id="groupCreationDate" class="w-full border p-2" value="<?php echo htmlspecialchars($groupCreationDate); ?>" disabled>
-            </div>
+            
+            <h3 class="text-2xl font-bold mb-4" id="grpDetails">Project Group Details</h3>
+
+            <div id="members" class="space-y-6"></div>
+
+            <button id="addMemberBtn" class="bg-blue-500 text-white px-4 py-2 mt-4">Add Member</button>
         </div>
+
+        <div class="w-full bg-white p-4 shadow-lg my-4 mx-auto" id="responsibilitiesSection" style="display:none;">
+            <h2 class="text-2xl font-bold mb-4">Project Work Distribution</h2>
+            <table class="min-w-full bg-white border-2">
+                <thead>
+                    <tr>
+                        <th class="py-2 border">Roll Number</th>
+                        <th class="py-2 border">Name</th>
+                        <th class="py-2 border">Section</th>
+                        <th class="py-2 border">Branch</th>
+                        <th class="py-2 border">Responsibility</th>
+                    </tr>
+                </thead>
+                <tbody id="responsibilitiesTable" style="text-align: center;"></tbody>
+            </table>
+            <button type="submit" id="saveDetailsBtn" class="bg-green-500 text-white px-4 py-2 mt-4">Save Details</button>
+        </div>
+        <?php if ($groupExists): ?>
+            <div class="w-full bg-white p-4 shadow-lg my-4 mx-auto" id="projectInfo">
+                <h2 class="text-2xl font-bold mb-4">Project Information</h2>
+
+                <div class="mb-4">
+                    <label for="projectTitle" class="block text-gray-700">Project Title:</label>
+                    <input type="text" id="projectTitle" class="w-full border p-2" maxlength="50">
+                </div>
+
+                <div class="mb-4">
+                    <label for="briefIntroduction" class="block text-gray-700">Brief Introduction:</label>
+                    <textarea id="briefIntroduction" class="w-full border p-2 h-20" maxlength="880"></textarea>
+                </div>
+
+                <div class="mb-4">
+                    <label for="objectiveStatement" class="block text-gray-700">Objective and Problem Statement:</label>
+                    <textarea id="objectiveStatement" class="w-full border p-2 h-20" maxlength="880"></textarea>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="technology1Word" class="block text-gray-700">Technology Used (In Short):</label>
+                    <input type="text" id="technology1Word" class="w-full border p-2" maxlength="50">
+                </div>
+
+                <div class="mb-4">
+                    <label for="technologyUsed" class="block text-gray-700">Technology/Methodology Used (In Detail):</label>
+                    <textarea id="technologyUsed" class="w-full border p-2 h-20" maxlength="880"></textarea>
+                </div>
+                <button type="submit" id="saveProjDetailsBtn" class="bg-green-500 text-white px-4 py-2 mt-4">Save Details</button>
+            </div>
+
+            <div class="w-full bg-white p-4 shadow-lg my-4 mx-auto">
+                <h2 class="text-2xl font-bold mb-4">Approval Status</h2>
+
+                <!-- <div class="mb-4">
+                    <label for="supervisorApprovalStatus" class="block text-gray-700">Mentor Approval Status:</label>
+                    <input type="text" id="supervisorApprovalStatus" class="w-full border p-2" disabled>
+                </div> -->
+                <?php if ($mentorExists): ?>
+                    <div class="mb-4" id="supervisorApprovalDateDiv"">
+                        <label for="supervisorApprovalDate" class="block text-gray-700">Mentor Approval Date:</label>
+                        <input type="text" id="supervisorApprovalDate" class="w-full border p-2" disabled>
+                    </div>
+                <?php endif; ?>
+
+                <!-- <div class="mb-4">
+                    <label for="decApprovalStatus" class="block text-gray-700">DEC Approval Status:</label>
+                    <input type="text" id="decApprovalStatus" class="w-full border p-2" disabled>
+                </div> -->
+
+                <div class="mb-4" id="decApprovalDateDiv"">
+                    <label for="decApprovalDate" class="block text-gray-700">DEC Approval Date:</label>
+                    <input type="text" id="decApprovalDate" class="w-full border p-2" value="<?php echo htmlspecialchars($dAppDate); ?>" disabled>
+                </div>
+            </div>
         <?php endif; ?>
-        
-        <h3 class="text-xl font-bold mb-2" id="grpDetails">Project Group Details</h3>
-
-        <div id="members" class="space-y-6"></div>
-
-        <button id="addMemberBtn" class="bg-blue-500 text-white px-4 py-2 mt-4">Add Member</button>
     </div>
-
-    <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto" id="responsibilitiesSection" style="display:none;">
-        <h2 class="text-2xl font-bold mb-4">Project Work Distribution</h2>
-        <table class="min-w-full bg-white border-2">
-            <thead>
-                <tr>
-                    <th class="py-2 border">Roll Number</th>
-                    <th class="py-2 border">Name</th>
-                    <th class="py-2 border">Section</th>
-                    <th class="py-2 border">Branch</th>
-                    <th class="py-2 border">Responsibility</th>
-                </tr>
-            </thead>
-            <tbody id="responsibilitiesTable" style="text-align: center;"></tbody>
-        </table>
-        <button type="submit" id="saveDetailsBtn" class="bg-green-500 text-white px-4 py-2 mt-4">Save Details</button>
-    </div>
-    <?php if ($groupExists): ?>
-    <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto" id="projectInfo">
-        <h2 class="text-2xl font-bold mb-4">Project Information</h2>
-
-        <div class="mb-4">
-            <label for="projectTitle" class="block text-gray-700">Project Title:</label>
-            <input type="text" id="projectTitle" class="w-full border p-2" maxlength="50">
-        </div>
-
-        <div class="mb-4">
-            <label for="briefIntroduction" class="block text-gray-700">Brief Introduction:</label>
-            <textarea id="briefIntroduction" class="w-full border p-2 h-20" maxlength="880"></textarea>
-        </div>
-
-        <div class="mb-4">
-            <label for="objectiveStatement" class="block text-gray-700">Objective and Problem Statement:</label>
-            <textarea id="objectiveStatement" class="w-full border p-2 h-20" maxlength="880"></textarea>
-        </div>
-        
-        <div class="mb-4">
-            <label for="technology1Word" class="block text-gray-700">Technology Used (In Short):</label>
-            <input type="text" id="technology1Word" class="w-full border p-2" maxlength="50">
-        </div>
-
-        <div class="mb-4">
-            <label for="technologyUsed" class="block text-gray-700">Technology/Methodology Used (In Detail):</label>
-            <textarea id="technologyUsed" class="w-full border p-2 h-20" maxlength="880"></textarea>
-        </div>
-        <button type="submit" id="saveProjDetailsBtn" class="bg-green-500 text-white px-4 py-2 mt-4">Save Details</button>
-    </div>
-
-    <div class="w-full bg-white p-8 shadow-lg my-8 mx-auto">
-        <h2 class="text-2xl font-bold mb-4">Approval Status</h2>
-
-        <!-- <div class="mb-4">
-            <label for="supervisorApprovalStatus" class="block text-gray-700">Mentor Approval Status:</label>
-            <input type="text" id="supervisorApprovalStatus" class="w-full border p-2" disabled>
-        </div> -->
-        <?php if ($mentorExists): ?>
-            <div class="mb-4" id="supervisorApprovalDateDiv"">
-                <label for="supervisorApprovalDate" class="block text-gray-700">Mentor Approval Date:</label>
-                <input type="text" id="supervisorApprovalDate" class="w-full border p-2" disabled>
-            </div>
-        <?php endif; ?>
-
-        <!-- <div class="mb-4">
-            <label for="decApprovalStatus" class="block text-gray-700">DEC Approval Status:</label>
-            <input type="text" id="decApprovalStatus" class="w-full border p-2" disabled>
-        </div> -->
-
-        <div class="mb-4" id="decApprovalDateDiv"">
-            <label for="decApprovalDate" class="block text-gray-700">DEC Approval Date:</label>
-            <input type="text" id="decApprovalDate" class="w-full border p-2" value="<?php echo htmlspecialchars($dAppDate); ?>" disabled>
-        </div>
-    </div>
-    <?php endif; ?>
+    </main>
     
     <script>
     const members = [];
