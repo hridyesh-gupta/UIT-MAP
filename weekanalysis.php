@@ -12,7 +12,7 @@ if ($gnumResult->num_rows > 0) {
     $gnum = $gnumResult->fetch_assoc()['gnum'];
 }
 
-// Check if gnum exists, and if it does, fetch Group ID (number) from projinfo
+// Check if gnum exists, and if it does, check if user has a group ID (has a project)
 if ($gnum) {
     $numberQuery = "SELECT number FROM projinfo WHERE gnum = '$gnum' LIMIT 1";
     $numberResult = $conn->query($numberQuery);
@@ -75,13 +75,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body class="bg-white text-gray-800 flex flex-col min-h-screen">
     <?php include 'studentheaders.php' ?>
-    <div class="max-w-4xl mx-auto bg-white p-6 rounded shadow">
-        <h2 class="text-2xl font-bold mb-6">Weekly Analysis</h2>
+    <div class="flex-grow bg-white p-6 rounded shadow">
+        <h1 class="text-3xl font-bold mb-4"><center>Weekly Analysis</center></h1>
+        <hr class="my-8 border-black-300">
 
         <?php if (!$gnum): ?>
-            <p class="text-red-500">You are not assigned to any group.</p>
+            <center>
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <strong class="font-bold">Oops!</strong>
+                <span class="block sm:inline">You are not assigned to any group.</span>
+            </div>
+            </center>
         <?php elseif (!$groupId): ?>
-            <p class="text-red-500">Your group has no project records in our database.</p>
+            <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
+                <center>
+                <strong class="font-bold">Notice:</strong>
+                <span class="block sm:inline">Your group has no project records in our database.</span>
+                </center>
+            </div>
         <?php else: ?>
             <div id="weekly-forms">
                 <!-- PHP to output existing weekly forms if they exist -->
@@ -89,16 +100,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="week-section mb-6" data-week="<?php echo $week['weeknum']; ?>">
                         <h3 class="text-lg font-bold mb-2">Week <?php echo $week['weeknum']; ?></h3>
                         <textarea class="w-full p-2 border rounded mb-2 summary-field" rows="3" disabled><?php echo htmlspecialchars($week['summary']); ?></textarea>
-                        <p class="text-gray-600">Performance: <?php echo $week['performance']; ?></p>
-                        <p class="text-gray-600">Date of Submission: <?php echo $week['dsub']; ?></p>
-                        <p class="text-gray-600">Date of Evaluation: <?php echo $week['deval']; ?></p>
+                        <p class="text-gray-600"><b>Performance: </b><?php echo $week['performance']; ?></p>
+                        <p class="text-gray-600"><b>Submission Date: </b><?php echo $week['dsub']; ?></p>
+                        <p class="text-gray-600"><b>Evaluation Date: </b><?php echo $week['deval']; ?></p>
+                        <hr class="my-8 border-black-300">
                     </div>
                 <?php endforeach; ?>
 
                 <!-- New week form, either week 1 or next week if data exists -->
                 <div class="week-section mb-6" data-week="<?php echo count($weeklyData) + 1; ?>">
                     <h3 class="text-lg font-bold mb-2">Week <?php echo count($weeklyData) + 1; ?></h3>
-                    <textarea id="new-summary" class="w-full p-2 border rounded mb-2" rows="3" placeholder="Enter your summary here"></textarea>
+                    <textarea id="new-summary" class="w-full p-2 border rounded mb-2" rows="3" placeholder="Enter your summary here" maxlength="800"></textarea>
                     <button id="save-button" class="bg-blue-500 text-white py-2 px-4 rounded mt-4">Save</button>
                 </div>
             </div>
