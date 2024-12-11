@@ -69,8 +69,8 @@ elseif($_SESSION['usertype'] == "student"){ //If the user is student show the st
     <!-- Main Content -->
     <main class="max-w-4xl mx-auto p-4 bg-white shadow-md rounded-lg mt-8">
         <section class="mb-4">
-        <center><h2 class="text-2xl font-bold mb-4">Project Guidelines</h2></center>
-        <h2 class="text-xl font-semibold mb-2">"The final year B. Tech. project is defined as the development of a model or application (software or hardware) useful in exploring and/or solving an engineering problem".</h2>
+        <center><h1 class="text-3xl font-bold mb-4">Project Guidelines</h2></center>
+        <h2 class="text-xl font-semibold mb-2"><center>"The final year B.Tech. project is defined as the development of a model or application (software or hardware) useful in exploring and/or solving an engineering problem".</center></h2>
             <p class="text-justify">These are guidelines for successful completion of the B. Tech. Projects in effective and uniform conduction of projects to be carried out by undergraduate B. Tech. Students in Semester VII and Semester VIII. It is expected that these guidelines will help in the overall improvement in the quality of B. Tech. Projects along with improvement in the evaluation process. The B. Tech. Project is a partial requirement for the successful completion of the degree. It can be two types: Projects based on implementing any application-oriented problem, which will be more or less experimental. The others will be based on some innovative (research-oriented) theoretical work.</p>
             <p class="text-justify">Department Evaluation Committee (DEC) is created to monitor the overall functioning of the activities related to the B. Tech. projects and to have an academic bridge among the various groups.</p>
         </section>

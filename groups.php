@@ -72,10 +72,16 @@ $analysisResults = $conn->query($sql3); //Executing the query
 $analysisRows = [];
 if($analysisResults->num_rows > 0){ //If there are weekly analysis details in the wanalysis table
     $analysisExists=true;
-    $analysisRows[] = $analysisResults->fetch_all(MYSQLI_ASSOC);//Fast Method: Fetching the weekly analysis details from wanalysis table- Group Number, Week Number, Summary, Performance, Submission Date, Evaluation Date
-    // while($analysisRow = $analysisResults->fetch_assoc()){ //Slow Method: Fetching the weekly analysis details from wanalysis table- Group ID, Week Number, Summary, Performance, Date of Submission and Date of Evaluation
-    //     $analysisRows[] = $analysisRow;
-    // }
+    while($analysisRow = $analysisResults->fetch_assoc()){ //Slow Method: Fetching the weekly analysis details from wanalysis table- Group ID, Week Number, Summary, Performance, Date of Submission and Date of Evaluation
+        $analysisRows[] = $analysisRow;
+    }
+}
+
+//To fetch last date of all rubrics through batchyr
+$lastDateSql = "SELECT lastR1, lastR2, lastR3, lastR4, lastR5, lastR6, lastR7, lastR8 FROM batches WHERE batchyr = '$batchYear'";
+$lastDateResults = $conn->query($lastDateSql);
+if ($lastDateResults->num_rows > 0) {
+    $lastDate = $lastDateResults->fetch_assoc();
 }
 
 //To handle the incoming POST request and check if the request is to change the mentor or delete the group
@@ -86,8 +92,8 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
     if ($action === 'change') {
         $mentor = $data['mentor']; // Get the selected mentor
 
-        $mIdQuery="SELECT mid FROM mentors where mname='$mentor'";//Get mentor ID of the selected mentor
-        $mIdResults=$conn->query($mIdQuery);
+        $mIdQuery= "SELECT mid FROM mentors where mname='$mentor'";//Get mentor ID of the selected mentor
+        $mIdResults= $conn->query($mIdQuery);
         $mId= $mIdResults->fetch_assoc()['mid'];//As mid is the name of the column in the mentors table whose value is stored in the $mIdResults variable
 
         // Update the mentor, its Id and DEC approval date for the group in the 'projinfo' table using gnum. DEC approval date also bcoz at the time when DEC allotted mentor it also approved the grp.
@@ -137,7 +143,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
         $performance = $data['performance'];
 
         // Update the weekly analysis data in the 'wanalysis' table
-        $updateAnalysis = "UPDATE wanalysis SET summary = '$summary', performance = '$performance', dsub = CURDATE() WHERE number = '$groupId' AND weeknum = $weekNum";
+        $updateAnalysis = "UPDATE wanalysis SET performance = '$performance', deval = CURDATE() WHERE number = '$groupId' AND weeknum = $weekNum";
         $stmt = $conn->query($updateAnalysis);
         // $stmt->bind_param("sssi", $summary, $performance, date('Y-m-d'), $groupId, $weekNum);
         // $stmt->execute();
@@ -146,11 +152,63 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
         //     header('Content-Type: text/plain');
         //     echo 'success=true';
         // } 
-        echo 'success=true';
-
+        // echo 'success=true';
+        echo json_encode(['success' => true, 'message' => 'Data inserted successfully']);
         // Close the statement and connection
-        $stmt->close();
+        // $stmt->close();
         $conn->close();
+        exit;
+    }
+    else if($action == 'rubricsreview'){
+        $rubric = $data['rubric'];
+        $examiner = $data['examiner'];
+        $status = $data['status'];
+        // Determine the column names dynamically based on the rubric number
+        $columnExaminer = "examinerR$rubric";
+        $columnStatus = "statusR$rubric";
+        $columnEval = "evalR$rubric";
+        // Update the projinfo table
+        $sql = "UPDATE projinfo SET $columnExaminer = '$examiner', $columnStatus = '$status', $columnEval = CURDATE() WHERE gnum = '$gnum'";
+        $stmt = $conn->query($sql);
+        
+        if ($stmt) {
+            echo json_encode(["success" => true, "message" => "Rubric updated successfully"]);
+        } else {
+            echo json_encode(["success" => false, "message" => $stmt->error]);
+        }
+        $conn->close();
+        exit;
+    }
+    else if($action =='rubricsmarks'){
+        $rubric = $data['rubric'];
+        $rubricData = $data['rubricData'];
+
+        $errors = [];
+
+        // Loop through each part and update the database
+        foreach ($rubricData as $rubricPartData) {
+            $part = $rubricPartData['part'];
+            $members = $rubricPartData['members'];
+
+            foreach ($members as $member) {
+                $roll = $conn->real_escape_string($member['roll']);
+                $score = $conn->real_escape_string($member['score']);
+                $rubricColumn = $conn->real_escape_string($part);
+
+                // Update the score for each member in the database
+                $updateQuery = "UPDATE groups SET $rubricColumn = '$score' WHERE gnum = '$gnum' AND roll = '$roll'";
+                if (!$conn->query($updateQuery)) {
+                    $errors[] = "Failed to update $rubricColumn for roll $roll: " . $conn->error;
+                }
+            }
+        }
+        // Return response
+        if (empty($errors)) {
+            echo json_encode(["success" => true, "message" => "Rubric marks updated successfully."]);
+        } else {
+            echo json_encode(["success" => false, "message" => implode(", ", $errors)]);
+        }
+        exit;
     }
 }
 ?>
@@ -266,22 +324,21 @@ include 'adminheaders.php';
     <div id="weeklyAnalysisModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <center><h1>Weekly Analysis</h1></center>
+            <center><h1 class="text-3xl font-bold mb-4">Weekly Analysis</h1></center>
+            <hr class="my-8 border-gray-300">
             <div id="weeklyAnalysisContent">
                 <!-- Weekly analysis content will be dynamically added here -->
             </div>
-            <button id="saveWeeklyAnalysis" class="bg-blue-500 text-white py-2 px-4 rounded">Save</button>
         </div>
     </div>
     <!-- Modal for Rubrics Review -->
     <div id="rubricsReviewModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <center><h1>&nbsp; Rubrics Review</h1></center>
+            <center><h1 class="text-3xl font-bold mb-4">&nbsp; Rubrics Review</h1></center>
             <div id="rubricsReviewContent">
                 <!-- Rubrics review content will be dynamically added here -->
             </div>
-            <button id="saveRubricsReview" class="bg-blue-500 text-white py-2 px-4 rounded">Save</button>
         </div>
     </div>
 
@@ -289,8 +346,10 @@ include 'adminheaders.php';
         const groupRows = <?php echo json_encode($groupRows); ?>; //Fetching the group details from projinfo table- Gnum, Group ID, Batch, Title, Intro, Objective, Tech, Technology, Creator, Mentor, Mentor ID, Creation date, DEC Approval Date, and Mentor Approval Date
         const memberRows = <?php echo json_encode($memberRows); ?>; //Fetching the group members details from groups table- Member's Roll Number, Member's Name, Batch, Section, Branch, Responsibility, Gnum, Creator and Creation Date
         const analysisRows = <?php echo json_encode($analysisRows); ?>; //Fetching the weekly analysis details from wanalysis table- Group ID, Week Number, Summary, Performance, Submission Date, Evaluation Date
+        const lastDate = <?php echo json_encode($lastDate); ?>;
         const mentors = <?php echo json_encode($mentors); ?>;
         const userType = "<?php echo $_SESSION['usertype']; ?>";
+        console.log(groupRows);
 
         // Populate the table when the page loads
         document.addEventListener('DOMContentLoaded', populateTable);
@@ -353,7 +412,6 @@ include 'adminheaders.php';
             const groupId = event.target.closest('tr').querySelector('.group-number').textContent;//To get the group ID of the group whose title is clicked
             const group = groupRows.find(group => group.number == groupId);//This 'group' variable contains all the details of that group whose title is clicked which we have filtered out from rest of the groups using that group ID
             const members = memberRows.filter(member => member.gnum == group.gnum);//This 'member' variable contains all the member details of that group whose title is clicked which we have filtered out using the gnum
-            //const creator = event.target.closest('tr').querySelector('.group-creator').textContent;//To get the creator of the group whose title is clicked to further search the group members of that group from the groups table
 
             const modal = document.getElementById('groupProjectInfoModal');
             const groupProjectInfo = document.getElementById('groupProjectInfo');
@@ -417,6 +475,8 @@ include 'adminheaders.php';
         function openWeeklyAnalysisModal(groupId) {
             console.log('Opening weekly analysis for group:', groupId); // Debugging line
             const analysis = analysisRows.filter(analysis => analysis.number == groupId);
+            // console.log(analysis); 
+            const gnum = groupRows.find(group => group.number == groupId).gnum;
             const modal = document.getElementById('weeklyAnalysisModal');
             const modalContent = document.getElementById('weeklyAnalysisContent');
             modalContent.innerHTML = ''; // Clear existing content
@@ -427,50 +487,40 @@ include 'adminheaders.php';
 
                 // Loop through the weeks to render the form for each week
                 for (let week = 1; week <= maxWeek; week++) {
-                    const weekData = analysis.find(item => item.weeknum === week);
-
+                    const weekData = analysis.find(item => item.weeknum == week);
+                    // console.log(weekData);
                     const weekDiv = document.createElement('div');
                     weekDiv.classList.add('mb-4');
                     weekDiv.innerHTML = `
-                        <h3 class="text-lg font-bold mb-2">Week ${week}</h3>
-                        <label class="block mb-2">Weekly Summary:</label>
-                        <textarea class="w-full p-2 border rounded mb-2" rows="3" disabled>${weekData ? weekData.summary : ''}</textarea>
-                        <label class="block mb-2">Performance:</label>
-                        <select class="w-full p-2 border rounded mb-2" ${weekData?.performance ? 'disabled' : ''}>
-                            <option value="satisfactory" ${weekData?.performance === 'satisfactory' ? 'selected' : ''}>Satisfactory</option>
-                            <option value="not_satisfactory" ${weekData?.performance === 'not_satisfactory' ? 'selected' : ''}>Not Satisfactory</option>
+                        <h3 class="text-2xl font-semibold text-gray-800 mb-6"><center>Week ${week}</center></h3>
+                        <label class="block font-bold mb-2">Weekly Summary:</label>
+                        <textarea class="w-full p-2 border rounded mb-2" rows="3" disabled>${weekData?.summary}</textarea>
+                        <label class="block font-bold mb-2">Performance:</label>
+                        <select class="w-full p-2 border rounded mb-2"}>
+                            <option value="">Select...</option>
+                            <option value="Satisfactory" ${weekData?.performance === 'Satisfactory' ? 'selected' : ''}>Satisfactory</option>
+                            <option value="Unsatisfactory" ${weekData?.performance === 'Unsatisfactory' ? 'selected' : ''}>Unsatisfactory</option>
                         </select>
-                        <label class="block mb-2">Date of Submission:</label>
-                        <input type="date" class="w-full p-2 border rounded mb-2" value="${weekData?.dsub || ''}" disabled>
-                        <label class="block mb-2">Date of Evaluation:</label>
-                        <input type="date" class="w-full p-2 border rounded mb-2" value="${weekData?.deval || ''}" ${weekData?.deval ? 'disabled' : ''}>
-                        <button class="bg-blue-500 text-white py-2 px-4 rounded mt-4 save-btn" 
-                                data-group-id="${groupId}" 
-                                data-week-num="${week}" 
-                                ${weekData?.deval ? 'disabled' : ''}>Save</button>
+                        <label class="block font-bold mb-2">Submission Date:</label>
+                        <input type="date" class="w-full p-2 border rounded mb-2" value="${weekData?.dsub}" disabled>
+                        <label class="block font-bold mb-2">Evaluation Date:</label>
+                        <input type="date" class="w-full p-2 border rounded mb-2" value="${weekData?.deval || ''}" disabled>
+                            <center>
+                                <button class="bg-blue-500 text-white py-2 px-4 rounded mt-4 save-btn hover:bg-blue-800 transition duration-300" style="min-width: 140px;"
+                                    data-group-id="${groupId}" 
+                                    data-week-num="${week}">Save
+                                </button>
+                            </center>
+                        <hr class="my-8 border-gray-300">
                     `;
                     modalContent.appendChild(weekDiv);
                 }
             } else {
                 // If no data exists, show only the first week form
                 const weekDiv = document.createElement('div');
-                weekDiv.classList.add('mb-4');
+                weekDiv.classList.add('text-center', 'text-gray-700', 'font-bold', 'p-4');
                 weekDiv.innerHTML = `
-                    <h3 class="text-lg font-bold mb-2">Week 1</h3>
-                    <label class="block mb-2">Weekly Summary:</label>
-                    <textarea class="w-full p-2 border rounded mb-2" rows="3"></textarea>
-                    <label class="block mb-2">Performance:</label>
-                    <select class="w-full p-2 border rounded mb-2">
-                        <option value="satisfactory">Satisfactory</option>
-                        <option value="not_satisfactory">Not Satisfactory</option>
-                    </select>
-                    <label class="block mb-2">Date of Submission:</label>
-                    <input type="date" class="w-full p-2 border rounded mb-2" disabled>
-                    <label class="block mb-2">Date of Evaluation:</label>
-                    <input type="date" class="w-full p-2 border rounded mb-2" disabled>
-                    <button class="bg-blue-500 text-white py-2 px-4 rounded mt-4 save-btn" 
-                            data-group-id="${groupId}" 
-                            data-week-num="1">Save</button>
+                    <p>No weekly analysis has been submitted by the student yet.</p>
                 `;
                 modalContent.appendChild(weekDiv);
             }
@@ -478,7 +528,7 @@ include 'adminheaders.php';
             modal.style.display = 'block';
             modal.scrollTop = 0;
 
-            // Attach event listeners to the save buttons
+            // Attach event listeners to the save buttons to save the weekly analysis data
             const saveButtons = modal.querySelectorAll('.save-btn');
             saveButtons.forEach(button => {
                 button.addEventListener('click', function () {
@@ -489,19 +539,25 @@ include 'adminheaders.php';
                     const summary = weekDiv.querySelector('textarea').value.trim();
                     const performance = weekDiv.querySelector('select').value;
 
-                    if (!summary) {
-                        alert('Summary cannot be empty!');
-                        return;
-                    }
+                    // if (!summary) {
+                    //     alert('Weekly Analysis for this week has not been filled out.');
+                    //     return;
+                    // }
 
                     // Prepare the data to send to the server
                     const requestData = {
                         groupId: groupId,
-                        weekNum: parseInt(weekNum, 10),
+                        gnum: gnum,
+                        weekNum: parseInt(weekNum, 10),//Convert the week number to integer with base 10
                         summary: summary,
                         performance: performance,
                         action : 'weekperformance',
                     };
+
+                    // Save the modal state and position to local storage before sending the data as after it is sent, the page will reload
+                    localStorage.setItem('modalState', 'open');
+                    localStorage.setItem('modalPosition', document.getElementById('weeklyAnalysisModal').scrollTop);
+                    localStorage.setItem('groupId', groupId);
 
                     // Send the data to the server via Fetch API
                     fetch('groups.php', {
@@ -511,24 +567,71 @@ include 'adminheaders.php';
                         },
                         body: JSON.stringify(requestData),
                     })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                alert(`Details saved successfully for Week ${weekNum}`);
-                                weekDiv.querySelector('textarea').disabled = true;
-                                weekDiv.querySelector('select').disabled = true;
-                                this.disabled = true;
-                            } else {
-                                alert(`Error saving details for Week ${weekNum}: ${data.error}`);
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            alert('An error occurred while saving the details.');
-                        });
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(`Details saved successfully for Week ${weekNum}`);
+                            window.location.reload();
+                        } else {
+                            alert(`Error saving details for Week ${weekNum}: ${data.error}`);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while saving the details.');
+                    });
                 });
             });
+            // Function to clear modal state
+            function clearModalState() {
+                localStorage.removeItem('modalState');
+                localStorage.removeItem('modalPosition');
+                localStorage.removeItem('groupId');
+            }
+
+            // Clear the modal state from local storage when the modal is closed
+            document.querySelector('.close').addEventListener('click', () => {
+                clearModalState();
+                document.getElementById('weeklyAnalysisModal').style.display = 'none';
+            });
+
+            // Clear the modal state when clicking outside the modal content
+            window.addEventListener('click', (event) => {
+                const modal = document.getElementById('weeklyAnalysisModal');
+                if (event.target === modal) {
+                    clearModalState();
+                    modal.style.display = 'none';
+                }
+            });
         }
+        //Function to check whether the modal(weekly/rubrics) state is saved in local storage or not means whether the modal previously was closed by the user or due to page reload, and if it was closed due to page reload then we have to open it again
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if the modal state is saved in local storage
+            const modalState = localStorage.getItem('modalState');
+            const modalPosition = localStorage.getItem('modalPosition');
+            const rmodalState = localStorage.getItem('rmodalState');
+            const rmodalPosition = localStorage.getItem('rmodalPosition');
+            const savedGroupId = localStorage.getItem('groupId');
+
+            if (modalState === 'open' && savedGroupId) {
+                const modal = document.getElementById('weeklyAnalysisModal');
+                openWeeklyAnalysisModal(savedGroupId);
+
+                // Restore the modal position if saved
+                if (modalPosition) {
+                    modal.scrollTop = parseInt(modalPosition, 10);
+                }
+            }
+            else if(rmodalState === 'open' && savedGroupId){
+                const rmodal = document.getElementById('rubricsReviewModal');
+                openRubricsReviewModal(savedGroupId);
+
+                // Restore the modal position if saved
+                if (rmodalPosition) {
+                    rmodal.scrollTop = parseInt(rmodalPosition, 10);
+                }
+            }
+        });
 
         // Function to open the rubrics review modal
         function openRubricsReviewModal(groupNumber) {
@@ -543,46 +646,55 @@ include 'adminheaders.php';
 
             // Populate modal with rubrics review fields
             for (let i = 1; i <= 8; i++) {
-                const rubricDiv = document.createElement('div');
+                const rubricDiv = document.createElement('div');    
                 rubricDiv.classList.add('mb-4', 'rubric-section');
                 rubricDiv.innerHTML = `
                     <div class="bg-beige shadow-xl rounded-xl p-6 mb-4 max-h-[500px] overflow-y-auto border-t-4 border-indigo-400">
-                        <h3 class="text-2xl font-serif text-gray-800 mb-6"><center>Rubric R${i}</center></h3>
+                        <h3 class="text-2xl font-semibold text-gray-800 mb-6"><center>Rubric R${i}</center></h3>
                         ${i === 2 || i === 6 ? `
                         <!-- View PPT -->
                         <div class="mb-5">
                             <label for="ppt-upload" class="block text-gray-700 font-medium mb-2">View PPT:</label>
-                            <input id="ppt-upload" type="file" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg">
+                            <input id="ppt-upload" type="file" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg" disabled>
                         </div>
 
                         <!-- View Report -->
                         <div class="mb-5">
                             <label for="report-upload" class="block text-gray-700 font-medium mb-2">View Report:</label>
-                            <input id="report-upload" type="file" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg">
+                            <input id="report-upload" type="file" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg" disabled>
                         </div>
                         ` : ''}
 
-                        <!-- Submission Date -->
+                        <!-- Last Date -->
                         <div class="mb-5">
-                            <label for="submission-date" class="block text-gray-700 font-medium mb-2">Submission Date:</label>
-                            <input id="submission-date" type="date" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg">
+                            <label for="last-date" class="block text-gray-700 font-medium mb-2">Last Date:</label>
+                            <input id="last-date" type="date" value="${lastDate[`lastR${i}`] || ""}" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg" disabled>
                         </div>
 
-                        <!-- Evaluation Date -->
+                        <!-- Examiner Name -->
                         <div class="mb-5">
-                            <label for="evaluation-date" class="block text-gray-700 font-medium mb-2">Evaluation Date:</label>
-                            <input id="evaluation-date" type="date" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg">
+                            <label for="examiner" class="block text-gray-700 font-medium mb-2">Examiner Name:</label>
+                            <input id="examiner-${i}" type="text" value="${group[`examinerR${i}`] || ""}" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg" maxlength="28">
                         </div>
 
                         <!-- Status -->
                         <div class="mb-5">
                             <label for="status" class="block text-gray-700 font-medium mb-2">Status:</label>
-                            <select id="status" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg">
-                                <option value="completed">Completed</option>
-                                <option value="not_completed">Not Completed</option>
+                            <select id="status-${i}" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg">
+                                <option value="">Select...</option>
+                                <option value="Completed" ${group[`statusR${i}`] === "Completed" ? "selected" : ""}>Completed</option>
+                                <option value="Not Completed" ${group[`statusR${i}`] === "Not Completed" ? "selected" : ""}>Not Completed</option>
                             </select>
                         </div>
+
+                        <!-- Evaluation Date -->
+                        <div class="mb-5">
+                            <label for="evaluation-date" class="block text-gray-700 font-medium mb-2">Evaluation Date:</label>
+                            <input id="evaluation-${i}" value="${group[`evalR${i}`] || ""}" type="date" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg" disabled>
+                        </div>
+                        <center><button id="saveRubricsReview" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-800 transition duration-300 save-btn" data-rubric="${i}" style="min-width: 140px;">Save</button></center>
                     </div>
+                    
                     <div class="table-container overflow-auto mb-8 shadow-lg rounded-lg border border-gray-200">
                     <table class="min-w-full bg-white rounded-lg text-gray-700" style="font-size: 15px !important;">
                         ${i === 1 ? `
@@ -595,7 +707,7 @@ include 'adminheaders.php';
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Good (6)</th>
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Average (5)</th>
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Poor (4)</th>
-                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Name</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Student</th>
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Score</th>
                                 </tr>
                             </thead>
@@ -605,9 +717,9 @@ include 'adminheaders.php';
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Detailed and extensive explanation of the purpose and need of the project</td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Average explanation of the purpose and need of the project </td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Minimal explanation of the purpose and need of the project </td>
-                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border"><center>${members[0].name}<br>(${members[0].roll})</center></td>
                                     <td class="px-5 py-2 border">
-                                        <select class="p-2 border rounded">
+                                        <select id ="r11-${members[0].roll}" class="p-2 border rounded">
                                             <option value="">...</option>
                                             <option value="6" ${Number(members[0].r11) === 6 ? 'selected' : ''}>6</option> //Even the r11 in db is stored as integer but when we use it in JS it is sometimes stored as string so we need to convert it to number using Number() function to compare with numbers 6,5,4
                                             <option value="5" ${Number(members[0].r11) === 5 ? 'selected' : ''}>5</option>
@@ -617,9 +729,9 @@ include 'adminheaders.php';
                                 </tr>
                                 ${members.slice(1).map((member, index) => `
                                     <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
-                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border"><center>${member.name}<br>(${member.roll})</center></td>
                                         <td class="px-5 py-2 border">
-                                            <select class="p-2 border rounded">
+                                            <select id ="r11-${member.roll}" class="p-2 border rounded">
                                                 <option value="">...</option>
                                                 <option value="6" ${Number(member.r11) === 6 ? 'selected' : ''}>6</option> //Even the r11 in db is stored as integer but when we use it in JS it is sometimes stored as string so we need to convert it to number using Number() function to compare with numbers 6,5,4
                                                 <option value="5" ${Number(member.r11) === 5 ? 'selected' : ''}>5</option>
@@ -633,9 +745,9 @@ include 'adminheaders.php';
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Detailed and extensive explanation of the specifications and the limitations of the existing systems</td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Moderate study of the existing systems; collects some basic information</td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Minimal explanation of the specifications and the limitations of the existing systems; incomplete information</td>
-                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border"><center>${members[0].name}<br>(${members[0].roll})</center></td>
                                     <td class="px-5 py-2 border">
-                                        <select class="p-2 border rounded">
+                                        <select id ="r12-${members[0].roll}" class="p-2 border rounded">
                                             <option value="">...</option>
                                             <option value="6" ${Number(members[0].r12) === 6 ? 'selected' : ''}>6</option> 
                                             <option value="5" ${Number(members[0].r12) === 5 ? 'selected' : ''}>5</option>
@@ -645,9 +757,9 @@ include 'adminheaders.php';
                                 </tr>
                                 ${members.slice(1).map((member, index) => `
                                     <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
-                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border"><center>${member.name}<br>(${member.roll})</center</td>
                                         <td class="px-5 py-2 border">
-                                            <select class="p-2 border rounded">
+                                            <select id ="r12-${member.roll}" class="p-2 border rounded">
                                                 <option value="">...</option>
                                                 <option value="6" ${Number(member.r12) === 6 ? 'selected' : ''}>6</option> 
                                                 <option value="5" ${Number(member.r12) === 5 ? 'selected' : ''}>5</option>
@@ -661,9 +773,9 @@ include 'adminheaders.php';
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">All objectives of the proposed work are well defined; steps to be followed to solve the defined problem are clearly specified</td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Incomplete justification to the objectives proposed; steps are mentioned but unclear; without justification to objectives</td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Objectives of the proposed work are either not identified or not well defined; incomplete and improper specification</td>
-                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border"><center>${members[0].name}<br>(${members[0].roll})</center></td>
                                     <td class="px-5 py-2 border">
-                                        <select class="p-2 border rounded">
+                                        <select id ="r13-${members[0].roll}" class="p-2 border rounded">
                                             <option value="">...</option>
                                             <option value="6" ${Number(members[0].r13) === 6 ? 'selected' : ''}>6</option> 
                                             <option value="5" ${Number(members[0].r13) === 5 ? 'selected' : ''}>5</option>
@@ -673,9 +785,9 @@ include 'adminheaders.php';
                                 </tr>
                                 ${members.slice(1).map((member, index) => `
                                     <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
-                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border"><center>${member.name}<br>(${member.roll})</center</td>
                                         <td class="px-5 py-2 border">
-                                            <select class="p-2 border rounded">
+                                            <select id ="r13-${member.roll}" class="p-2 border rounded">
                                                 <option value="">...</option>
                                                 <option value="6" ${Number(member.r13) === 6 ? 'selected' : ''}>6</option> 
                                                 <option value="5" ${Number(member.r13) === 5 ? 'selected' : ''}>5</option>
@@ -684,6 +796,13 @@ include 'adminheaders.php';
                                         </td>
                                     </tr>
                                 `).join('')}
+                                <tr>
+                                    <td class="px-5 py-2 border" colspan="6">
+                                        <center>
+                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="1" style="min-width: 140px;">Save</button>
+                                        </center>
+                                    </td>
+                                </tr>
                             </tbody>        
                         ` : ''}
                         ${i === 2 ? `
@@ -697,7 +816,7 @@ include 'adminheaders.php';
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Good (7)</th>
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Average (6)</th>
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Poor (5)</th>
-                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Name</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Student</th>
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Score</th>
                                 </tr>
                             </thead>
@@ -708,9 +827,9 @@ include 'adminheaders.php';
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Project Synopsis report is according to the specified format</li><li>References and citations are appropriate but not mentioned well</li></ul></td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Project Synopsis report is according to the specified format but with some mistakes</li><li>Insufficient references and citations</li></ul></td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Project Synopsis report not prepared according to the specified format</li><li>References and citations are not appropriate</li></ul></td>
-                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border"><center>${members[0].name}<br>(${members[0].roll})</center></td>
                                     <td class="px-5 py-2 border">
-                                        <select class="p-2 border rounded">
+                                        <select id ="r21-${members[0].roll}" class="p-2 border rounded">
                                             <option value="">...</option>
                                             <option value="8" ${Number(members[0].r21) === 8 ? 'selected' : ''}>8</option>
                                             <option value="7" ${Number(members[0].r21) === 7 ? 'selected' : ''}>7</option>
@@ -721,9 +840,9 @@ include 'adminheaders.php';
                                 </tr>
                                 ${members.slice(1).map((member, index) => `
                                     <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
-                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border"><center>${member.name}<br>(${member.roll})</center</td>
                                         <td class="px-5 py-2 border">
-                                            <select class="p-2 border rounded">
+                                            <select id ="r21-${member.roll}" class="p-2 border rounded">
                                                 <option value="">...</option>
                                                 <option value="8" ${Number(member.r21) === 8 ? 'selected' : ''}>8</option>
                                                 <option value="7" ${Number(member.r21) === 7 ? 'selected' : ''}>7</option>
@@ -739,9 +858,9 @@ include 'adminheaders.php';
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Complete explanation of the key concepts</li><li>Insufficient description of the technical requirements of the project</li></ul></td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Complete explanation of the key concepts but little relevance to literature</li><li>Insufficient description of the technical requirements of the project</li></ul></td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Inappropiate explanation of the key concepts</li><li>Poor description of the technical requirements of the project</li></ul></td>
-                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border"><center>${members[0].name}<br>(${members[0].roll})</center></td>
                                     <td class="px-5 py-2 border">
-                                        <select class="p-2 border rounded">
+                                        <select id ="r22-${members[0].roll}" class="p-2 border rounded">
                                             <option value="">...</option>
                                             <option value="8" ${Number(members[0].r22) === 8 ? 'selected' : ''}>8</option>
                                             <option value="7" ${Number(members[0].r22) === 7 ? 'selected' : ''}>7</option>
@@ -752,9 +871,9 @@ include 'adminheaders.php';
                                 </tr>
                                 ${members.slice(1).map((member, index) => `
                                     <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
-                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border"><center>${member.name}<br>(${member.roll})</center</td>
                                         <td class="px-5 py-2 border">
-                                            <select class="p-2 border rounded">
+                                            <select id ="r22-${member.roll}" class="p-2 border rounded">
                                                 <option value="">...</option>
                                                 <option value="8" ${Number(member.r22) === 8 ? 'selected' : ''}>8</option>
                                                 <option value="7" ${Number(member.r22) === 7 ? 'selected' : ''}>7</option>
@@ -770,9 +889,9 @@ include 'adminheaders.php';
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Time frame properly specified and being followed</li><li>Distribution of project work inappropriate</li></ul></td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Time frame properly specified, but not being followed</li><li>Distribution of project work uneven</li></ul></td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Time frame not properly specified</li><li>Inappropriate distribution of project work</li></ul></td>
-                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border"><center>${members[0].name}<br>(${members[0].roll})</center></td>
                                     <td class="px-5 py-2 border">
-                                        <select class="p-2 border rounded">
+                                        <select id ="r23-${members[0].roll}" class="p-2 border rounded">
                                             <option value="">...</option>
                                             <option value="8" ${Number(members[0].r23) === 8 ? 'selected' : ''}>8</option>
                                             <option value="7" ${Number(members[0].r23) === 7 ? 'selected' : ''}>7</option>
@@ -783,9 +902,9 @@ include 'adminheaders.php';
                                 </tr>
                                 ${members.slice(1).map((member, index) => `
                                     <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
-                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border"><center>${member.name}<br>(${member.roll})</center</td>
                                         <td class="px-5 py-2 border">
-                                            <select class="p-2 border rounded">
+                                            <select id ="r23-${member.roll}" class="p-2 border rounded">
                                                 <option value="">...</option>
                                                 <option value="8" ${Number(member.r23) === 8 ? 'selected' : ''}>8</option>
                                                 <option value="7" ${Number(member.r23) === 7 ? 'selected' : ''}>7</option>
@@ -795,6 +914,13 @@ include 'adminheaders.php';
                                         </td>
                                     </tr>
                                 `).join('')}
+                                <tr>
+                                    <td class="px-5 py-2 border" colspan="7">
+                                        <center>
+                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="2" style="min-width: 140px;">Save</button>
+                                        </center>
+                                    </td>
+                                </tr>
                             </tbody>
                         ` : ''}
                         ${i === 3 ? `
@@ -807,7 +933,7 @@ include 'adminheaders.php';
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Good (4)</th>
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Average (3)</th>
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Poor (2)</th>
-                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Name</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Student</th>
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Score</th>
                                 </tr>
                             </thead>
@@ -817,9 +943,9 @@ include 'adminheaders.php';
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Collaborates and communicates in a group situation and integrates the views of others</td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Exchanges some views but requires guidance to collaborate with others</td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Makes little or no attempt to collaborate in a group situation</td>
-                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border"><center>${members[0].name}<br>(${members[0].roll})</center></td>
                                     <td class="px-5 py-2 border">
-                                        <select class="p-2 border rounded">
+                                        <select id ="r31-${members[0].roll}" class="p-2 border rounded">
                                             <option value="">...</option>
                                             <option value="4" ${Number(members[0].r31) === 4 ? 'selected' : ''}>4</option>
                                             <option value="3" ${Number(members[0].r31) === 3 ? 'selected' : ''}>3</option>
@@ -829,9 +955,9 @@ include 'adminheaders.php';
                                 </tr>
                                 ${members.slice(1).map((member, index) => `
                                     <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
-                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border"><center>${member.name}<br>(${member.roll})</center</td>
                                         <td class="px-5 py-2 border">
-                                            <select class="p-2 border rounded">
+                                            <select id ="r31-${member.roll}" class="p-2 border rounded">
                                                 <option value="">...</option>
                                                 <option value="4" ${Number(member.r31) === 4 ? 'selected' : ''}>4</option>
                                                 <option value="3" ${Number(member.r31) === 3 ? 'selected' : ''}>3</option>
@@ -845,9 +971,9 @@ include 'adminheaders.php';
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Reports to the guide regularly and consistent in work</td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Not very regular but consistent in the work</td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Irregular in attendance and inconsistent in work</td>
-                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border"><center>${members[0].name}<br>(${members[0].roll})</center></td>
                                     <td class="px-5 py-2 border">
-                                        <select class="p-2 border rounded">
+                                        <select id ="r32-${members[0].roll}" class="p-2 border rounded">
                                             <option value="">...</option>
                                             <option value="4" ${Number(members[0].r32) === 4 ? 'selected' : ''}>4</option>
                                             <option value="3" ${Number(members[0].r32) === 3 ? 'selected' : ''}>3</option>
@@ -857,9 +983,9 @@ include 'adminheaders.php';
                                 </tr>
                                 ${members.slice(1).map((member, index) => `
                                     <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
-                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border"><center>${member.name}<br>(${member.roll})</center</td>
                                         <td class="px-5 py-2 border">
-                                            <select class="p-2 border rounded">
+                                            <select id ="r32-${member.roll}" class="p-2 border rounded">
                                                 <option value="">...</option>
                                                 <option value="4" ${Number(member.r32) === 4 ? 'selected' : ''}>4</option>
                                                 <option value="3" ${Number(member.r32) === 3 ? 'selected' : ''}>3</option>
@@ -868,6 +994,13 @@ include 'adminheaders.php';
                                         </td>
                                     </tr>
                                 `).join('')}
+                                <tr>
+                                    <td class="px-5 py-2 border" colspan="6">
+                                        <center>
+                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="3" style="min-width: 140px;">Save</button>
+                                        </center>
+                                    </td>
+                                </tr>
                             </tbody>        
                         ` : ''}
                         ${i === 4 ? `
@@ -881,7 +1014,7 @@ include 'adminheaders.php';
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Good (45)</th>
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Average (40)</th>
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Poor (35)</th>
-                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Name</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Student</th>
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Score</th>
                                 </tr>
                             </thead>
@@ -892,9 +1025,9 @@ include 'adminheaders.php';
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Divison of problem into modules and good selection of computing framework</li><li>Design methodology not properly justified</li></ul></td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Divison of problem into modules but inappropriate selection of computing framework</li><li>Design methodology not defined properly</li></ul></td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Modular approach not adopted </li><li>Design methodology not defined</li></ul></td>
-                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border"><center>${members[0].name}<br>(${members[0].roll})</center></td>
                                     <td class="px-5 py-2 border">
-                                        <select class="p-2 border rounded">
+                                        <select id ="r41-${members[0].roll}" class="p-2 border rounded">
                                             <option value="">...</option>
                                             <option value="50" ${Number(members[0].r41) === 50 ? 'selected' : ''}>50</option>
                                             <option value="45" ${Number(members[0].r41) === 45 ? 'selected' : ''}>45</option>
@@ -905,9 +1038,9 @@ include 'adminheaders.php';
                                 </tr>
                                 ${members.slice(1).map((member, index) => `
                                     <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
-                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border"><center>${member.name}<br>(${member.roll})</center</td>
                                         <td class="px-5 py-2 border">
-                                            <select class="p-2 border rounded">
+                                            <select id ="r41-${member.roll}" class="p-2 border rounded">
                                                 <option value="">...</option>
                                                 <option value="50" ${Number(member.r41) === 50 ? 'selected' : ''}>50</option>
                                                 <option value="45" ${Number(member.r41) === 45 ? 'selected' : ''}>45</option>
@@ -923,9 +1056,9 @@ include 'adminheaders.php';
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Objectives achieved as per time frame</li><li>Contents of presentations are appropriate but not well arranged</li><li>Satisfactory demonstration, clear voice with good spoken language but eye contact not proper</li></ul></td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Objectives achieved as per time frame</li><li>Contents of presentations are appropriate but not well arranged</li><li>Presentation not satisfactory and average demonstration</li></ul></td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>No objectives achieved</li><li>Contents of presentations are not appropriate and not well delivered </li><li>Poor delivery of presentation</li></ul></td>
-                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border"><center>${members[0].name}<br>(${members[0].roll})</center></td>
                                     <td class="px-5 py-2 border">
-                                        <select class="p-2 border rounded">
+                                        <select id ="r42-${members[0].roll}" class="p-2 border rounded">
                                             <option value="">...</option>
                                             <option value="50" ${Number(members[0].r42) === 50 ? 'selected' : ''}>50</option>
                                             <option value="45" ${Number(members[0].r42) === 45 ? 'selected' : ''}>45</option>
@@ -936,9 +1069,9 @@ include 'adminheaders.php';
                                 </tr>
                                 ${members.slice(1).map((member, index) => `
                                     <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
-                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border"><center>${member.name}<br>(${member.roll})</center</td>
                                         <td class="px-5 py-2 border">
-                                            <select class="p-2 border rounded">
+                                            <select id ="r42-${member.roll}" class="p-2 border rounded">
                                                 <option value="">...</option>
                                                 <option value="50" ${Number(member.r42) === 50 ? 'selected' : ''}>50</option>
                                                 <option value="45" ${Number(member.r42) === 45 ? 'selected' : ''}>45</option>
@@ -948,6 +1081,13 @@ include 'adminheaders.php';
                                         </td>
                                     </tr>
                                 `).join('')}
+                                <tr>
+                                    <td class="px-5 py-2 border" colspan="7">
+                                        <center>
+                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="4" style="min-width: 140px;">Save</button>
+                                        </center>
+                                    </td>
+                                </tr>
                             </tbody>
                         ` : ''}
                         ${i === 5 ? `
@@ -961,7 +1101,7 @@ include 'adminheaders.php';
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Good (45)</th>
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Average (40)</th>
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Poor (35)</th>
-                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Name</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Student</th>
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Score</th>
                                 </tr>
                             </thead>
@@ -972,9 +1112,9 @@ include 'adminheaders.php';
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Changes are made as per modifications suggested during mid term evaluation and good justification</td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Few changes are made as per modifications suggested during mid term evaluation</td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Suggestions during mid term evaluation are not incorporated</td>
-                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border"><center>${members[0].name}<br>(${members[0].roll})</center></td>
                                     <td class="px-5 py-2 border">
-                                        <select class="p-2 border rounded">
+                                        <select id ="r51-${members[0].roll}" class="p-2 border rounded">
                                             <option value="">...</option>
                                             <option value="50" ${Number(members[0].r51) === 50 ? 'selected' : ''}>50</option>
                                             <option value="45" ${Number(members[0].r51) === 45 ? 'selected' : ''}>45</option>
@@ -985,9 +1125,9 @@ include 'adminheaders.php';
                                 </tr>
                                 ${members.slice(1).map((member, index) => `
                                     <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
-                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border"><center>${member.name}<br>(${member.roll})</center</td>
                                         <td class="px-5 py-2 border">
-                                            <select class="p-2 border rounded">
+                                            <select id ="r51-${member.roll}" class="p-2 border rounded">
                                                 <option value="">...</option>
                                                 <option value="50" ${Number(member.r51) === 50 ? 'selected' : ''}>50</option>
                                                 <option value="45" ${Number(member.r51) === 45 ? 'selected' : ''}>45</option>
@@ -1003,9 +1143,9 @@ include 'adminheaders.php';
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>All defined objectives are achieved</li><li>Each module working well and properly demonstrated</li><li>Integration of all modules not done and system working is not veey satisfactory</li></ul></td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Some of the defined objectives are achieved</li><li>Modules are working well in isolation and properly demonstrated</li><li>Modules of project are not properly integrated</li></ul></td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Defined objectives are not achieved</li><li>Modules are not in proper working form that further leads to failure of integrated system</li></ul></td>
-                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border"><center>${members[0].name}<br>(${members[0].roll})</center></td>
                                     <td class="px-5 py-2 border">
-                                        <select class="p-2 border rounded">
+                                        <select id ="r52-${members[0].roll}" class="p-2 border rounded">
                                             <option value="">...</option>
                                             <option value="50" ${Number(members[0].r52) === 50 ? 'selected' : ''}>50</option>
                                             <option value="45" ${Number(members[0].r52) === 45 ? 'selected' : ''}>45</option>
@@ -1016,9 +1156,9 @@ include 'adminheaders.php';
                                 </tr>
                                 ${members.slice(1).map((member, index) => `
                                     <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
-                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border"><center>${member.name}<br>(${member.roll})</center</td>
                                         <td class="px-5 py-2 border">
-                                            <select class="p-2 border rounded">
+                                            <select id ="r52-${member.roll}" class="p-2 border rounded">
                                                 <option value="">...</option>
                                                 <option value="50" ${Number(member.r52) === 50 ? 'selected' : ''}>50</option>
                                                 <option value="45" ${Number(member.r52) === 45 ? 'selected' : ''}>45</option>
@@ -1034,9 +1174,9 @@ include 'adminheaders.php';
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Contents of presentations are appropriate and well delivered</li><li>Clear voice with good spoken language but less eye contact with audience</li></ul></td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Contents of presentations are not appropriate</li><li>Eye contact with few people and unclear voice</li></ul></td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Contents of presentations are not appropriate and not well delivered</li><li>Poor delivery of presentation</li></ul></td>
-                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border"><center>${members[0].name}<br>(${members[0].roll})</center></td>
                                     <td class="px-5 py-2 border">
-                                        <select class="p-2 border rounded">
+                                        <select id ="r53-${members[0].roll}" class="p-2 border rounded">
                                             <option value="">...</option>
                                             <option value="50" ${Number(members[0].r53) === 50 ? 'selected' : ''}>50</option>
                                             <option value="45" ${Number(members[0].r53) === 45 ? 'selected' : ''}>45</option>
@@ -1047,9 +1187,9 @@ include 'adminheaders.php';
                                 </tr>
                                 ${members.slice(1).map((member, index) => `
                                     <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
-                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border"><center>${member.name}<br>(${member.roll})</center</td>
                                         <td class="px-5 py-2 border">
-                                            <select class="p-2 border rounded">
+                                            <select id ="r53-${member.roll}" class="p-2 border rounded">
                                                 <option value="">...</option>
                                                 <option value="50" ${Number(member.r53) === 50 ? 'selected' : ''}>50</option>
                                                 <option value="45" ${Number(member.r53) === 45 ? 'selected' : ''}>45</option>
@@ -1059,6 +1199,13 @@ include 'adminheaders.php';
                                         </td>
                                     </tr>
                                 `).join('')}
+                                <tr>
+                                    <td class="px-5 py-2 border" colspan="7">
+                                        <center>
+                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="5" style="min-width: 140px;">Save</button>
+                                        </center>
+                                    </td>
+                                </tr>
                             </tbody>
                         ` : ''}
                         ${i === 6 ? `
@@ -1072,7 +1219,7 @@ include 'adminheaders.php';
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Good (27)</th>
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Average (24)</th>
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Poor (21)</th>
-                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Name</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Student</th>
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Score</th>
                                 </tr>
                             </thead>
@@ -1083,9 +1230,9 @@ include 'adminheaders.php';
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Project report is according to the specified format</li><li>References and citations are appropriate but not mentioned well </li></ul></td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Project report is according to the specified format but some mistakes</li><li>In-sufficient references and citations</li></ul></td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Project report not prepared according to the specified format</li><li>References and citations are not  appropriate</li></ul></td>
-                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border"><center>${members[0].name}<br>(${members[0].roll})</center></td>
                                     <td class="px-5 py-2 border">
-                                        <select class="p-2 border rounded">
+                                        <select id ="r61-${members[0].roll}" class="p-2 border rounded">
                                             <option value="">...</option>
                                             <option value="30" ${Number(members[0].r61) === 30 ? 'selected' : ''}>30</option>
                                             <option value="27" ${Number(members[0].r61) === 27 ? 'selected' : ''}>27</option>
@@ -1096,9 +1243,9 @@ include 'adminheaders.php';
                                 </tr>
                                 ${members.slice(1).map((member, index) => `
                                     <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
-                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border"><center>${member.name}<br>(${member.roll})</center</td>
                                         <td class="px-5 py-2 border">
-                                            <select class="p-2 border rounded">
+                                            <select id ="r61-${member.roll}" class="p-2 border rounded">
                                                 <option value="">...</option>
                                                 <option value="30" ${Number(member.r61) === 30 ? 'selected' : ''}>30</option>
                                                 <option value="27" ${Number(member.r61) === 27 ? 'selected' : ''}>27</option>
@@ -1114,9 +1261,9 @@ include 'adminheaders.php';
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Complete explanation of the key concepts</li><li>In-sufficient description of the technical requirements of the project</li></ul></td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Complete explanation of the key concepts but little relevance to literature</li><li>In-sufficient description of the technical requirements of the project</li></ul></td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Inapproiate explanation of the key concepts</li><li>Poor description of the technical requirements of the project</li></ul></td>
-                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border"><center>${members[0].name}<br>(${members[0].roll})</center></td>
                                     <td class="px-5 py-2 border">
-                                        <select class="p-2 border rounded">
+                                        <select id ="r62-${members[0].roll}" class="p-2 border rounded">
                                             <option value="">...</option>
                                             <option value="30" ${Number(members[0].r62) === 30 ? 'selected' : ''}>30</option>
                                             <option value="27" ${Number(members[0].r62) === 27 ? 'selected' : ''}>27</option>
@@ -1127,9 +1274,9 @@ include 'adminheaders.php';
                                 </tr>
                                 ${members.slice(1).map((member, index) => `
                                     <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
-                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border"><center>${member.name}<br>(${member.roll})</center</td>
                                         <td class="px-5 py-2 border">
-                                            <select class="p-2 border rounded">
+                                            <select id ="r62-${member.roll}" class="p-2 border rounded">
                                                 <option value="">...</option>
                                                 <option value="30" ${Number(member.r62) === 30 ? 'selected' : ''}>30</option>
                                                 <option value="27" ${Number(member.r62) === 27 ? 'selected' : ''}>27</option>
@@ -1145,9 +1292,9 @@ include 'adminheaders.php';
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Results are presented in good manner </li><li>Project work summary and conclusion not very appropriate</li><li>Future extensions in the project are  specified </li></ul></td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Results presented are not much satisfactory</li><li>Project work summary and conclusion not very appropriate</li><li>Future extensions in the project are specified</li></ul></td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}"><ul style="list-style-type: disc;"><li>Results are not presented properly</li><li>Project work is not  summarized and concluded</li><li>Future extensions in the project are not specified</li></ul></td>
-                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border"><center>${members[0].name}<br>(${members[0].roll})</center></td>
                                     <td class="px-5 py-2 border">
-                                        <select class="p-2 border rounded">
+                                        <select id ="r63-${members[0].roll}" class="p-2 border rounded">
                                             <option value="">...</option>
                                             <option value="30" ${Number(members[0].r63) === 30 ? 'selected' : ''}>30</option>
                                             <option value="27" ${Number(members[0].r63) === 27 ? 'selected' : ''}>27</option>
@@ -1158,9 +1305,9 @@ include 'adminheaders.php';
                                 </tr>
                                 ${members.slice(1).map((member, index) => `
                                     <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
-                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border"><center>${member.name}<br>(${member.roll})</center</td>
                                         <td class="px-5 py-2 border">
-                                            <select class="p-2 border rounded">
+                                            <select id ="r63-${member.roll}" class="p-2 border rounded">
                                                 <option value="">...</option>
                                                 <option value="30" ${Number(member.r63) === 30 ? 'selected' : ''}>30</option>
                                                 <option value="27" ${Number(member.r63) === 27 ? 'selected' : ''}>27</option>
@@ -1170,6 +1317,13 @@ include 'adminheaders.php';
                                         </td>
                                     </tr>
                                 `).join('')}
+                                <tr>
+                                    <td class="px-5 py-2 border" colspan="7">
+                                        <center>
+                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="6" style="min-width: 140px;">Save</button>
+                                        </center>
+                                    </td>
+                                </tr>
                             </tbody>
                         ` : ''}
                         ${i === 7 ? `
@@ -1182,7 +1336,7 @@ include 'adminheaders.php';
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Good (35)</th>
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Average (30)</th>
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Poor (25)</th>
-                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Name</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Student</th>
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Score</th>
                                 </tr>
                             </thead>
@@ -1192,9 +1346,9 @@ include 'adminheaders.php';
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Written Research paper related to Project and communicated in any Conference/ Journal</td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Written Research paper related to Project but not communicated in any Conference/ Journal</td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Not written Research paper related to Project</td>
-                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border"><center>${members[0].name}<br>(${members[0].roll})</center></td>
                                     <td class="px-5 py-2 border">
-                                        <select class="p-2 border rounded">
+                                        <select id ="r71-${members[0].roll}" class="p-2 border rounded">
                                             <option value="">...</option>
                                             <option value="35" ${Number(members[0].r71) === 35 ? 'selected' : ''}>35</option>
                                             <option value="30" ${Number(members[0].r71) === 30 ? 'selected' : ''}>30</option>
@@ -1204,9 +1358,9 @@ include 'adminheaders.php';
                                 </tr>
                                 ${members.slice(1).map((member, index) => `
                                     <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
-                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border"><center>${member.name}<br>(${member.roll})</center</td>
                                         <td class="px-5 py-2 border">
-                                            <select class="p-2 border rounded">
+                                            <select id ="r71-${member.roll}" class="p-2 border rounded">
                                                 <option value="">...</option>
                                                 <option value="35" ${Number(member.r71) === 35 ? 'selected' : ''}>35</option>
                                                 <option value="30" ${Number(member.r71) === 30 ? 'selected' : ''}>30</option>
@@ -1220,9 +1374,9 @@ include 'adminheaders.php';
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Research paper published in international Conference/Journal <br> <b>OR</b> <br> Research paper published in national Conference/Journal and placed in any company</td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Research paper published in national Conference/Journal</td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Research paper not published</td>
-                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border"><center>${members[0].name}<br>(${members[0].roll})</center></td>
                                     <td class="px-5 py-2 border">
-                                        <select class="p-2 border rounded">
+                                        <select id ="r72-${members[0].roll}" class="p-2 border rounded">
                                             <option value="">...</option>
                                             <option value="35" ${Number(members[0].r72) === 35 ? 'selected' : ''}>35</option>
                                             <option value="30" ${Number(members[0].r72) === 30 ? 'selected' : ''}>30</option>
@@ -1232,9 +1386,9 @@ include 'adminheaders.php';
                                 </tr>
                                 ${members.slice(1).map((member, index) => `
                                     <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
-                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border"><center>${member.name}<br>(${member.roll})</center</td>
                                         <td class="px-5 py-2 border">
-                                            <select class="p-2 border rounded">
+                                            <select id ="r72-${member.roll}" class="p-2 border rounded">
                                                 <option value="">...</option>
                                                 <option value="35" ${Number(member.r72) === 35 ? 'selected' : ''}>35</option>
                                                 <option value="30" ${Number(member.r72) === 30 ? 'selected' : ''}>30</option>
@@ -1243,6 +1397,13 @@ include 'adminheaders.php';
                                         </td>
                                     </tr>
                                 `).join('')}
+                                <tr>
+                                    <td class="px-5 py-2 border" colspan="6">
+                                        <center>
+                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="7" style="min-width: 140px;">Save</button>
+                                        </center>
+                                    </td>
+                                </tr>
                             </tbody>        
                         ` : ''}
                         ${i === 8 ? `
@@ -1255,7 +1416,7 @@ include 'adminheaders.php';
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Good (30)</th>
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Average (25)</th>
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Poor (20)</th>
-                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Name</th>
+                                    <th class="px-3 py-3 border font-medium uppercase tracking-wider">Student</th>
                                     <th class="px-3 py-3 border font-medium uppercase tracking-wider">Score</th>
                                 </tr>
                             </thead>
@@ -1265,9 +1426,9 @@ include 'adminheaders.php';
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Collaborates and communicates in a group situation and integrates the views of others</td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Exchanges some views but requires guidance to collaborate with others</td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Makes little or no attempt to collaborate in a group situation</td>
-                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border"><center>${members[0].name}<br>(${members[0].roll})</center></td>
                                     <td class="px-5 py-2 border">
-                                        <select class="p-2 border rounded">
+                                        <select id ="r81-${members[0].roll}" class="p-2 border rounded">
                                             <option value="">...</option>
                                             <option value="30" ${Number(members[0].r81) === 30 ? 'selected' : ''}>30</option>
                                             <option value="25" ${Number(members[0].r81) === 25 ? 'selected' : ''}>25</option>
@@ -1277,9 +1438,9 @@ include 'adminheaders.php';
                                 </tr>
                                 ${members.slice(1).map((member, index) => `
                                     <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
-                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border"><center>${member.name}<br>(${member.roll})</center</td>
                                         <td class="px-5 py-2 border">
-                                            <select class="p-2 border rounded">
+                                            <select id ="r81-${member.roll}" class="p-2 border rounded">
                                                 <option value="">...</option>
                                                 <option value="30" ${Number(member.r81) === 30 ? 'selected' : ''}>30</option>
                                                 <option value="25" ${Number(member.r81) === 25 ? 'selected' : ''}>25</option>
@@ -1293,9 +1454,9 @@ include 'adminheaders.php';
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Extensive knowledge related to the project</td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Fair knowledge related to the project</td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Lacks sufficient knowledge</td>
-                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border"><center>${members[0].name}<br>(${members[0].roll})</center></td>
                                     <td class="px-5 py-2 border">
-                                        <select class="p-2 border rounded">
+                                        <select id ="r82-${members[0].roll}" class="p-2 border rounded">
                                             <option value="">...</option>
                                             <option value="30" ${Number(members[0].r82) === 30 ? 'selected' : ''}>30</option>
                                             <option value="25" ${Number(members[0].r82) === 25 ? 'selected' : ''}>25</option>
@@ -1305,9 +1466,9 @@ include 'adminheaders.php';
                                 </tr>
                                 ${members.slice(1).map((member, index) => `
                                     <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
-                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border"><center>${member.name}<br>(${member.roll})</center</td>
                                         <td class="px-5 py-2 border">
-                                            <select class="p-2 border rounded">
+                                            <select id ="r82-${member.roll}" class="p-2 border rounded">
                                                 <option value="">...</option>
                                                 <option value="30" ${Number(member.r82) === 30 ? 'selected' : ''}>30</option>
                                                 <option value="25" ${Number(member.r82) === 25 ? 'selected' : ''}>25</option>
@@ -1321,9 +1482,9 @@ include 'adminheaders.php';
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Reports to the guide regularly and consistent in work</td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Not very regular  but consistent in the work</td>
                                     <td class="px-5 py-2 border" rowspan="${numberOfMembers}">Irregular in attendance and inconsistent in work</td>
-                                    <td class="px-5 py-2 border">${members[0].name}</td>
+                                    <td class="px-5 py-2 border"><center>${members[0].name}<br>(${members[0].roll})</center></td>
                                     <td class="px-5 py-2 border">
-                                        <select class="p-2 border rounded">
+                                        <select id ="r83-${members[0].roll}" class="p-2 border rounded">
                                             <option value="">...</option>
                                             <option value="30" ${Number(members[0].r83) === 30 ? 'selected' : ''}>30</option>
                                             <option value="25" ${Number(members[0].r83) === 25 ? 'selected' : ''}>25</option>
@@ -1333,9 +1494,9 @@ include 'adminheaders.php';
                                 </tr>
                                 ${members.slice(1).map((member, index) => `
                                     <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"> 
-                                        <td class="px-5 py-2 border">${member.name}</td>
+                                        <td class="px-5 py-2 border"><center>${member.name}<br>(${member.roll})</center</td>
                                         <td class="px-5 py-2 border">
-                                            <select class="p-2 border rounded">
+                                            <select id ="r83-${member.roll}" class="p-2 border rounded">
                                                 <option value="">...</option>
                                                 <option value="30" ${Number(member.r83) === 30 ? 'selected' : ''}>30</option>
                                                 <option value="25" ${Number(member.r83) === 25 ? 'selected' : ''}>25</option>
@@ -1344,6 +1505,13 @@ include 'adminheaders.php';
                                         </td>
                                     </tr>
                                 `).join('')}
+                                <tr>
+                                    <td class="px-5 py-2 border" colspan="6">
+                                        <center>
+                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="8" style="min-width: 140px;">Save</button>
+                                        </center>
+                                    </td>
+                                </tr>
                             </tbody>        
                         ` : ''}
                     </table>
@@ -1355,7 +1523,160 @@ include 'adminheaders.php';
 
             modal.style.display = 'block';
             modal.scrollTop = 0;
+
+            // Add event listeners to Save buttons to save the review for their respective rubric when they are clicked
+            const saveButtons = modalContent.querySelectorAll(".save-btn");
+            saveButtons.forEach(button => {
+                button.addEventListener("click", () => {
+                    const rubricNumber = button.dataset.rubric;
+                    saveRubricData(group.gnum, rubricNumber, groupNumber);//Taking parameters gnum & rubricNumber to save the details for that particular rubrics of a grp, and groupNumber to further using it to reopen the same group modal after save-reloading   
+                });
+            });
+
+            // Function to save rubric review data
+            function saveRubricData(gnum, rubricNumber, groupId) {
+                const examiner = document.getElementById(`examiner-${rubricNumber}`).value;
+                const status = document.getElementById(`status-${rubricNumber}`).value;
+
+                if (!examiner || !status) {
+                    alert("Please fill in all fields before saving.");
+                    return;
+                }
+
+                const data = {
+                    gnum: gnum,
+                    rubric: rubricNumber,
+                    examiner: examiner,
+                    status: status,
+                    action: 'rubricsreview',
+                };
+
+                // Save the modal state and position to local storage before sending the data as after it is sent, the page will reload
+                localStorage.setItem('rmodalState', 'open');
+                localStorage.setItem('rmodalPosition', document.getElementById('rubricsReviewModal').scrollTop);
+                localStorage.setItem('groupId', groupId);
+                
+                // Send the data to the server
+                fetch("groups.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data),
+                })
+                .then(response => response.json())
+                .then(response => {
+                    if (response.success) {
+                        alert(`Rubric R${rubricNumber} details saved successfully.`);
+                        window.location.reload();
+                    } else {
+                        alert(`Failed to save Rubric R${rubricNumber} details: ${response.message}`);
+                    }
+                })
+                .catch(error => console.error("Error:", error));
+            }
+
+            // Add event listeners to Save buttons to save the marks for their respective rubric when they are clicked
+            const msaveButtons = modalContent.querySelectorAll(".save-mbtn");
+            msaveButtons.forEach(button => {
+                button.addEventListener("click", () => {
+                    const rubricNumber = button.dataset.rubric;
+                    saveRubricMarks(group.gnum, rubricNumber, groupNumber);//Taking parameters gnum to save the details for that particular grp,  
+                });
+            });
+            function saveRubricMarks(gnum, rubricNumber, groupId) {
+                // Collect data for all members and all subparts of the rubric
+                const rubricParts = {
+                    1: ['r11', 'r12', 'r13'],
+                    2: ['r21', 'r22', 'r23'],
+                    3: ['r31', 'r32'],
+                    4: ['r41', 'r42'],
+                    5: ['r51', 'r52', 'r53'],
+                    6: ['r61', 'r62', 'r63'],
+                    7: ['r71', 'r72'],
+                    8: ['r81', 'r82', 'r83'],
+                };
+                let allFieldsFilled = true;
+                const rubricData = rubricParts[rubricNumber].map(part => ({
+                    part,
+                    members: memberRows
+                        .filter(member => member.gnum === gnum)
+                        .map(member => {
+                            const roll = member.roll;
+                            const scoreElement = document.getElementById(`${part}-${roll}`);
+                            const score = scoreElement ? scoreElement.value : null;
+                            if (!score) {
+                                allFieldsFilled = false;
+                            }
+                            return {
+                                roll,
+                                score: score ? parseInt(score) : null, // Ensure score is stored as an integer
+                            };
+                        }),
+                }));
+                // Stop execution if any field is empty
+                if (!allFieldsFilled) {
+                    alert(`Please fill in all the R${rubricNumber} marks fields before saving.`);
+                    return;
+                }
+                // Prepare data payload
+                const payload = {
+                    action: "rubricsmarks",
+                    gnum,
+                    rubric: rubricNumber,
+                    rubricData,
+                };
+
+                // Save the modal state and position to local storage before sending the data as after it is sent, the page will reload
+                localStorage.setItem('rmodalState', 'open');
+                localStorage.setItem('rmodalPosition', document.getElementById('rubricsReviewModal').scrollTop);
+                localStorage.setItem('groupId', groupId);
+                
+                // Send data to the server
+                fetch("groups.php", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(payload),
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(`Rubric R${rubricNumber} marks saved successfully!`);
+                            window.location.reload();
+                        } else {
+                            alert(`Failed to save Rubric R${rubricNumber} marks: ${data.message}`);
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error saving rubric marks:", error);
+                        alert(`An error occurred while saving Rubric R${rubricNumber} marks.`);
+                    });
+            }
+
+            
+            // Function to clear modal state
+            function clearModalState() {
+                localStorage.removeItem('rmodalState');
+                localStorage.removeItem('rmodalPosition');
+                localStorage.removeItem('rgroupId');
+            }
+
+            // Clear the modal state from local storage when the modal is closed
+            document.querySelector('.close').addEventListener('click', () => {
+                clearModalState();
+                document.getElementById('rubricsReviewModal').style.display = 'none';
+            });
+
+            // Clear the modal state when clicking outside the modal content
+            window.addEventListener('click', (event) => {
+                const modal = document.getElementById('rubricsReviewModal');
+                if (event.target === modal) {
+                    clearModalState();
+                    modal.style.display = 'none';
+                }
+            });
         }
+
         // Close the modals when the close button is clicked
         document.querySelectorAll('.close').forEach(closeButton => {
             closeButton.addEventListener('click', () => {
@@ -1372,30 +1693,6 @@ include 'adminheaders.php';
                     modal.style.display = 'none';
                 }
             });
-        });
-        // Save weekly analysis data
-        document.getElementById('saveWeeklyAnalysis').addEventListener('click', () => {
-            // Collect data from the modal
-            const weeklyData = [];
-            document.querySelectorAll('#weeklyAnalysisContent > div').forEach((weekDiv, index) => {
-                const summary = weekDiv.querySelector('textarea').value;
-                const performance = weekDiv.querySelector('select').value;
-                const submissionDate = weekDiv.querySelector('input[type="date"]').value;
-                const evaluationDate = weekDiv.querySelector('input[type="date"]').value;
-                weeklyData.push({
-                    week: index + 1,
-                    summary,
-                    performance,
-                    submissionDate,
-                    evaluationDate
-                });
-            });
-
-            // Send data to the server (implement server-side handling)
-            console.log(weeklyData);
-
-            // Close the modal
-            document.getElementById('weeklyAnalysisModal').style.display = 'none';
         });
 
         // document.getElementById('showApprovedCheckbox').addEventListener('change', function() {
