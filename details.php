@@ -190,6 +190,9 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .hidden {
             display: none;
         }
+        .table-container {
+            overflow-x: auto;
+        }
     </style>
 </head>
 <body class="bg-white text-gray-800 flex flex-col min-h-screen">
@@ -233,16 +236,16 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button id="addMemberBtn" class="bg-blue-500 text-white px-4 py-2 mt-4">Add Member</button>
         </div>
 
-        <div class="w-full bg-white p-4 shadow-lg my-4 mx-auto" id="responsibilitiesSection" style="display:none;">
+        <div class="table-container overflow-auto w-full bg-white p-4 shadow-lg my-4" id="responsibilitiesSection" style="display:none;">
             <h2 class="text-2xl font-bold mb-4">Project Work Distribution</h2>
-            <table class="min-w-full bg-white border-2">
+            <table class="min-w-full bg-white border border-gray-300">
                 <thead>
-                    <tr>
-                        <th class="py-2 border">Roll Number</th>
-                        <th class="py-2 border">Name</th>
-                        <th class="py-2 border">Section</th>
-                        <th class="py-2 border">Branch</th>
-                        <th class="py-2 border">Responsibility</th>
+                    <tr class="bg-blue-100">
+                        <th class="px-4 py-2 border">Roll Number</th>
+                        <th class="px-4 py-2 border">Name</th>
+                        <th class="px-4 py-2 border">Section</th>
+                        <th class="px-4 py-2 border">Branch</th>
+                        <th class="px-4 py-2 border">Responsibility</th>
                     </tr>
                 </thead>
                 <tbody id="responsibilitiesTable" style="text-align: center;"></tbody>
@@ -456,11 +459,11 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         members.filter(member => member.locked).forEach(member => {
             tableBody.innerHTML += `
                 <tr>
-                    <td class="py-2 border center-align">${member.roll}</td>
-                    <td class="py-2 border center-align">${member.name}</td>
-                    <td class="py-2 border center-align">${member.section}</td>
-                    <td class="py-2 border center-align">${member.branch}</td>
-                    <td class="py-2 border center-align">${member.responsibility}</td>
+                    <td class="px-4 py-2 border center-align">${member.roll}</td>
+                    <td class="px-4 py-2 border center-align">${member.name}</td>
+                    <td class="px-4 py-2 border center-align">${member.section}</td>
+                    <td class="px-4 py-2 border center-align">${member.branch}</td>
+                    <td class="px-4 py-2 border center-align">${member.responsibility}</td>
                 </tr>
             `;
         });

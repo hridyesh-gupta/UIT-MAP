@@ -1,5 +1,6 @@
 <!-- 3rd page -->
 <?php
+error_reporting(0); //To hide the errors
 include 'dbconnect.php';
 session_start();
 if(!(isset($_SESSION['username']))){  //If the session variable is not set, then it means the user is not logged in and is accessing this page through URL editing, as we have provided session username to every user who logged in. So, redirecting to the login page
@@ -36,7 +37,8 @@ if ($groupId) {
         examinerR5, statusR5, evalR5,
         examinerR6, statusR6, evalR6,
         examinerR7, statusR7, evalR7,
-        examinerR8, statusR8, evalR8
+        examinerR8, statusR8, evalR8,
+        r2ppt, r2pdf, r6ppt, r6pdf
         FROM projinfo WHERE gnum = '$gnum'";
     $rubricsResults = $conn->query($sql);
     if ($rubricsResults->num_rows > 0) {
@@ -49,6 +51,7 @@ if ($groupId) {
     if ($lastDateResults->num_rows > 0) {
         $lastDate = $lastDateResults->fetch_assoc();
     }
+    
 }
 ?>
 <!DOCTYPE html>
@@ -126,21 +129,48 @@ if ($groupId) {
             for (let i = 1; i < maxRubricIndex; i++) {
                 const rubricDiv = document.createElement("div");
                 rubricDiv.classList.add("bg-beige", "shadow-xl", "rounded-xl", "p-6", "mb-6", "border-t-4", "border-indigo-400");
-
+                <!-- Determine existing URLs from the database-->
+                let pptUrl = null;
+                let pdfUrl = null;
+                if (i == 2 || i == 6) {
+                    pptUrl = rubricsData[`r${i}ppt`];
+                    pdfUrl = rubricsData[`r${i}pdf`];
+                }
                 rubricDiv.innerHTML = `
                     <h3 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Rubric R${i}</h3>
                     ${i === 2 || i === 6 ? `
-                    <!-- Upload PPT -->
-                    <div class="mb-5">
-                        <label class="block text-gray-700 font-medium mb-2">Upload PPT:</label>
-                        <input type="file" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg">
-                    </div>
-
-                    <!-- Upload Report -->
-                    <div class="mb-5">
-                        <label class="block text-gray-700 font-medium mb-2">Upload Report:</label>
-                        <input type="file" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg">
-                    </div>
+                        <!-- Upload PPT -->
+                        <div class="mb-5">
+                            <label class="block text-gray-700 font-medium mb-2">Upload Presentation Slides:</label>
+                            ${pptUrl ? `
+                                <a href="${pptUrl}" target="_blank" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 max-w-[219px] w-full justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 13v-1m4 1v-3m4 3V8M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                                    </svg>View Uploaded Slides
+                                </a>                          
+                            `: `
+                                <form id="r${i}pptForm" method="post" enctype="multipart/form-data">
+                                    <input type="file" name="r${i}ppt" accept=".ppt,.pptx" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg" required>
+                                    <button type="submit" class="bg-blue-500 text-white mt-2 py-2 px-4 rounded hover:bg-blue-800 text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">Submit</button>
+                                </form>
+                            `}
+                        </div>
+                        <!-- Upload Report -->
+                        <div class="mb-5">
+                            <label class="block text-gray-700 font-medium mb-2">Upload Report:</label>
+                            ${pdfUrl ? `
+                                <a href="${pdfUrl}" target="_blank" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 max-w-[219px] w-full justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>View Uploaded Report
+                                </a>
+                            `: `
+                                <form id="r${i}pdfForm" method="post" enctype="multipart/form-data">
+                                    <input type="file" name="r${i}pdf" accept=".pdf" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg" required>
+                                    <button type="submit" class="bg-blue-500 text-white mt-2 py-2 px-4 rounded hover:bg-blue-800 text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">Submit</button>
+                                </form>
+                            `}
+                        </div>
                     ` : ""}
                     <!-- Last Date -->
                     <div class="mb-5">
@@ -151,7 +181,7 @@ if ($groupId) {
                     <!-- Examiner Name -->
                     <div class="mb-5">
                         <label class="block text-gray-700 font-medium mb-2">Examiner Name:</label>
-                        <input type="text" value="${rubricsData[`examinerR${i}`] || ""}" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg">
+                        <input type="text" value="${rubricsData[`examinerR${i}`] || ""}" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg" disabled>
                     </div>
 
                     <!-- Status -->
@@ -176,6 +206,36 @@ if ($groupId) {
 
         // Call renderRubricsPage on page load
         document.addEventListener("DOMContentLoaded", renderRubricsPage);
+    
+        // Function to handle form submission
+        function handleFormSubmit(formId) {
+            document.getElementById(formId).addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                
+                fetch('rubrics.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.text())
+                .then(data => {
+                    alert(data);
+                    window.location.reload();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while uploading files.');
+                });
+            });
+        }
+
+        // Apply the event listener to R2 and R6 forms on page load
+        [2, 6].forEach(i => {
+            // Add listeners for both PPT and PDF forms
+            handleFormSubmit(`r${i}pptForm`);
+            handleFormSubmit(`r${i}pdfForm`);
+        });
+
     </script>
 
     <?php include 'footer.php'; ?>

@@ -1,14 +1,14 @@
 <?php
-// Admin 2nd page
 session_start();
+error_reporting(0); //To hide the errors
+include 'dbconnect.php'; //Database connection
+
 if(!(isset($_SESSION['username']))){  //If the session variable is not set, then it means the user is not logged in and is accessing this page through url editing, as we have provided session username to every user who logged in. So, redirecting to login page
     header("location: index.php");
 }
 elseif($_SESSION['usertype']!="admin" && $_SESSION['usertype']!="mentor"){ //If the user is not admin or mentor, then it means the user is student and is accessing this page through url editing as we have provided admin usertype to every user who logged in via admin credentials. So, redirecting to login page
     header("location: index.php");
 }
-
-include 'dbconnect.php'; //Database connection
 
 // To fetch mentors from the mentors table
 $sql = "SELECT mname FROM mentors ORDER BY mname ASC";
@@ -20,9 +20,16 @@ if ($result->num_rows > 0) {
         $mentors[] = $row['mname'];//mname is the column name in the mentors table
     }
 }
-
-// Extract the batch year from the URL
-$batchYear = isset($_GET['year']) ? $_GET['year'] : '';
+$batchYear = null;
+// Check whether batchyr is in the URL
+if (!isset($_GET['year']) || empty($_GET['year'])) {
+    $batchYear = $_SESSION['selected_year'];
+}
+else{
+    // Extract the batch year from the URL and also store it in the session variable
+    $batchYear = $_GET['year'];
+    $_SESSION['selected_year'] = $batchYear;
+}
 // Sanitize the input to prevent SQL injection
 $batchYear = mysqli_real_escape_string($conn, $batchYear);
 
@@ -89,6 +96,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
     $data = json_decode(file_get_contents('php://input'), true); //Decode the JSON payload sent from the client side
     $action = $data['action']; //Get the action from the decoded JSON payload
     $gnum = $data['gnum'];
+    // var_dump($gnum);
     if ($action === 'change') {
         $mentor = $data['mentor']; // Get the selected mentor
 
@@ -279,7 +287,7 @@ include 'adminheaders.php';
     <!-- Main Content -->
     <main class="flex-grow bg-gray-100 p-8">
         <div class="max-w-6xl mx-auto">
-            <center><h2 class="text-2xl font-bold mb-6">Student Groups</h2></center>
+            <center><h2 class="text-2xl font-bold mb-6">Student Groups (<?php echo $batchYear-4; ?>-<?php echo $batchYear; ?>)</h2></center>
 
             <!-- Filter Box -->
             <div class="mb-6 flex justify-between items-center">
@@ -291,8 +299,8 @@ include 'adminheaders.php';
             </div>
 
             <!-- Group List -->
-            <div class="table-container bg-white p-6 rounded-lg shadow-lg">
-                <table class="min-w-full bg-white table-fixed">
+            <div class="table-container bg-white mb-8 rounded-lg shadow-lg">
+                <table class="w-full bg-white">
                     <thead class="bg-gray-800 text-white">
                         <tr>
                             <th class="px-4 py-2 text-center w-12">Group ID</th>
@@ -349,7 +357,7 @@ include 'adminheaders.php';
         const lastDate = <?php echo json_encode($lastDate); ?>;
         const mentors = <?php echo json_encode($mentors); ?>;
         const userType = "<?php echo $_SESSION['usertype']; ?>";
-        console.log(groupRows);
+        // console.log(groupRows);
 
         // Populate the table when the page loads
         document.addEventListener('DOMContentLoaded', populateTable);
@@ -444,7 +452,6 @@ include 'adminheaders.php';
                         </tbody>
                     </table>
                 </div>
-
                 <hr class="my-8 border-gray-300">
 
                 <center><h3 class="text-xl font-semibold mb-6 text-green-600">Group Information</h3></center>
@@ -476,7 +483,8 @@ include 'adminheaders.php';
             console.log('Opening weekly analysis for group:', groupId); // Debugging line
             const analysis = analysisRows.filter(analysis => analysis.number == groupId);
             // console.log(analysis); 
-            const gnum = groupRows.find(group => group.number == groupId).gnum;
+            const group = groupRows.find(group => group.number == groupId);
+            const gnum = group.gnum;
             const modal = document.getElementById('weeklyAnalysisModal');
             const modalContent = document.getElementById('weeklyAnalysisContent');
             modalContent.innerHTML = ''; // Clear existing content
@@ -516,7 +524,6 @@ include 'adminheaders.php';
                     modalContent.appendChild(weekDiv);
                 }
             } else {
-                // If no data exists, show only the first week form
                 const weekDiv = document.createElement('div');
                 weekDiv.classList.add('text-center', 'text-gray-700', 'font-bold', 'p-4');
                 weekDiv.innerHTML = `
@@ -576,10 +583,10 @@ include 'adminheaders.php';
                             alert(`Error saving details for Week ${weekNum}: ${data.error}`);
                         }
                     })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('An error occurred while saving the details.');
-                    });
+                    // .catch(error => {
+                    //     console.error('Error:', error);
+                    //     alert('An error occurred while saving the details.');
+                    // });
                 });
             });
             // Function to clear modal state

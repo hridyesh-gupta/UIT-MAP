@@ -41,22 +41,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $marks_10 = $postData['marks10'];
     $marks_12 = $postData['marks12'];
     $marks = [
-        $postData['m1'], $postData['m2'], $postData['m3'], $postData['m4'], $postData['m5'], $postData['m6'], $postData['m7'], $postData['m8']
+        $postData['m1'], $postData['m2'], $postData['m3'], $postData['m4'], $postData['m5'], $postData['m6'], $postData['m7'], $postData['m8'], $postData['mm1'], $postData['mm2'], $postData['mm3'], $postData['mm4'], $postData['mm5'], $postData['mm6'], $postData['mm7'], $postData['mm8']
     ];
     $cp = [
         $postData['cp1'], $postData['cp2'], $postData['cp3'], $postData['cp4'], $postData['cp5'], $postData['cp6'], $postData['cp7'], $postData['cp8']
     ];
 
     // Insert or update into the 'marks' table
-    $query = "INSERT INTO marks (roll, tenm, twelm, m1, m2, m3, m4, m5, m6, m7, m8, cp1, cp2, cp3, cp4, cp5, cp6, cp7, cp8)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $query = "INSERT INTO marks (roll, tenm, twelm, m1, m2, m3, m4, m5, m6, m7, m8, mm1, mm2, mm3, mm4, mm5, mm6, mm7, mm8, cp1, cp2, cp3, cp4, cp5, cp6, cp7, cp8)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             //   ON DUPLICATE KEY UPDATE
             //   tenm=VALUES(tenm), twelm=VALUES(twelm), m1=VALUES(m1), m2=VALUES(m2), m3=VALUES(m3), m4=VALUES(m4),
-            //   m5=VALUES(m5), m6=VALUES(m6), m7=VALUES(m7), m8=VALUES(m8), cp1=VALUES(cp1), cp2=VALUES(cp2),
+            //   m5=VALUES(m5), m6=VALUES(m6), m7=VALUES(m7), m8=VALUES(m8), mm1=VALUES(mm1), mm2=VALUES(mm2), mm3=VALUES(mm3), mm4=VALUES(mm4),
+            //   mm5=VALUES(mm5), mm6=VALUES(mm6), mm7=VALUES(mm7), mm8=VALUES(mm8),  cp1=VALUES(cp1), cp2=VALUES(cp2),
             //   cp3=VALUES(cp3), cp4=VALUES(cp4), cp5=VALUES(cp5), cp6=VALUES(cp6), cp7=VALUES(cp7), cp8=VALUES(cp8)";
 
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("sssssssssssssssssss", $username, $marks_10, $marks_12, $marks[0], $marks[1], $marks[2], $marks[3], $marks[4], $marks[5], $marks[6], $marks[7], $cp[0], $cp[1], $cp[2], $cp[3], $cp[4], $cp[5], $cp[6], $cp[7]);
+    $stmt->bind_param("sssssssssssssssssssssssssss", $username, $marks_10, $marks_12, $marks[0], $marks[1], $marks[2], $marks[3], $marks[4], $marks[5], $marks[6], $marks[7], $marks[8], $marks[9], $marks[10], $marks[11], $marks[12], $marks[13], $marks[14], $marks[15], $cp[0], $cp[1], $cp[2], $cp[3], $cp[4], $cp[5], $cp[6], $cp[7]);
     $success= $stmt->execute();
     $stmt->close();
     if ($success) {
@@ -163,67 +164,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <h2 class="text-2xl font-semibold text-gray-700 mb-4">B. Tech. :</h2>
             <div class="table-container mb-8">
-                <table class="w-full text-center border-collapse border border-gray-300">
+                <table class="min-w-full bg-white border border-gray-300">
                     <thead>
-                        <tr class="bg-gray-100">
-                            <th class="border px-4 py-2">Semester</th>
+                        <tr class="bg-blue-100">
+                            <th class="border px-4 py-2" rowspan="2">Semester</th>
                             <th class="border px-4 py-2" colspan="2">Marks</th>
-                            <th class="border px-4 py-2">CP</th>
+                            <th class="border px-4 py-2" rowspan="2">CP</th>
                         </tr>
-                        <tr class="bg-gray-100">
-                            <th></th> <!-- Empty column for "Semester" header alignment -->
+                        <tr class="bg-blue-100">
                             <th class="border px-4 py-2">Obtained</th>
                             <th class="border px-4 py-2">Maximum</th>
-                            <th></th> <!-- Empty column for "CP" header alignment -->
                         </tr>
                     </thead>
                     <tbody id="academic-record">
                         <tr>
-                            <td class="border px-4 py-2">I Semester</td>
+                            <td class="border px-4 py-2"><center>I Semester</center></td>
                             <td class="border px-4 py-2"><input type="text" id="m1" class="editable w-full border p-2 text-center" maxlength="3"></td>
-                            <td class="border px-4 py-2"><span class="static">900</span></td>
+                            <td class="border px-4 py-2"><input type="text" id="mm1" class="editable w-full border p-2 text-center" maxlength="3"></td>
                             <td class="border px-4 py-2"><input type="text" id="cp1" class="editable w-full border p-2 text-center" maxlength="2"></td>
                         </tr>
                         <tr>
-                            <td class="border px-4 py-2">II Semester</td>
+                            <td class="border px-4 py-2"><center>II Semester</center></td>
                             <td class="border px-4 py-2"><input type="text" id="m2" class="editable w-full border p-2 text-center" maxlength="3"></td>
-                            <td class="border px-4 py-2"><span class="static">900</span></td>
+                            <td class="border px-4 py-2"><input type="text" id="mm2" class="editable w-full border p-2 text-center" maxlength="3"></td>
                             <td class="border px-4 py-2"><input type="text" id="cp2" class="editable w-full border p-2 text-center" maxlength="2"></td>
                         </tr>
                         <tr>
-                            <td class="border px-4 py-2">III Semester</td>
+                            <td class="border px-4 py-2"><center>III Semester</center></td>
                             <td class="border px-4 py-2"><input type="text" id="m3" class="editable w-full border p-2 text-center" maxlength="3"></td>
-                            <td class="border px-4 py-2"><span class="static">950</span></td>
+                            <td class="border px-4 py-2"><input type="text" id="mm3" class="editable w-full border p-2 text-center" maxlength="3"></td>
                             <td class="border px-4 py-2"><input type="text" id="cp3" class="editable w-full border p-2 text-center" maxlength="2"></td>
                         </tr>
                         <tr>
-                            <td class="border px-4 py-2">IV Semester</td>
+                            <td class="border px-4 py-2"><center>IV Semester</center></td>
                             <td class="border px-4 py-2"><input type="text" id="m4" class="editable w-full border p-2 text-center" maxlength="3"></td>
-                            <td class="border px-4 py-2"><span class="static">900</span></td>
+                            <td class="border px-4 py-2"><input type="text" id="mm4" class="editable w-full border p-2 text-center" maxlength="3"></td>
                             <td class="border px-4 py-2"><input type="text" id="cp4" class="editable w-full border p-2 text-center" maxlength="2"></td>
                         </tr>
                         <tr>
-                            <td class="border px-4 py-2">V Semester</td>
+                            <td class="border px-4 py-2"><center>V Semester</center></td>
                             <td class="border px-4 py-2"><input type="text" id="m5" class="editable w-full border p-2 text-center" maxlength="3"></td>
-                            <td class="border px-4 py-2"><span class="static">950</span></td>
+                            <td class="border px-4 py-2"><input type="text" id="mm5" class="editable w-full border p-2 text-center" maxlength="3"></td>
                             <td class="border px-4 py-2"><input type="text" id="cp5" class="editable w-full border p-2 text-center" maxlength="2"></td>
                         </tr>
                         <tr>
-                            <td class="border px-4 py-2">VI Semester</td>
+                            <td class="border px-4 py-2"><center>VI Semester</center></td>
                             <td class="border px-4 py-2"><input type="text" id="m6" class="editable w-full border p-2 text-center" maxlength="3"></td>
-                            <td class="border px-4 py-2"><span class="static">900</span></td>
+                            <td class="border px-4 py-2"><input type="text" id="mm6" class="editable w-full border p-2 text-center" maxlength="3"></td>
                             <td class="border px-4 py-2"><input type="text" id="cp6" class="editable w-full border p-2 text-center" maxlength="2"></td>
                         </tr>
                         <tr>
-                            <td class="border px-4 py-2">VII Semester</td>
+                            <td class="border px-4 py-2"><center>VII Semester</center></td>
                             <td class="border px-4 py-2"><input type="text" id="m7" class="editable w-full border p-2 text-center" maxlength="3"></td>
-                            <td class="border px-4 py-2"><span class="static">950</span></td>
+                            <td class="border px-4 py-2"><input type="text" id="mm7" class="editable w-full border p-2 text-center" maxlength="3"></td>
                             <td class="border px-4 py-2"><input type="text" id="cp7" class="editable w-full border p-2 text-center" maxlength="2"></td>
                         </tr>
                         <tr>
-                            <td class="border px-4 py-2">VIII Semester</td>
+                            <td class="border px-4 py-2"><center>VIII Semester</center></td>
                             <td class="border px-4 py-2"><input type="text" id="m8" class="editable w-full border p-2 text-center" maxlength="3"></td>
-                            <td class="border px-4 py-2"><span class="static">900</span></td>
+                            <td class="border px-4 py-2"><input type="text" id="mm8" class="editable w-full border p-2 text-center" maxlength="3"></td>
                             <td class="border px-4 py-2"><input type="text" id="cp8" class="editable w-full border p-2 text-center" maxlength="2"></td>
                         </tr>
                     </tbody>
@@ -268,6 +267,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             document.getElementById("m6").value = marksDetails.m6;
             document.getElementById("m7").value = marksDetails.m7;
             document.getElementById("m8").value = marksDetails.m8;
+            document.getElementById("mm1").value = marksDetails.mm1;
+            document.getElementById("mm2").value = marksDetails.mm2;
+            document.getElementById("mm3").value = marksDetails.mm3;
+            document.getElementById("mm4").value = marksDetails.mm4;
+            document.getElementById("mm5").value = marksDetails.mm5;
+            document.getElementById("mm6").value = marksDetails.mm6;
+            document.getElementById("mm7").value = marksDetails.mm7;
+            document.getElementById("mm8").value = marksDetails.mm8;
             document.getElementById("cp1").value = marksDetails.cp1;
             document.getElementById("cp2").value = marksDetails.cp2;
             document.getElementById("cp3").value = marksDetails.cp3;
@@ -314,6 +321,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 m6: document.getElementById('m6').value,
                 m7: document.getElementById('m7').value,
                 m8: document.getElementById('m8').value,
+                mm1: document.getElementById('mm1').value,
+                mm2: document.getElementById('mm2').value,
+                mm3: document.getElementById('mm3').value,
+                mm4: document.getElementById('mm4').value,
+                mm5: document.getElementById('mm5').value,
+                mm6: document.getElementById('mm6').value,
+                mm7: document.getElementById('mm7').value,
+                mm8: document.getElementById('mm8').value,
                 cp1: document.getElementById('cp1').value,
                 cp2: document.getElementById('cp2').value,
                 cp3: document.getElementById('cp3').value,
@@ -328,7 +343,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Check if all fields are filled
             for (const [key, value] of Object.entries(data)) {
                 if (value.trim() === "") {
-                    alert(`Please fill out all fields. Missing field: ${key.toUpperCase()}`);
+                    alert(`Please fill out all the marks fields.`);
                     return; // Stop the function if any field is empty
                 }
             }
