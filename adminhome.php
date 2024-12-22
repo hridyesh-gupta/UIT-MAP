@@ -17,6 +17,11 @@ if ($yearsResult->num_rows > 0) {
         $years[] = $row['batchyr'];
     }
 }
+// Fetch the logged-in user's name
+$username = $_SESSION['username'];
+$nameQuery = "SELECT name FROM info WHERE username = '$username' LIMIT 1";
+$nameResult = $conn->query($nameQuery);
+$loggedInName = $nameResult->num_rows > 0 ? $nameResult->fetch_assoc()['name'] : 'User';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -98,13 +103,22 @@ if ($yearsResult->num_rows > 0) {
     <header class="bg-blue-600 text-white p-4">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
             <img src="COLLEGE.png" alt="College Logo" class="h-12">
-            <?php if($_SESSION['usertype'] == "admin"){ ?>                
+            <div class="flex-1 text-center">
+                <?php if($_SESSION['usertype'] == "admin"){ ?>                
                     <h1 class="text-3xl font-bold text-center">MAP - Admin Panel</h1>
-            <?php } ?>
-            <?php if($_SESSION['usertype'] == "mentor"){ ?>                
+                <?php } ?>
+                <?php if($_SESSION['usertype'] == "mentor"){ ?>                
                     <h1 class="text-3xl font-bold text-center">MAP - Mentor Panel</h1>
-            <?php } ?>
-            <div></div>
+                <?php } ?>
+            </div>
+            <div id="balancingdiv"></div><!-- Div to maintain the space in mobile view between right side boundary and h1 when the user name is hidden -->
+            <!-- Logged-in User -->
+            <div id="user" class="absolute right-8 top-7 flex items-center space-x-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" />
+                </svg>
+                <span class="text-lg font-medium"><?php echo htmlspecialchars($loggedInName); ?></span>
+            </div>
         </div>
     </header>
 
@@ -112,46 +126,77 @@ if ($yearsResult->num_rows > 0) {
     <main class="flex-grow bg-gray-100 p-8">
         <div class="max-w-6xl mx-auto">
             <?php if($_SESSION['usertype'] == "admin"){ ?>                
-                <h2 class="text-2xl font-bold mb-6">Admin Home</h2>
+                <center><h2 class="text-2xl font-bold mb-6">Admin Home</h2></center>
             <?php } ?>
             <?php if($_SESSION['usertype'] == "mentor"){ ?>                
-                <h2 class="text-2xl font-bold mb-6">Mentor Home</h2>
+                <center><h2 class="text-2xl font-bold mb-6">Mentor Home</h2></center>
             <?php } ?>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <?php if($_SESSION['usertype'] == "admin"){ ?>                
                 <button class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300" onclick="location.href='addstudent.php'">Admin Controls</button>
             <?php } ?>
                 <button class="bg-blue-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-blue-600 transition duration-300" onclick="location.href='#'" id="groups-link">Groups</button>
-                <button class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300" onclick="location.href='guidelines.php'">Guidelines</button>
+                <button class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300" onclick="location.href='#'" id="marks-link">Rubrics Marks</button>
+                <button class="bg-blue-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-blue-600 transition duration-300" onclick="location.href='guidelines.php'">Guidelines</button>
                 <button class="bg-red-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-red-600 transition duration-300" onclick="location.href='logout.php'">Logout</button>
             </div>
         </div>
     </main>
-        <!-- Modal for Year Selection -->
+        <!-- Modal for Year Selection for groups.php-->
         <div id="yearSelectionModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
-        <div class="modal-content bg-white p-6 rounded-lg shadow-lg">
-            <span class="close text-gray-500 cursor-pointer">&times;</span>
-            <h2 class="text-xl font-bold mb-4">Select Batch:</h2>
-            <div id="yearButtonsContainer" class="space-y-2">
-                <!-- Year buttons will be dynamically added here -->
+            <div class="modal-content bg-white p-6 rounded-lg shadow-lg">
+                <span class="close text-gray-500 cursor-pointer">&times;</span>
+                <h2 class="text-xl font-bold mb-4">Select Batch:</h2>
+                <div id="yearButtonsContainer" class="space-y-2">
+                    <!-- Year buttons will be dynamically added here -->
+                </div>
             </div>
         </div>
-    </div>
+        <!-- 2nd Modal for Year Selection for rmarks.php-->
+        <div id="yearSelectionModal2" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+            <div class="modal-content bg-white p-6 rounded-lg shadow-lg">
+                <span class="close text-gray-500 cursor-pointer">&times;</span>
+                <h2 class="text-xl font-bold mb-4">Select Batch:</h2>
+                <div id="yearButtonsContainer2" class="space-y-2">
+                    <!-- Year buttons will be dynamically added here -->
+                </div>
+            </div>
+        </div>
     <?php include 'footer.php' ?>
     <!-- JavaScript -->
     <script>
+        const user = document.getElementById('user');
+        const baldiv = document.getElementById('balancingdiv');
+            
         //Variables for year selection modal
         const years = <?php echo json_encode($years); ?>;//Contains the years from the batches table
         const groupsLink = document.getElementById('groups-link');
+        const marksLink = document.querySelectorAll('#marks-link');
         const yearSelectionModal = document.getElementById('yearSelectionModal');
+        const yearSelectionModal2 = document.getElementById('yearSelectionModal2');
         const yearButtonsContainer = document.getElementById('yearButtonsContainer');
-        const closeModal = document.querySelector('.close');
+        const yearButtonsContainer2 = document.getElementById('yearButtonsContainer2');
+        
+        // Initial check
+        checkScreenSize();
+
+        // Check on resize
+        window.addEventListener('resize', checkScreenSize);
+
+        function checkScreenSize() {
+            if (window.innerWidth >= 768) {//If screen if of large size
+                user.classList.remove('hidden');//Show user
+                baldiv.classList.add('hidden');//Hide balancing div
+            } else {//If screen if of small size
+                user.classList.add('hidden');//Hide user
+            }
+        }
 
         // Populate the modal with year buttons
         years.forEach(year => {
             const button = document.createElement('button');
             button.classList.add('bg-blue-500', 'text-white', 'py-2', 'px-4', 'rounded', 'hover:bg-blue-700', 'transition', 'duration-300');
-            button.textContent = year;
+            button.textContent = year-4 + "-" + year;
             button.style.marginRight = '10px';
             button.addEventListener('click', () => {
                 // Handle year button click
@@ -167,16 +212,45 @@ if ($yearsResult->num_rows > 0) {
             event.preventDefault();
             yearSelectionModal.style.display = 'flex';
         });
+        
+        // Populate the 2nd modal with year buttons
+        years.forEach(year => {
+                const button = document.createElement('button');
+                button.classList.add('bg-blue-500', 'text-white', 'py-2', 'px-4', 'rounded', 'hover:bg-blue-700', 'transition', 'duration-300');
+                button.textContent = year-4 + "-" + year;
+                button.style.marginRight = '10px';
+                button.addEventListener('click', () => {
+                    // Handle year button click
+                    console.log(`Year ${year} selected`);
+                    // Redirect to the groups page with the selected year as a query parameter
+                    window.location.href = `rmarks.php?year=${year}`;
+                });
+                yearButtonsContainer2.appendChild(button);
+            });
+            // Attach the click event listener to each 'marks-link' element
+            marksLink.forEach(link => {
+                link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    yearSelectionModal2.style.display = 'flex';
+                });
+            });
 
-        // Close the modal when the close button is clicked
-        closeModal.addEventListener('click', () => {
-            yearSelectionModal.style.display = 'none';
+
+        // Close any open modal when the close button is clicked
+        document.querySelectorAll('.close').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.style.display = 'none';
+                });
+            });
         });
-
         // Close the modal when clicking outside of the modal content
         window.addEventListener('click', (event) => {
             if (event.target == yearSelectionModal) {
                 yearSelectionModal.style.display = 'none';
+            }
+            else if (event.target == yearSelectionModal2) {
+                yearSelectionModal2.style.display = 'none';
             }
         });
     </script>

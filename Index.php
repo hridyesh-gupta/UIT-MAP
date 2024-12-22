@@ -43,8 +43,8 @@
                         <!-- To print error message if the username or password is incorrect -->
                         <?php
                             session_start();
-                            if (isset($_SESSION['loginMessage'])) {//This will execute only if there is any error message stored in session variable by the login check page
-                                echo '<span style="color: red;">' . $_SESSION['loginMessage'] . '</span>'; //Fetching the login error message from login check page and displaying it here if incorrect username or password is entered
+                            if (isset($_SESSION['loginMessage'])) {//This will execute only if there is any error message stored in session variable by the login page
+                                echo '<span style="color: red;">' . $_SESSION['loginMessage'] . '</span>'; //Fetching the login error message from login page and displaying it here if incorrect username or password is entered
                             }
                             session_destroy();
                             if(isset($_SESSION['status'])){
