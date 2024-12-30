@@ -1,8 +1,10 @@
 <!-- 3rd page -->
 <?php
-error_reporting(0); //To hide the errors
+// error_reporting(0); //To hide the errors
 include 'dbconnect.php';
+include 's3client.php';
 session_start();
+
 if(!(isset($_SESSION['username']))){  //If the session variable is not set, then it means the user is not logged in and is accessing this page through URL editing, as we have provided session username to every user who logged in. So, redirecting to the login page
     header("location: index.php");
 }
@@ -51,7 +53,60 @@ if ($groupId) {
     if ($lastDateResults->num_rows > 0) {
         $lastDate = $lastDateResults->fetch_assoc();
     }
-    
+}
+// Handle file uploads
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES)) {
+    try {
+        $uploadedFile = null;
+        $columnName = '';
+        
+        // Determine which file was uploaded
+        if (isset($_FILES['r2ppt'])) {
+            $uploadedFile = $_FILES['r2ppt'];
+            $columnName = 'r2ppt';
+        } elseif (isset($_FILES['r2pdf'])) {
+            $uploadedFile = $_FILES['r2pdf'];
+            $columnName = 'r2pdf';
+        } elseif (isset($_FILES['r6ppt'])) {
+            $uploadedFile = $_FILES['r6ppt'];
+            $columnName = 'r6ppt';
+        } elseif (isset($_FILES['r6pdf'])) {
+            $uploadedFile = $_FILES['r6pdf'];
+            $columnName = 'r6pdf';
+        }
+
+        if ($uploadedFile && $uploadedFile['error'] === UPLOAD_ERR_OK) {
+            // Generate unique filename
+            $extension = pathinfo($uploadedFile['name'], PATHINFO_EXTENSION);
+            $filename = 'Grp_' . $groupId . '_' . $columnName . '_' . uniqid() . '_' . time() . '.' . $extension;
+            
+            // Upload to Tebi
+            $result = $s3Client->putObject([
+                'Bucket' => $TEBI_BUCKET,
+                'Key' => $filename,
+                'SourceFile' => $uploadedFile['tmp_name'],
+                'ACL' => 'public-read'
+            ]);
+
+            // Get the URL
+            $fileUrl = $result['ObjectURL'];
+            
+            // Update database
+            $sql = "UPDATE projinfo SET $columnName = ? WHERE gnum = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ss", $fileUrl, $gnum);
+            $stmt->execute();
+            
+            echo "<script>
+                alert('File uploaded successfully!');
+                window.location.replace(window.location.pathname);
+            </script>";
+            exit;
+        }
+    } catch (Exception $e) {
+        echo "Error uploading file: " . $e->getMessage();
+        exit;
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -129,7 +184,7 @@ if ($groupId) {
             for (let i = 1; i < maxRubricIndex; i++) {
                 const rubricDiv = document.createElement("div");
                 rubricDiv.classList.add("bg-beige", "shadow-xl", "rounded-xl", "p-6", "mb-6", "border-t-4", "border-indigo-400");
-                <!-- Determine existing URLs from the database-->
+                // Determine existing URLs from the database
                 let pptUrl = null;
                 let pdfUrl = null;
                 if (i == 2 || i == 6) {
@@ -143,7 +198,7 @@ if ($groupId) {
                         <div class="mb-5">
                             <label class="block text-gray-700 font-medium mb-2">Upload Presentation Slides:</label>
                             ${pptUrl ? `
-                                <a href="${pptUrl}" target="_blank" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 max-w-[219px] w-full justify-center">
+                                <a onclick="openDocument('${pptUrl}')" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 max-w-[219px] w-full justify-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 13v-1m4 1v-3m4 3V8M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
                                     </svg>View Uploaded Slides
@@ -159,7 +214,7 @@ if ($groupId) {
                         <div class="mb-5">
                             <label class="block text-gray-700 font-medium mb-2">Upload Report:</label>
                             ${pdfUrl ? `
-                                <a href="${pdfUrl}" target="_blank" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 max-w-[219px] w-full justify-center">
+                                <a onclick="openDocument('${pdfUrl}')" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 max-w-[219px] w-full justify-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>View Uploaded Report
@@ -207,7 +262,7 @@ if ($groupId) {
         // Call renderRubricsPage on page load
         document.addEventListener("DOMContentLoaded", renderRubricsPage);
     
-        // Function to handle form submission
+        // Function to handle form submission to upload files when submit button is pressed
         function handleFormSubmit(formId) {
             document.getElementById(formId).addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -236,6 +291,135 @@ if ($groupId) {
             handleFormSubmit(`r${i}pdfForm`);
         });
 
+        // To open the document in new tab
+        function openDocument(fileUrl) {
+            // Extract file extension from the last dot
+            const fileExtension = fileUrl.substring(fileUrl.lastIndexOf('.') + 1).toLowerCase();
+            
+            // First, try Google Viewer for all file types
+            tryGoogleViewer(fileUrl, fileExtension)
+                .catch(() => {
+                    // If Google Viewer fails, check if the file is PDF and show fallback dialog
+                    if (fileExtension.toLowerCase() === 'pdf') {
+                        console.log('PDF file detected. Showing fallback dialog.');
+                        showFallbackDialog(fileUrl);
+                    } else {
+                        // If it's not PDF, try Microsoft Office Viewer
+                        return tryMicrosoftViewer(fileUrl)
+                            .catch(() => {
+                                // If both fail, show fallback dialog
+                                showFallbackDialog(fileUrl);
+                            });
+                    }
+                });
+        }
+        // To open file in Google Docs
+        function tryGoogleViewer(fileUrl) {
+            return new Promise((resolve, reject) => {
+                const encodedUrl = encodeURIComponent(fileUrl);
+                const viewerUrl = 'https://docs.google.com/viewer?url=' + encodedUrl + '&embedded=true';
+                // Try to open the Google Docs Online Viewer directly
+                try {
+                    window.open(viewerUrl, '_blank');
+                    return Promise.resolve();  // If successful, resolve the promise
+                } catch (error) {
+                    console.error('Error opening Google Docs Online Viewer:', error);
+                    return Promise.reject(error);    
+                }
+            });
+        }
+        //To open file in MS Office
+        function tryMicrosoftViewer(fileUrl) {
+            return new Promise((resolve, reject) => {
+                const encodedUrl = encodeURIComponent(fileUrl);
+                const viewerUrl = 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodedUrl;
+                
+                // Try to open the Office Online Viewer directly
+                try {
+                    window.open(viewerUrl, '_blank');
+                    return Promise.resolve();  // If successful, resolve the promise
+                } catch (error) {
+                    console.error('Error opening Office Online Viewer:', error);
+                    return Promise.reject(error);
+                }
+            });
+        }
+        // If both are unavailable provide a dialog box
+        function showFallbackDialog(fileUrl) {
+            // Create a custom dialog
+            const dialog = document.createElement('div');
+            dialog.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 24px;
+                border-radius: 12px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+                z-index: 1000;
+                max-width: 420px;
+                width: 90%;
+                text-align: center;
+                font-family: Arial, sans-serif;
+            `;
+
+            dialog.innerHTML = `
+                <h3 style="margin: 0 0 12px; font-size: 1.25em; font-weight: bold; color: #1E3A8A;">
+                    Document Viewer Unavailable
+                </h3>
+                <p style="margin: 0 0 20px; color: #4B5563; font-size: 0.95em;">
+                    Unable to load document. Please try downloading the file directly:
+                </p>
+                <a href="${fileUrl}" download
+                    style="
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 10px 20px;
+                        max-width: 220px;
+                        width: 100%;
+                        background: linear-gradient(to right, #3B82F6, #2563EB);
+                        color: white;
+                        font-size: 0.95em;
+                        font-weight: 500;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        text-decoration: none;
+                        transition: all 0.3s ease;
+                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                    "
+                    onmouseover="this.style.background='linear-gradient(to right, #2563EB, #1E40AF)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0, 0, 0, 0.15)';"
+                    onmouseout="this.style.background='linear-gradient(to right, #3B82F6, #2563EB)'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0, 0, 0, 0.1)';"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" style="height: 28px; width: 28px; margin-right: 8px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 110-8 4.5 4.5 0 019 0h1a3 3 0 110 6h-2m-5 0v4m0 0l-3-3m3 3l3-3" />
+                    </svg>
+                    Download File
+                </a>
+            `;
+
+            // Add overlay background
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 999;
+            `;
+            // Add to document
+            document.body.appendChild(overlay);
+            document.body.appendChild(dialog);
+            
+            // Close dialog when clicking overlay
+            overlay.onclick = function() {
+                dialog.remove();
+                overlay.remove();
+            };
+        }
     </script>
 
     <?php include 'footer.php'; ?>

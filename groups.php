@@ -2,6 +2,7 @@
 session_start();
 error_reporting(0); //To hide the errors
 include 'dbconnect.php'; //Database connection
+require 's3client.php';
 
 if(!(isset($_SESSION['username']))){  //If the session variable is not set, then it means the user is not logged in and is accessing this page through url editing, as we have provided session username to every user who logged in. So, redirecting to login page
     header("location: index.php");
@@ -97,6 +98,8 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
     $action = $data['action']; //Get the action from the decoded JSON payload
     $gnum = $data['gnum'];
     // var_dump($gnum);
+
+    //To handle the change mentor action
     if ($action === 'change') {
         $mentor = $data['mentor']; // Get the selected mentor
 
@@ -120,6 +123,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
         $stmt->close();
         $conn->close();
     }
+    //To handle the delete action
     else if($action === 'delete'){
         // Delete group members from 'groups' table
         $deleteGroupMembers = "DELETE FROM groups WHERE gnum = '$gnum'";
@@ -144,6 +148,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
         $stmt2->close();
         $conn->close();
     }
+    //To handle the weekly performance action
     else if($action === 'weekperformance'){
         $groupId = $data['groupId'];
         $weekNum = $data['weekNum'];
@@ -167,6 +172,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
         $conn->close();
         exit;
     }
+    //To handle the rubrics review action
     else if($action == 'rubricsreview'){
         $rubric = $data['rubric'];
         $examiner = $data['examiner'];
@@ -216,6 +222,35 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
         } else {
             echo json_encode(["success" => false, "message" => implode(", ", $errors)]);
         }
+        exit;
+    }
+    //To handle the delete document action
+    else if($action == 'deleteDocument'){
+
+        $fileUrl = $data['fileUrl'];
+        $gnum = $data['gnum'];
+        $columnName = $data['columnName'];
+
+        // Extract the filename (Key) from the URL
+        $key = basename($fileUrl);
+
+        // Delete from Tebi
+        $s3Client->deleteObject([
+            'Bucket' => $TEBI_BUCKET,
+            'Key' => $key
+        ]);
+
+        // Update database to remove the URL
+        $sql = "UPDATE projinfo SET $columnName = NULL WHERE gnum = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $gnum);
+        $stmt->execute();
+        if ($stmt) {
+            echo json_encode(["success" => true, "message" => "Document deleted successfully"]);
+        } else {
+            echo json_encode(["success" => false, "message" => $stmt->error]);
+        }
+        $conn->close();
         exit;
     }
 }
@@ -620,7 +655,7 @@ include 'adminheaders.php';
             const rmodalPosition = localStorage.getItem('rmodalPosition');
             const savedGroupId = localStorage.getItem('groupId');
 
-            if (modalState === 'open' && savedGroupId) {
+            if (modalState === 'open' && savedGroupId) {// Means weekly analysis modal is open and group id is saved in local storage
                 const modal = document.getElementById('weeklyAnalysisModal');
                 openWeeklyAnalysisModal(savedGroupId);
 
@@ -629,7 +664,7 @@ include 'adminheaders.php';
                     modal.scrollTop = parseInt(modalPosition, 10);
                 }
             }
-            else if(rmodalState === 'open' && savedGroupId){
+            else if(rmodalState === 'open' && savedGroupId){// Means rubrics review modal is open and group id is saved in local storage
                 const rmodal = document.getElementById('rubricsReviewModal');
                 openRubricsReviewModal(savedGroupId);
 
@@ -646,7 +681,7 @@ include 'adminheaders.php';
             const group = groupRows.find(group => group.number == groupNumber);//We're receiving groupNumber as parameter when rubricsreview button is clicked and now we are finding that group which have same group number in the database using this line
             const members = memberRows.filter(member => member.gnum == group.gnum);//This 'member' variable contains all the member details of that group whose title is clicked which we have filtered out using the gnum
             const numberOfMembers = members.length;
-
+            localStorage.setItem('groupId', groupNumber);
             const modal = document.getElementById('rubricsReviewModal');
             const modalContent = document.getElementById('rubricsReviewContent');
             modalContent.innerHTML = ''; // Clear existing content
@@ -655,23 +690,60 @@ include 'adminheaders.php';
             for (let i = 1; i <= 8; i++) {
                 const rubricDiv = document.createElement('div');    
                 rubricDiv.classList.add('mb-4', 'rubric-section');
+                // Determine existing URLs from the database
+                let pptUrl = null;
+                let pdfUrl = null;
+                if (i == 2 || i == 6) {
+                    pptUrl = group[`r${i}ppt`];
+                    pdfUrl = group[`r${i}pdf`];
+                }
                 rubricDiv.innerHTML = `
                     <div class="bg-beige shadow-xl rounded-xl p-6 mb-4 max-h-[500px] overflow-y-auto border-t-4 border-indigo-400">
                         <h3 class="text-2xl font-semibold text-gray-800 mb-6"><center>Rubric R${i}</center></h3>
                         ${i === 2 || i === 6 ? `
-                        <!-- View PPT -->
-                        <div class="mb-5">
-                            <label for="ppt-upload" class="block text-gray-700 font-medium mb-2">View PPT:</label>
-                            <input id="ppt-upload" type="file" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg" disabled>
-                        </div>
-
-                        <!-- View Report -->
-                        <div class="mb-5">
-                            <label for="report-upload" class="block text-gray-700 font-medium mb-2">View Report:</label>
-                            <input id="report-upload" type="file" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg" disabled>
-                        </div>
+                            <!-- Upload PPT -->
+                            <div class="mb-5">
+                                <label class="block text-gray-700 font-medium mb-2">View Presentation Slides:</label>
+                                ${pptUrl ? `
+                                    <a onclick="openDocument('${pptUrl}')" class="inline-flex items-center px-4 py-2 w-48 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 13v-1m4 1v-3m4 3V8M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                                        </svg>Uploaded Slides
+                                    </a>
+                                    <!-- Delete Button -->
+                                    <button onclick="deleteDocument('${pptUrl}')"
+                                            class="inline-flex items-center px-4 py-2 w-48 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-1 12H6L5 7m5 4v4m4-4v4m1-9h3m-8 0H6m3-4h6a2 2 0 012 2v1H7V5a2 2 0 012-2z" />
+                                        </svg>
+                                        Delete Slides
+                                    </button>
+                                `: `
+                                    <h3 class="text-lg font-bold text-blue-700 mb-2">No Slides Submitted</h3>
+                                `}
+                            </div>
+                            <!-- Upload Report -->
+                            <div class="mb-5">
+                                <label class="block text-gray-700 font-medium mb-2">View Report:</label>
+                                ${pdfUrl ? `
+                                    <a onclick="openDocument('${pdfUrl}')" class="inline-flex items-center px-4 py-2 w-48 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>Uploaded Report
+                                    </a>
+                                    <!-- Delete Button -->
+                                    <button onclick="deleteDocument('${pdfUrl}')"
+                                            class="inline-flex items-center px-4 py-2 w-48 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-1 12H6L5 7m5 4v4m4-4v4m1-9h3m-8 0H6m3-4h6a2 2 0 012 2v1H7V5a2 2 0 012-2z" />
+                                        </svg>
+                                        Delete Report
+                                    </button>                        
+                                `: `
+                                    <h3 class="text-lg font-bold text-blue-700 mb-2">No Report Submitted</h3>
+                                `}
+                            </div>
                         ` : ''}
-
                         <!-- Last Date -->
                         <div class="mb-5">
                             <label for="last-date" class="block text-gray-700 font-medium mb-2">Last Date:</label>
@@ -1665,7 +1737,7 @@ include 'adminheaders.php';
             function clearModalState() {
                 localStorage.removeItem('rmodalState');
                 localStorage.removeItem('rmodalPosition');
-                localStorage.removeItem('rgroupId');
+                localStorage.removeItem('groupId');
             }
 
             // Clear the modal state from local storage when the modal is closed
@@ -1683,7 +1755,197 @@ include 'adminheaders.php';
                 }
             });
         }
+        // To open the document(ppt/pdf) in new tab when view button is clicked
+        function openDocument(fileUrl) {
+            // Extract file extension from the last dot
+            const fileExtension = fileUrl.substring(fileUrl.lastIndexOf('.') + 1).toLowerCase();
+            
+            // First, try Google Viewer for all file types
+            tryGoogleViewer(fileUrl, fileExtension)
+                .catch(() => {
+                    // If Google Viewer fails, check if the file is PDF and show fallback dialog
+                    if (fileExtension.toLowerCase() === 'pdf') {
+                        console.log('PDF file detected. Showing fallback dialog.');
+                        showFallbackDialog(fileUrl);
+                    } else {
+                        // If it's not PDF, try Microsoft Office Viewer
+                        return tryMicrosoftViewer(fileUrl)
+                            .catch(() => {
+                                // If both fail, show fallback dialog
+                                showFallbackDialog(fileUrl);
+                            });
+                    }
+                });
+        }
+        // To open file in Google Docs
+        function tryGoogleViewer(fileUrl) {
+            return new Promise((resolve, reject) => {
+                const encodedUrl = encodeURIComponent(fileUrl);
+                const viewerUrl = 'https://docs.google.com/viewer?url=' + encodedUrl + '&embedded=true';
+                // Try to open the Google Docs Online Viewer directly
+                try {
+                    window.open(viewerUrl, '_blank');
+                    return Promise.resolve();  // If successful, resolve the promise
+                } catch (error) {
+                    console.error('Error opening Google Docs Online Viewer:', error);
+                    return Promise.reject(error);    
+                }
+            });
+        }
+        //To open file in MS Office
+        function tryMicrosoftViewer(fileUrl) {
+            return new Promise((resolve, reject) => {
+                const encodedUrl = encodeURIComponent(fileUrl);
+                const viewerUrl = 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodedUrl;
+                
+                // Try to open the Office Online Viewer directly
+                try {
+                    window.open(viewerUrl, '_blank');
+                    return Promise.resolve();  // If successful, resolve the promise
+                } catch (error) {
+                    console.error('Error opening Office Online Viewer:', error);
+                    return Promise.reject(error);
+                }
+            });
+        }
+        // If both are unavailable provide a dialog box
+        function showFallbackDialog(fileUrl) {
+            // Create a custom dialog
+            const dialog = document.createElement('div');
+            dialog.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 24px;
+                border-radius: 12px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+                z-index: 1000;
+                max-width: 420px;
+                width: 90%;
+                text-align: center;
+                font-family: Arial, sans-serif;
+            `;
 
+            dialog.innerHTML = `
+                <h3 style="margin: 0 0 12px; font-size: 1.25em; font-weight: bold; color: #1E3A8A;">
+                    Document Viewer Unavailable
+                </h3>
+                <p style="margin: 0 0 20px; color: #4B5563; font-size: 0.95em;">
+                    Unable to load document. Please try downloading the file directly:
+                </p>
+                <a href="${fileUrl}" download
+                    style="
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 10px 20px;
+                        max-width: 220px;
+                        width: 100%;
+                        background: linear-gradient(to right, #3B82F6, #2563EB);
+                        color: white;
+                        font-size: 0.95em;
+                        font-weight: 500;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        text-decoration: none;
+                        transition: all 0.3s ease;
+                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                    "
+                    onmouseover="this.style.background='linear-gradient(to right, #2563EB, #1E40AF)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0, 0, 0, 0.15)';"
+                    onmouseout="this.style.background='linear-gradient(to right, #3B82F6, #2563EB)'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0, 0, 0, 0.1)';"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" style="height: 28px; width: 28px; margin-right: 8px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 110-8 4.5 4.5 0 019 0h1a3 3 0 110 6h-2m-5 0v4m0 0l-3-3m3 3l3-3" />
+                    </svg>
+                    Download File
+                </a>
+            `;
+
+            // Add overlay background
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 999;
+            `;
+            // Add to document
+            document.body.appendChild(overlay);
+            document.body.appendChild(dialog);
+            
+            // Close dialog when clicking overlay
+            overlay.onclick = function() {
+                dialog.remove();
+                overlay.remove();
+            };
+        }
+        //To delete the document from the tebi and its URL from the database
+        function deleteDocument(fileUrl) {
+            const groupId = localStorage.getItem('groupId');
+            const group = groupRows.find(group => group.number == groupId);
+            const gnum = group.gnum;
+
+            // Determine which column to update based on the file URL
+            let columnName = "";
+            if (fileUrl.includes("r2ppt")) {
+                columnName = "r2ppt";
+            }
+            else if (fileUrl.includes('r2pdf')) {
+                columnName = "r2pdf";
+            }
+            else if (fileUrl.includes('r6ppt')) {
+                columnName = "r6ppt";
+            }
+            else if (fileUrl.includes('r6pdf')) {
+                columnName = "r6pdf";
+            }
+            // console.log(fileUrl);
+            // console.log(gnum);
+            // console.log(columnName);
+            if (!fileUrl || !gnum || !columnName) {
+                alert("Something unexpected happened! Please try again later.");
+                return;
+            }
+            const confirmDelete = confirm('Are you sure you want to delete this document?');
+            if (!confirmDelete) return;
+
+            // Save the modal state and position before making the request
+            localStorage.setItem('rmodalState', 'open');
+            localStorage.setItem('rmodalPosition', document.getElementById('rubricsReviewModal').scrollTop);
+            localStorage.setItem('groupId', groupId);
+
+            // Send delete request to server
+            fetch('groups.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: "deleteDocument",
+                    fileUrl: fileUrl,
+                    gnum: gnum,
+                    columnName: columnName
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Document deleted successfully');
+                    window.location.reload();
+                } else {
+                    alert('Error deleting document: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while deleting the document');
+            });
+        }
         // Close the modals when the close button is clicked
         document.querySelectorAll('.close').forEach(closeButton => {
             closeButton.addEventListener('click', () => {
