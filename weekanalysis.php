@@ -100,9 +100,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="week-section mb-6" data-week="<?php echo $week['weeknum']; ?>">
                         <h3 class="text-lg font-bold mb-2">Week <?php echo $week['weeknum']; ?></h3>
                         <textarea class="w-full p-2 border rounded mb-2 summary-field" rows="3" disabled><?php echo htmlspecialchars($week['summary']); ?></textarea>
-                        <p class="text-gray-600"><b>Performance: </b><?php echo $week['performance']; ?></p>
-                        <p class="text-gray-600"><b>Submission Date: </b><?php echo $week['dsub']; ?></p>
-                        <p class="text-gray-600"><b>Evaluation Date: </b><?php echo $week['deval']; ?></p>
+                        <p class="text-gray-600"><b>Performance: </b></p>
+                        <input type="text" class="w-full p-2 border rounded mb-2" value="<?php echo $week['performance']; ?>" disabled>
+                        <p class="text-gray-600"><b>Submission Date: </b></p>
+                        <input type="date" class="w-full p-2 border rounded mb-2" value="<?php echo $week['dsub']; ?>" disabled>
+                        <p class="text-gray-600"><b>Evaluation Date: </b></p>
+                        <input type="date" class="w-full p-2 border rounded mb-2" value="<?php echo $week['deval']; ?>" disabled>
                         <hr class="my-8 border-black-300">
                     </div>
                 <?php endforeach; ?>
