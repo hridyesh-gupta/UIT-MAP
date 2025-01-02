@@ -21,4 +21,17 @@
     ]);
 
     $TEBI_BUCKET = $_ENV['BUCKET']; 
+
+    // Initialize connection for the second bucket
+    $s3Client2 = new Aws\S3\S3Client([
+        "credentials" => [
+            "key" => $_ENV['ACCESS_KEY2'],
+            "secret" => $_ENV['SECRET_KEY2']
+        ],
+        "endpoint" => "https://s3.tebi.io",
+        "region" => "sg",
+        "version" => "2006-03-01"
+    ]);
+
+    $TEBI_BUCKET2 = $_ENV['BUCKET2']; 
 ?>
