@@ -318,6 +318,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background-color: #10b981;
             color: white;
         }
+
+        .spinner-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .save-btn-container {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .save-btn-text {
+            display: inline-block;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
@@ -347,7 +384,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- The ?v=timestamp parameter forces the browser to treat it as a new image each time to avoid the problem of new image not uploading. -->
                  <!-- When you append ?v=somevalue to an image URL, it does not change the core URL itself. Instead, it simply acts as a query parameter that most servers and CDNs (like Tebi in your case) ignore by default when serving static files. So even after appending this parameter your image will be fetched as URL isn't changed. -->
                     <img id="student-photo" 
-                         src="<?php echo !empty($studentDetails['image']) ? $studentDetails['image'] . '?v=' . time() : 'https://s3.tebi.io/imgbucket/placeholder.jpg'; ?>" 
+                         src="<?php echo !empty($studentDetails['image']) ? $studentDetails['image'] . '?v=' . time() : 'https://s3.tebi.io/imgbucket/placeholder.png'; ?>" 
                          alt="Student Photo" 
                          class="profile-image">
                     <form class="image-upload-form" method="POST" enctype="multipart/form-data">
@@ -477,10 +514,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             
             <div class="flex justify-end mb-8">
-                <button id="save-btn" class="bg-green-500 text-white px-4 py-2 rounded">Save</button>
+                <button id="save-btn" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors duration-200">
+                    <span class="save-btn-text">Save</span>
+                </button>
             </div>
         </div>
     </main>
+
+    <div id="spinner" class="spinner-overlay">
+        <div class="spinner"></div>
+    </div>
 
     <script>
         let cropper = null;
@@ -543,52 +586,86 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         function saveCrop() {
             if (!cropper) return;
             
-            // Get the cropped canvas
-            const canvas = cropper.getCroppedCanvas({
-                width: 400,
-                height: 400
-            });
+            const spinner = document.getElementById('spinner');
+            const saveBtn = document.querySelector('.crop-save');
+            const cancelBtn = document.querySelector('.crop-cancel');
             
-            // Convert canvas to blob with quality control
-            canvas.toBlob(function(blob) {
-                // Check if the cropped image size is within limits
-                if (blob.size > 1048576) {
-                    alert('The cropped image is larger than 1MB. Please try a smaller selection or a different image.');
-                    return;
-                }
+            try {
+                // Show spinner and disable buttons
+                spinner.style.display = 'flex';
+                saveBtn.disabled = true;
+                cancelBtn.disabled = true;
+                saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                cancelBtn.classList.add('opacity-50', 'cursor-not-allowed');
                 
-                // Create a new File object
-                const croppedFile = new File([blob], 'cropped_image.png', { type: 'image/png' });
-                
-                // Create FormData and append the cropped file
-                const formData = new FormData();
-                formData.append('profile_image', croppedFile);
-                
-                // Upload the cropped image
-                fetch('studentdetails.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => {
-                    if (response.ok) {
-                        window.location.href = window.location.pathname + '?t=' + new Date().getTime(); // Instead of using location.reload(), we're adding a timestamp to the URL to ensure a fresh page load.
-                    } else {
-                        throw new Error('Upload failed');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Failed to upload image. Please try again!');
-                })
-                .finally(() => {
-                    // Close the modal and cleanup
-                    document.getElementById('cropperModal').style.display = 'none';
-                    if (cropper) {
-                        cropper.destroy();
-                        cropper = null;
-                    }
+                // Get the cropped canvas
+                const canvas = cropper.getCroppedCanvas({
+                    width: 400,
+                    height: 400
                 });
-            }, 'image/png');
+                
+                // Convert canvas to blob with quality control
+                canvas.toBlob(function(blob) {
+                    // Check if the cropped image size is within limits
+                    if (blob.size > 1048576) {
+                        alert('The cropped image is larger than 1MB. Please try a smaller selection or a different image.');
+                        // Hide spinner and enable buttons
+                        spinner.style.display = 'none';
+                        saveBtn.disabled = false;
+                        cancelBtn.disabled = false;
+                        saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        cancelBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        return;
+                    }
+                    
+                    // Create a new File object
+                    const croppedFile = new File([blob], 'cropped_image.png', { type: 'image/png' });
+                    
+                    // Create FormData and append the cropped file
+                    const formData = new FormData();
+                    formData.append('profile_image', croppedFile);
+                    
+                    // Upload the cropped image
+                    fetch('studentdetails.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.href = window.location.pathname + '?t=' + new Date().getTime();
+                        } else {
+                            throw new Error('Upload failed');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Failed to upload image. Please try again!');
+                        // Hide spinner and enable buttons on error
+                        spinner.style.display = 'none';
+                        saveBtn.disabled = false;
+                        cancelBtn.disabled = false;
+                        saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        cancelBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    })
+                    .finally(() => {
+                        // Close the modal and cleanup
+                        document.getElementById('cropperModal').style.display = 'none';
+                        if (cropper) {
+                            cropper.destroy();
+                            cropper = null;
+                        }
+                    });
+                }, 'image/png');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while processing the image.');
+                // Hide spinner and enable buttons on error
+                spinner.style.display = 'none';
+                saveBtn.disabled = false;
+                cancelBtn.disabled = false;
+                saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                cancelBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
         }
 
         // Close modal when clicking outside
@@ -657,53 +734,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         });
         //To save the marks of the student in the database
-        document.getElementById("save-btn").addEventListener("click", function() {
-            // Collect the data from the input fields
-            const data = {
-                marks10: document.getElementById('student-marks-10').value,
-                marks12: document.getElementById('student-marks-12').value,
-                m1: document.getElementById('m1').value,
-                m2: document.getElementById('m2').value,
-                m3: document.getElementById('m3').value,
-                m4: document.getElementById('m4').value,
-                m5: document.getElementById('m5').value,
-                m6: document.getElementById('m6').value,
-                m7: document.getElementById('m7').value,
-                m8: document.getElementById('m8').value,
-                mm1: document.getElementById('mm1').value,
-                mm2: document.getElementById('mm2').value,
-                mm3: document.getElementById('mm3').value,
-                mm4: document.getElementById('mm4').value,
-                mm5: document.getElementById('mm5').value,
-                mm6: document.getElementById('mm6').value,
-                mm7: document.getElementById('mm7').value,
-                mm8: document.getElementById('mm8').value,
-                cp1: document.getElementById('cp1').value,
-                cp2: document.getElementById('cp2').value,
-                cp3: document.getElementById('cp3').value,
-                cp4: document.getElementById('cp4').value,
-                cp5: document.getElementById('cp5').value,
-                cp6: document.getElementById('cp6').value,
-                cp7: document.getElementById('cp7').value,
-                cp8: document.getElementById('cp8').value
-            };
-            // If all fields are filled, proceed with the fetch request and send the data
-            fetch('studentdetails.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())//It converts the response to json to make it more readable and to use it in the next .then block (Use response.text() when you expect the response from server to be plain text, such as HTML, XML, or plain text files. Use response.json() when you expect the response to be in JSON format.)
-            .then(data => {//It is used to access the data returned by the previous .then block and then we can use this data to display the message. Also we can name the data anything we want, here we have named it as data
-                if (data.success) {
-                    alert(data.message);
-                    location.reload(); // Reload to display the newly updated data
+        document.getElementById("save-btn").addEventListener("click", async function() {
+            const spinner = document.getElementById('spinner');
+            const saveBtn = document.getElementById('save-btn');
+            
+            try {
+                // Show spinner and disable button
+                spinner.style.display = 'flex';
+                saveBtn.disabled = true;
+                saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+                // Collect the data from the input fields
+                const data = {
+                    marks10: document.getElementById('student-marks-10').value,
+                    marks12: document.getElementById('student-marks-12').value,
+                    m1: document.getElementById('m1').value,
+                    m2: document.getElementById('m2').value,
+                    m3: document.getElementById('m3').value,
+                    m4: document.getElementById('m4').value,
+                    m5: document.getElementById('m5').value,
+                    m6: document.getElementById('m6').value,
+                    m7: document.getElementById('m7').value,
+                    m8: document.getElementById('m8').value,
+                    mm1: document.getElementById('mm1').value,
+                    mm2: document.getElementById('mm2').value,
+                    mm3: document.getElementById('mm3').value,
+                    mm4: document.getElementById('mm4').value,
+                    mm5: document.getElementById('mm5').value,
+                    mm6: document.getElementById('mm6').value,
+                    mm7: document.getElementById('mm7').value,
+                    mm8: document.getElementById('mm8').value,
+                    cp1: document.getElementById('cp1').value,
+                    cp2: document.getElementById('cp2').value,
+                    cp3: document.getElementById('cp3').value,
+                    cp4: document.getElementById('cp4').value,
+                    cp5: document.getElementById('cp5').value,
+                    cp6: document.getElementById('cp6').value,
+                    cp7: document.getElementById('cp7').value,
+                    cp8: document.getElementById('cp8').value
+                };
+
+                const response = await fetch('studentdetails.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(result.message);
+                    location.reload();
                 } else {
-                    alert("Error: " + data.message);
+                    throw new Error(result.message);
                 }
-            })
+            } catch (error) {
+                alert("Error: " + (error.message || "Failed to save marks"));
+            } finally {
+                // Hide spinner and enable button
+                spinner.style.display = 'none';
+                saveBtn.disabled = false;
+                saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
         });
     </script>
     <?php include 'footer.php' ?>

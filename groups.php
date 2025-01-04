@@ -769,7 +769,7 @@ include 'adminheaders.php';
                             <label for="evaluation-date" class="block text-gray-700 font-medium mb-2">Evaluation Date:</label>
                             <input id="evaluation-${i}" value="${group[`evalR${i}`] || ""}" type="date" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg" disabled>
                         </div>
-                        <center><button id="saveRubricsReview" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-800 transition duration-300 save-btn" data-rubric="${i}" style="min-width: 140px;">Save</button></center>
+                        <center><button id="saveRubricsReview" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-800 transition duration-300 save-btn" data-rubric="${i}" style="min-width: 140px;">Save Status</button></center>
                     </div>
                     
                     <div class="table-container overflow-auto mb-8 shadow-lg rounded-lg border border-gray-200">
@@ -876,7 +876,7 @@ include 'adminheaders.php';
                                 <tr>
                                     <td class="px-5 py-2 border" colspan="6">
                                         <center>
-                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="1" style="min-width: 140px;">Save</button>
+                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="1" style="min-width: 140px;">Save Score</button>
                                         </center>
                                     </td>
                                 </tr>
@@ -994,7 +994,7 @@ include 'adminheaders.php';
                                 <tr>
                                     <td class="px-5 py-2 border" colspan="7">
                                         <center>
-                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="2" style="min-width: 140px;">Save</button>
+                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="2" style="min-width: 140px;">Save Score</button>
                                         </center>
                                     </td>
                                 </tr>
@@ -1074,7 +1074,7 @@ include 'adminheaders.php';
                                 <tr>
                                     <td class="px-5 py-2 border" colspan="6">
                                         <center>
-                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="3" style="min-width: 140px;">Save</button>
+                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="3" style="min-width: 140px;">Save Score</button>
                                         </center>
                                     </td>
                                 </tr>
@@ -1161,7 +1161,7 @@ include 'adminheaders.php';
                                 <tr>
                                     <td class="px-5 py-2 border" colspan="7">
                                         <center>
-                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="4" style="min-width: 140px;">Save</button>
+                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="4" style="min-width: 140px;">Save Score</button>
                                         </center>
                                     </td>
                                 </tr>
@@ -1279,7 +1279,7 @@ include 'adminheaders.php';
                                 <tr>
                                     <td class="px-5 py-2 border" colspan="7">
                                         <center>
-                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="5" style="min-width: 140px;">Save</button>
+                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="5" style="min-width: 140px;">Save Score</button>
                                         </center>
                                     </td>
                                 </tr>
@@ -1397,7 +1397,7 @@ include 'adminheaders.php';
                                 <tr>
                                     <td class="px-5 py-2 border" colspan="7">
                                         <center>
-                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="6" style="min-width: 140px;">Save</button>
+                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="6" style="min-width: 140px;">Save Score</button>
                                         </center>
                                     </td>
                                 </tr>
@@ -1477,7 +1477,7 @@ include 'adminheaders.php';
                                 <tr>
                                     <td class="px-5 py-2 border" colspan="6">
                                         <center>
-                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="7" style="min-width: 140px;">Save</button>
+                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="7" style="min-width: 140px;">Save Score</button>
                                         </center>
                                     </td>
                                 </tr>
@@ -1585,7 +1585,7 @@ include 'adminheaders.php';
                                 <tr>
                                     <td class="px-5 py-2 border" colspan="6">
                                         <center>
-                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="8" style="min-width: 140px;">Save</button>
+                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="8" style="min-width: 140px;">Save Score</button>
                                         </center>
                                     </td>
                                 </tr>
