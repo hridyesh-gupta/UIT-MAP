@@ -62,17 +62,24 @@ if ($groupExists) {
         $projectDetails = $projectResult->fetch_assoc();
     }
     //To fetch the mentor assigned to the group
-    $getMentor = "SELECT mentor, dAppDate FROM projinfo WHERE gnum = '$gnum'";//To fetch the mentor assigned to the group
+    $getMentor = "SELECT number, mentor, dAppDate FROM projinfo WHERE gnum = '$gnum'";//To fetch the mentor assigned to the group
     $mentorResult = $conn->query($getMentor);//Executing the query and saving the resultset in $mentorResult
     $mentorExists=false;
     if($mentorResult->num_rows > 0){
-        $mentorData = $mentorResult->fetch_assoc();//Fetching the mentorData(mentor and approval date) from the resultset and storing it in $mentorData
+        $mentorData = $mentorResult->fetch_assoc();//Fetching the mentorData(mentor and approval date) and grp id from the resultset and storing it in $mentorData
         $mentor=$mentorData['mentor'];//Fetching the mentor value from the mentorData and storing it in $mentor
         if($mentor!=NULL){
             $mentorExists=true;
             //Fetching the date of approval bcoz as soon as the mentor is assigned the date of approval is also assigned
             $dAppDate=$mentorData['dAppDate'];//Fetching the date of approval from the mentorData and storing it in $dAppDate
+            $gid=$mentorData['number'];//Fetching the date of approval from the mentorData and storing it in $dAppDate
         }
+    }
+    //To fetch the first weekly analysis date of evaluation as it will be the Mentor Approval Date for the grp
+    if($mentorExists){
+        $getMentorApprovalDate = "SELECT deval FROM wanalysis WHERE number = '$gid' and weeknum = '1'";//To fetch the mentor approval date
+        $mentorApprovalDateResult = $conn->query($getMentorApprovalDate);//Executing the query and saving the resultset in $mentorApprovalDateResult
+        $mentorApprovalDate = $mentorApprovalDateResult->fetch_assoc()['deval'];//Fetching the date from the resultset and storing it in $mentorApprovalDate
     }
 }
 
@@ -224,7 +231,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <div class="mb-4">
                     <label for="groupCreationDate" class="block text-gray-700">Group Creation Date:</label>
-                    <input type="text" id="groupCreationDate" class="w-full border p-2" value="<?php echo htmlspecialchars($groupCreationDate); ?>" disabled>
+                    <input type="date" id="groupCreationDate" class="w-full border p-2" value="<?php echo htmlspecialchars($groupCreationDate); ?>" disabled>
                 </div>
             </div>
             <?php endif; ?>
@@ -286,14 +293,10 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="w-full bg-white p-4 shadow-lg my-4 mx-auto">
                 <h2 class="text-2xl font-bold mb-4">Approval Status</h2>
 
-                <!-- <div class="mb-4">
-                    <label for="supervisorApprovalStatus" class="block text-gray-700">Mentor Approval Status:</label>
-                    <input type="text" id="supervisorApprovalStatus" class="w-full border p-2" disabled>
-                </div> -->
                 <?php if ($mentorExists): ?>
                     <div class="mb-4" id="supervisorApprovalDateDiv"">
                         <label for="supervisorApprovalDate" class="block text-gray-700">Mentor Approval Date:</label>
-                        <input type="text" id="supervisorApprovalDate" class="w-full border p-2" disabled>
+                        <input type="date" id="supervisorApprovalDate" class="w-full border p-2" value="<?php echo htmlspecialchars($mentorApprovalDate); ?>" disabled>
                     </div>
                 <?php endif; ?>
 
@@ -304,7 +307,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <div class="mb-4" id="decApprovalDateDiv"">
                     <label for="decApprovalDate" class="block text-gray-700">DEC Approval Date:</label>
-                    <input type="text" id="decApprovalDate" class="w-full border p-2" value="<?php echo htmlspecialchars($dAppDate); ?>" disabled>
+                    <input type="date" id="decApprovalDate" class="w-full border p-2" value="<?php echo htmlspecialchars($dAppDate); ?>" disabled>
                 </div>
             </div>
         <?php endif; ?>
@@ -475,14 +478,14 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (members.some(member => member.locked)) {
             responsibilitiesSection.style.display = 'block';
         }
-        <?php if ($groupExists): ?>
-        else if (groupExists) {
-            responsibilitiesSection.style.display = 'block';
-        }
-        <?php endif; ?>
         else {
             responsibilitiesSection.style.display = 'none';
         }
+        <?php if ($groupExists): ?>
+        if (groupExists) {
+            responsibilitiesSection.style.display = 'block';
+        }
+        <?php endif; ?>
     }
     //Logic to check whether a new member can be added or not when the add member button is pressed
     document.getElementById('addMemberBtn').addEventListener('click', () => {
@@ -547,58 +550,59 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             alert('An unexpected error occurred. Please try again later.');
         });
     });
-    
-    //Logic to save the project details to the db when save details button is pressed
-    document.getElementById('saveProjDetailsBtn').addEventListener('click', (event) => {
-        event.preventDefault(); // Prevent the default form submission
+    <?php if ($groupExists): ?>
+        //Logic to save the project details to the db when save details button is pressed
+        document.getElementById('saveProjDetailsBtn').addEventListener('click', (event) => {
+            event.preventDefault(); // Prevent the default form submission
 
-        // Collect the data from the form fields
-        const projectTitle = document.getElementById('projectTitle').value;
-        const briefIntroduction = document.getElementById('briefIntroduction').value;
-        const objectiveStatement = document.getElementById('objectiveStatement').value;
-        const technology1Word = document.getElementById('technology1Word').value;
-        const technologyUsed = document.getElementById('technologyUsed').value;
+            // Collect the data from the form fields
+            const projectTitle = document.getElementById('projectTitle').value;
+            const briefIntroduction = document.getElementById('briefIntroduction').value;
+            const objectiveStatement = document.getElementById('objectiveStatement').value;
+            const technology1Word = document.getElementById('technology1Word').value;
+            const technologyUsed = document.getElementById('technologyUsed').value;
 
-        // Ensure all fields are filled
-        if (!projectTitle || !briefIntroduction || !objectiveStatement || !technology1Word || !technologyUsed) {
-            alert('Please fill all fields.');
-            return;
-        }
-
-        // Prepare the data to be sent to the server, including the action
-        const projectData = {
-            action: 'save_project',  // Indicate that this request is for saving project details
-            title: projectTitle,
-            intro: briefIntroduction,
-            objective: objectiveStatement,
-            tech: technology1Word,
-            technology: technologyUsed
-        };
-
-        // Send the data to the server to save project details
-        fetch('details.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(projectData),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                    alert('Project Details saved successfully.');
-                    window.location.reload(); // Refresh the page
-                } 
-            else {
-                alert('Something went wrong! Project Details not saved successfully.');
-                window.location.reload(); // Refresh the page
+            // Ensure all fields are filled
+            if (!projectTitle || !briefIntroduction || !objectiveStatement || !technology1Word || !technologyUsed) {
+                alert('Please fill all fields.');
+                return;
             }
-        })
-        .catch(error => {
-                console.error('Error occurred:', error);
-                alert('An unexpected error occurred. Please try again later.');
+
+            // Prepare the data to be sent to the server, including the action
+            const projectData = {
+                action: 'save_project',  // Indicate that this request is for saving project details
+                title: projectTitle,
+                intro: briefIntroduction,
+                objective: objectiveStatement,
+                tech: technology1Word,
+                technology: technologyUsed
+            };
+
+            // Send the data to the server to save project details
+            fetch('details.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(projectData),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                        alert('Project Details saved successfully.');
+                        window.location.reload(); // Refresh the page
+                    } 
+                else {
+                    alert('Something went wrong! Project Details not saved successfully.');
+                    window.location.reload(); // Refresh the page
+                }
+            })
+            .catch(error => {
+                    console.error('Error occurred:', error);
+                    alert('An unexpected error occurred. Please try again later.');
+            });
         });
-    });
+    <?php endif; ?>
 
     updateMembersUI();
     toggleResponsibilitiesSection();

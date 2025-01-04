@@ -1,4 +1,3 @@
-<!-- 3rd page -->
 <?php
 // error_reporting(0); //To hide the errors
 include 'dbconnect.php';
@@ -30,7 +29,7 @@ if ($gnum) {
     }
 }
 // Fetch rubrics data through gnum
-if ($groupId) {
+if ($groupId) { //Means grp has a project as grpid is only allotted after the project details have been submitted
     $sql = "SELECT batchyr,
         examinerR1, statusR1, evalR1,
         examinerR2, statusR2, evalR2,
@@ -48,10 +47,14 @@ if ($groupId) {
         $batchyr = $rubricsData['batchyr'];//As rubricsData consist of all the columns of the row, so we can directly access the column value by using the column name
     }
     //Fetch last date of all rubrics through batchyr
+    $lastDateExists = false;
     $lastDateSql = "SELECT lastR1, lastR2, lastR3, lastR4, lastR5, lastR6, lastR7, lastR8 FROM batches WHERE batchyr = '$batchyr'";
     $lastDateResults = $conn->query($lastDateSql);
+    $lastDate = $lastDateResults -> fetch_assoc();
     if ($lastDateResults->num_rows > 0) {
-        $lastDate = $lastDateResults->fetch_assoc();
+        if (array_filter($lastDate)) { // Will return false if all values are NULL
+            $lastDateExists = true;
+        }
     }
 }
 // Handle file uploads
@@ -59,31 +62,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES)) {
     try {
         $uploadedFile = null;
         $columnName = '';
+        $maxSize = 0; // Will store max allowed size in bytes
         
         // Determine which file was uploaded
         if (isset($_FILES['r2ppt'])) {
             $uploadedFile = $_FILES['r2ppt'];
             $columnName = 'r2ppt';
+            $maxSize = 10 * 1024 * 1024; // 10MB for PPT files
         } elseif (isset($_FILES['r2pdf'])) {
             $uploadedFile = $_FILES['r2pdf'];
             $columnName = 'r2pdf';
+            $maxSize = 5 * 1024 * 1024; // 5MB for PDF files
         } elseif (isset($_FILES['r6ppt'])) {
             $uploadedFile = $_FILES['r6ppt'];
             $columnName = 'r6ppt';
+            $maxSize = 10 * 1024 * 1024; // 10MB for PPT files
         } elseif (isset($_FILES['r6pdf'])) {
             $uploadedFile = $_FILES['r6pdf'];
             $columnName = 'r6pdf';
+            $maxSize = 5 * 1024 * 1024; // 5MB for PDF files
         }
 
         if ($uploadedFile && $uploadedFile['error'] === UPLOAD_ERR_OK) {
+            // Check file size
+            if ($uploadedFile['size'] > $maxSize) {
+                $maxSizeMB = $maxSize / (1024 * 1024);
+                echo "File size too large! Maximum allowed size is {$maxSizeMB}MB.";
+                exit;
+            }
+
             // Generate unique filename
             $extension = pathinfo($uploadedFile['name'], PATHINFO_EXTENSION);
-            $filename = 'Grp_' . $groupId . '_' . $columnName . '_' . uniqid() . '_' . time() . '.' . $extension;
+            $filename = 'Grp_' . $groupId . '_' . $columnName . '_' . uniqid() . '_' . time() . '.' . $extension;// Max 65 characters: 4 + 10 + 1 + 20 + 1 + 13 + 1 + 10 + 1 + 4 = 65 characters
             
             // Upload to Tebi
             $result = $s3Client->putObject([
                 'Bucket' => $TEBI_BUCKET,
-                'Key' => $filename,
+                'Key' => $batchyr . '/' . $filename,
                 'SourceFile' => $uploadedFile['tmp_name'],
                 'ACL' => 'public-read'
             ]);
@@ -96,15 +111,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES)) {
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("ss", $fileUrl, $gnum);
             $stmt->execute();
-            
-            echo "<script>
-                alert('File uploaded successfully!');
-                window.location.replace(window.location.pathname);
-            </script>";
+            if(!$stmt){
+                echo json_encode(['success' => false, 'message' => 'Error inserting data!']);
+            }
+            else{
+                echo json_encode(['success' => true, 'message' => 'File uploaded successfully!']);
+            }
             exit;
         }
     } catch (Exception $e) {
-        echo "Error uploading file: " . $e->getMessage();
+        echo "Something went wrong! Try again later.";
         exit;
     }
 }
@@ -147,6 +163,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES)) {
                 <center>
                 <strong class="font-bold">Notice:</strong>
                 <span class="block sm:inline">Your group has no project records in our database.</span>
+                </center>
+            </div>
+        <?php elseif (!$lastDateExists): ?>
+            <hr class="my-8 border-black-300">
+            <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
+                <center>
+                <strong class="font-bold">Notice:</strong>
+                <span class="block sm:inline">Rubrics Review for your batch has not been started yet.</span>
                 </center>
             </div>
         <?php else: ?>
@@ -204,8 +228,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES)) {
                                     </svg>View Uploaded Slides
                                 </a>                          
                             `: `
-                                <form id="r${i}pptForm" method="post" enctype="multipart/form-data">
-                                    <input type="file" name="r${i}ppt" accept=".ppt,.pptx" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg" required>
+                                <form id="r${i}pptForm" method="post" enctype="multipart/form-data" onsubmit="return validateFileSize(this.querySelector('input[type=file]'))">
+                                    <input type="file" name="r${i}ppt" accept=".ppt,.pptx" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg" required onchange="validateFileSize(this)">
                                     <button type="submit" class="bg-blue-500 text-white mt-2 py-2 px-4 rounded hover:bg-blue-800 text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">Submit</button>
                                 </form>
                             `}
@@ -220,8 +244,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES)) {
                                     </svg>View Uploaded Report
                                 </a>
                             `: `
-                                <form id="r${i}pdfForm" method="post" enctype="multipart/form-data">
-                                    <input type="file" name="r${i}pdf" accept=".pdf" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg" required>
+                                <form id="r${i}pdfForm" method="post" enctype="multipart/form-data" onsubmit="return validateFileSize(this.querySelector('input[type=file]'))">
+                                    <input type="file" name="r${i}pdf" accept=".pdf" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg" required onchange="validateFileSize(this)">
                                     <button type="submit" class="bg-blue-500 text-white mt-2 py-2 px-4 rounded hover:bg-blue-800 text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">Submit</button>
                                 </form>
                             `}
@@ -272,24 +296,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES)) {
                     method: 'POST',
                     body: formData
                 })
-                .then(response => response.text())
+                .then(response => response.json())
                 .then(data => {
-                    alert(data);
-                    window.location.reload();
+                    if (data.success) {//If sql query executed succesfully
+                        alert('File uploaded successfully.');
+                        window.location.reload(); // Refresh the page
+                    } 
+                    else {//If sql query isn't executed successfully
+                        alert('Something went wrong! File not uploaded successfully.');
+                        window.location.reload(); // Refresh the page
+                    }
                 })
-                .catch(error => {
+                .catch(error => {//Triggers when any unexpected error come
                     console.error('Error:', error);
                     alert('An error occurred while uploading files.');
+                    window.location.reload();
                 });
             });
         }
 
         // Apply the event listener to R2 and R6 forms on page load
-        [2, 6].forEach(i => {
-            // Add listeners for both PPT and PDF forms
-            handleFormSubmit(`r${i}pptForm`);
-            handleFormSubmit(`r${i}pdfForm`);
-        });
+        document.addEventListener('DOMContentLoaded', () => {
+    [2, 6].forEach(i => {
+        const pptForm = document.getElementById(`r${i}pptForm`);
+        const pdfForm = document.getElementById(`r${i}pdfForm`);
+
+        if (pptForm) handleFormSubmit(`r${i}pptForm`);
+        if (pdfForm) handleFormSubmit(`r${i}pdfForm`);
+    });
+});
 
         // To open the document in new tab
         function openDocument(fileUrl) {
@@ -419,6 +454,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES)) {
                 dialog.remove();
                 overlay.remove();
             };
+        }
+
+        function validateFileSize(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const isPPT = input.name.includes('ppt');
+                const maxSize = isPPT ? 10 * 1024 * 1024 : 5 * 1024 * 1024; // 10MB for PPT, 5MB for PDF
+                const maxSizeMB = maxSize / (1024 * 1024);
+                
+                if (file.size > maxSize) {
+                    alert(`File size too large! Maximum allowed size is ${maxSizeMB}MB.`);
+                    input.value = ''; // Clear the file input
+                    return false;
+                }
+                return true;
+            }
+            return false;
         }
     </script>
 

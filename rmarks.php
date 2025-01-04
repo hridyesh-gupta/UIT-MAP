@@ -21,29 +21,54 @@ else{
 }
 // Sanitize the input to prevent SQL injection
 $batchyr = mysqli_real_escape_string($conn, $batchyr);
-// Query to fetch data from groups and projinfo for the specified batchyr
-$query = "
-    SELECT 
-        g.gnum, 
-        g.roll, 
-        g.name,
-        g.r11 + g.r12 + g.r13 AS R1,
-        g.r21 + g.r22 + g.r23 AS R2,
-        g.r31 + g.r32 AS R3,
-        g.r41 + g.r42 AS R4,
-        g.r51 + g.r52 + g.r53 AS R5,
-        g.r61 + g.r62 + g.r63 AS R6,
-        g.r71 + g.r72 AS R7,
-        g.r81 + g.r82 + g.r83 AS R8,
-        g.r11 + g.r12 + g.r13 + g.r21 + g.r22 + g.r23 + g.r31 + g.r32 + g.r41 + g.r42 + g.r51 + g.r52 + g.r53 + g.r61 + g.r62 + g.r63 + g.r71 + g.r72 + g.r81 + g.r82 + g.r83 AS total,
-        p.number AS group_id, 
-        p.mentor, 
-        p.title
-    FROM groups g
-    INNER JOIN projinfo p ON g.gnum = p.gnum
-    WHERE g.batchyr = '$batchyr' AND p.batchyr = '$batchyr'
-    ORDER BY p.number, g.roll";
-
+// Query to fetch data from groups and projinfo for the specified batchyr if the user is admin
+if($_SESSION['usertype']=="admin"){
+    $query = "
+        SELECT 
+            g.gnum, 
+            g.roll, 
+            g.name,
+            g.r11 + g.r12 + g.r13 AS R1,
+            g.r21 + g.r22 + g.r23 AS R2,
+            g.r31 + g.r32 AS R3,
+            g.r41 + g.r42 AS R4,
+            g.r51 + g.r52 + g.r53 AS R5,
+            g.r61 + g.r62 + g.r63 AS R6,
+            g.r71 + g.r72 AS R7,
+            g.r81 + g.r82 + g.r83 AS R8,
+            g.r11 + g.r12 + g.r13 + g.r21 + g.r22 + g.r23 + g.r31 + g.r32 + g.r41 + g.r42 + g.r51 + g.r52 + g.r53 + g.r61 + g.r62 + g.r63 + g.r71 + g.r72 + g.r81 + g.r82 + g.r83 AS total,
+            p.number AS group_id, 
+            p.mentor, 
+            p.title
+        FROM groups g
+        INNER JOIN projinfo p ON g.gnum = p.gnum
+        WHERE g.batchyr = '$batchyr' AND p.batchyr = '$batchyr'
+        ORDER BY p.number, g.roll";
+}
+else if($_SESSION['usertype']=="mentor"){ // Query to fetch data from groups and projinfo for the specified batchyr if the user is mentor
+    $mentor = $_SESSION['username'];
+    $query = "
+        SELECT 
+            g.gnum, 
+            g.roll, 
+            g.name,
+            g.r11 + g.r12 + g.r13 AS R1,
+            g.r21 + g.r22 + g.r23 AS R2,
+            g.r31 + g.r32 AS R3,
+            g.r41 + g.r42 AS R4,
+            g.r51 + g.r52 + g.r53 AS R5,
+            g.r61 + g.r62 + g.r63 AS R6,
+            g.r71 + g.r72 AS R7,
+            g.r81 + g.r82 + g.r83 AS R8,
+            g.r11 + g.r12 + g.r13 + g.r21 + g.r22 + g.r23 + g.r31 + g.r32 + g.r41 + g.r42 + g.r51 + g.r52 + g.r53 + g.r61 + g.r62 + g.r63 + g.r71 + g.r72 + g.r81 + g.r82 + g.r83 AS total,
+            p.number AS group_id, 
+            p.mentor, 
+            p.title
+        FROM groups g
+        INNER JOIN projinfo p ON g.gnum = p.gnum
+        WHERE g.batchyr = '$batchyr' AND p.batchyr = '$batchyr' AND p.mid = '$mentor'
+        ORDER BY p.number, g.roll";
+}
 $result = $conn->query($query);
 
 // if ($result->num_rows === 0) {

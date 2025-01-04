@@ -110,43 +110,40 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
         // Update the mentor, its Id and DEC approval date for the group in the 'projinfo' table using gnum. DEC approval date also bcoz at the time when DEC allotted mentor it also approved the grp.
         $updateMentor = "UPDATE projinfo SET mentor = '$mentor', mid = '$mId', dAppDate = CURDATE() WHERE gnum = '$gnum'";
         $stmt = $conn->query($updateMentor);
-        // $stmt->bind_param("ss", $mentor, $gnum);
-        // $stmt->execute();
 
-        // if ($stmt->affected_rows > 0) {
-        //     header('Content-Type: text/plain');
-        //     echo 'success=true';
-        // } 
-        echo 'success=true';
+        if(!$stmt){
+            echo json_encode(['success' => false, 'message' => 'Error changing mentor!']);
+        }
+        else{
+            echo json_encode(['success' => true, 'message' => 'Mentor changed successfully!']);
+        }
 
         // Close the statement and connection
         $stmt->close();
         $conn->close();
+        exit;
     }
     //To handle the delete action
     else if($action === 'delete'){
         // Delete group members from 'groups' table
         $deleteGroupMembers = "DELETE FROM groups WHERE gnum = '$gnum'";
         $stmt1 = $conn->query($deleteGroupMembers);//Execute the query
-        // $stmt1->bind_param("s", $gnum);
-        // $stmt1->execute();
 
         // Delete group info from 'projinfo' table
         $deleteGroupInfo = "DELETE FROM projinfo WHERE gnum = '$gnum'";
         $stmt2 = $conn->query($deleteGroupInfo);
-        // $stmt2->bind_param("s", $gnum);
-        // $stmt2->execute();
-        
-        // Check if both queries were successful
-        // if ($stmt1->affected_rows > 0 && $stmt2->affected_rows > 0) {
-        //     header('Content-Type: text/plain');
-        //     echo 'success=true';
-        // } 
-        echo 'success=true';
+
+        if(!$stmt1 || !$stmt2){
+            echo json_encode(['success' => false, 'message' => 'Error deleting group!']);
+        }
+        else{
+            echo json_encode(['success' => true, 'message' => 'Group deleted successfully!']);
+        }
         // Close the prepared statements and connection
         $stmt1->close();
         $stmt2->close();
         $conn->close();
+        exit;
     }
     //To handle the weekly performance action
     else if($action === 'weekperformance'){
@@ -166,7 +163,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
         //     echo 'success=true';
         // } 
         // echo 'success=true';
-        echo json_encode(['success' => true, 'message' => 'Data inserted successfully']);
+        echo json_encode(['success' => true, 'message' => 'Data inserted successfully!']);
         // Close the statement and connection
         // $stmt->close();
         $conn->close();
@@ -186,9 +183,10 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
         $stmt = $conn->query($sql);
         
         if ($stmt) {
-            echo json_encode(["success" => true, "message" => "Rubric updated successfully"]);
-        } else {
-            echo json_encode(["success" => false, "message" => $stmt->error]);
+            echo json_encode(["success" => true, "message" => "Rubric updated successfully!"]);
+        }
+        else {
+            echo json_encode(["success" => false, "message" => $conn->error]);
         }
         $conn->close();
         exit;
@@ -218,7 +216,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
         }
         // Return response
         if (empty($errors)) {
-            echo json_encode(["success" => true, "message" => "Rubric marks updated successfully."]);
+            echo json_encode(["success" => true, "message" => "Rubric marks updated successfully!"]);
         } else {
             echo json_encode(["success" => false, "message" => implode(", ", $errors)]);
         }
@@ -233,11 +231,11 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
 
         // Extract the filename (Key) from the URL
         $key = basename($fileUrl);
-
+        $finalKey = $batchYear . '/' .$key;
         // Delete from Tebi
         $s3Client->deleteObject([
             'Bucket' => $TEBI_BUCKET,
-            'Key' => $key
+            'Key' => $finalKey
         ]);
 
         // Update database to remove the URL
@@ -246,9 +244,9 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
         $stmt->bind_param("s", $gnum);
         $stmt->execute();
         if ($stmt) {
-            echo json_encode(["success" => true, "message" => "Document deleted successfully"]);
+            echo json_encode(["success" => true, "message" => "Document deleted successfully!"]);
         } else {
-            echo json_encode(["success" => false, "message" => $stmt->error]);
+            echo json_encode(["success" => false, "message" => "Something went wrong! Please try again."]);
         }
         $conn->close();
         exit;
@@ -494,8 +492,8 @@ include 'adminheaders.php';
                     <p class="text-gray-700"><strong>Group Number:</strong> ${group.number}</p>
                     <p class="text-gray-700"><strong>Group Leader:</strong> ${group.creator}</p>
                     <p class="text-gray-700"><strong>Mentor Assigned:</strong> ${group.mentor}</p>
-                    <p class="text-gray-700"><strong>Group Creation Date:</strong> ${group.date}</p>
-                    <p class="text-gray-700"><strong>DEC Approval Date:</strong> ${group.dAppDate}</p>
+                    <p class="text-gray-700"><strong>Group Creation Date (yyyy-mm-dd):</strong>  ${group.date}</p>
+                    <p class="text-gray-700"><strong>DEC Approval Date (yyyy-mm-dd):</strong> ${group.dAppDate}</p>
                 </div>
 
                 <hr class="my-8 border-gray-300">
@@ -612,7 +610,7 @@ include 'adminheaders.php';
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            alert(`Details saved successfully for Week ${weekNum}`);
+                            alert(`Details saved successfully for Week ${weekNum}!`);
                             window.location.reload();
                         } else {
                             alert(`Error saving details for Week ${weekNum}: ${data.error}`);
@@ -771,7 +769,7 @@ include 'adminheaders.php';
                             <label for="evaluation-date" class="block text-gray-700 font-medium mb-2">Evaluation Date:</label>
                             <input id="evaluation-${i}" value="${group[`evalR${i}`] || ""}" type="date" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg" disabled>
                         </div>
-                        <center><button id="saveRubricsReview" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-800 transition duration-300 save-btn" data-rubric="${i}" style="min-width: 140px;">Save</button></center>
+                        <center><button id="saveRubricsReview" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-800 transition duration-300 save-btn" data-rubric="${i}" style="min-width: 140px;">Save Status</button></center>
                     </div>
                     
                     <div class="table-container overflow-auto mb-8 shadow-lg rounded-lg border border-gray-200">
@@ -878,7 +876,7 @@ include 'adminheaders.php';
                                 <tr>
                                     <td class="px-5 py-2 border" colspan="6">
                                         <center>
-                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="1" style="min-width: 140px;">Save</button>
+                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="1" style="min-width: 140px;">Save Score</button>
                                         </center>
                                     </td>
                                 </tr>
@@ -996,7 +994,7 @@ include 'adminheaders.php';
                                 <tr>
                                     <td class="px-5 py-2 border" colspan="7">
                                         <center>
-                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="2" style="min-width: 140px;">Save</button>
+                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="2" style="min-width: 140px;">Save Score</button>
                                         </center>
                                     </td>
                                 </tr>
@@ -1076,7 +1074,7 @@ include 'adminheaders.php';
                                 <tr>
                                     <td class="px-5 py-2 border" colspan="6">
                                         <center>
-                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="3" style="min-width: 140px;">Save</button>
+                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="3" style="min-width: 140px;">Save Score</button>
                                         </center>
                                     </td>
                                 </tr>
@@ -1163,7 +1161,7 @@ include 'adminheaders.php';
                                 <tr>
                                     <td class="px-5 py-2 border" colspan="7">
                                         <center>
-                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="4" style="min-width: 140px;">Save</button>
+                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="4" style="min-width: 140px;">Save Score</button>
                                         </center>
                                     </td>
                                 </tr>
@@ -1281,7 +1279,7 @@ include 'adminheaders.php';
                                 <tr>
                                     <td class="px-5 py-2 border" colspan="7">
                                         <center>
-                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="5" style="min-width: 140px;">Save</button>
+                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="5" style="min-width: 140px;">Save Score</button>
                                         </center>
                                     </td>
                                 </tr>
@@ -1399,7 +1397,7 @@ include 'adminheaders.php';
                                 <tr>
                                     <td class="px-5 py-2 border" colspan="7">
                                         <center>
-                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="6" style="min-width: 140px;">Save</button>
+                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="6" style="min-width: 140px;">Save Score</button>
                                         </center>
                                     </td>
                                 </tr>
@@ -1479,7 +1477,7 @@ include 'adminheaders.php';
                                 <tr>
                                     <td class="px-5 py-2 border" colspan="6">
                                         <center>
-                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="7" style="min-width: 140px;">Save</button>
+                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="7" style="min-width: 140px;">Save Score</button>
                                         </center>
                                     </td>
                                 </tr>
@@ -1587,7 +1585,7 @@ include 'adminheaders.php';
                                 <tr>
                                     <td class="px-5 py-2 border" colspan="6">
                                         <center>
-                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="8" style="min-width: 140px;">Save</button>
+                                            <button id="saveRubricsMarks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-800 transition duration-300 save-mbtn" data-rubric="8" style="min-width: 140px;">Save Score</button>
                                         </center>
                                     </td>
                                 </tr>
@@ -1644,7 +1642,7 @@ include 'adminheaders.php';
                 .then(response => response.json())
                 .then(response => {
                     if (response.success) {
-                        alert(`Rubric R${rubricNumber} details saved successfully.`);
+                        alert(`Rubric R${rubricNumber} details saved successfully!`);
                         window.location.reload();
                     } else {
                         alert(`Failed to save Rubric R${rubricNumber} details: ${response.message}`);
@@ -1935,16 +1933,12 @@ include 'adminheaders.php';
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Document deleted successfully');
+                    alert('Document deleted successfully!');
                     window.location.reload();
                 } else {
                     alert('Error deleting document: ' + data.message);
                 }
             })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while deleting the document');
-            });
         }
         // Close the modals when the close button is clicked
         document.querySelectorAll('.close').forEach(closeButton => {
@@ -2016,15 +2010,17 @@ include 'adminheaders.php';
                         action: 'change'    // Action type
                     }), // Send gnum, mentor, and action as JSON payload
                 })
-                .then(response => response.text())
-                .then(text => {
-                    // if (data.success) {
-                    alert('Mentor changed successfully');
-                    window.location.reload();
-                    // } else {
-                    //     alert('Error changing mentor: ' + data.message);
-                    // }
-                })
+                .then(response => response.json())
+                .then(data => {
+                        if (data.success) {//If sql query executed succesfully
+                            alert('Mentor changed successfully!');
+                            window.location.reload(); // Refresh the page
+                        } 
+                        else {//If sql query isn't executed successfully
+                            alert('Something went wrong! Mentor not changed successfully.');
+                            window.location.reload(); // Refresh the page
+                        }
+                    })
                 .catch(error => console.error('Error:', error));
             }
         }
@@ -2070,11 +2066,16 @@ include 'adminheaders.php';
                             action: 'delete' // Action type
                         }), // Send gnum & action as JSON payload
                     })
-                    .then(response => response.text())
-                    
-                    .then(text => {
-                            alert(`Group deleted successfully.`);
-                            window.location.reload();
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {//If sql query executed succesfully
+                            alert('Group deleted successfully!');
+                            window.location.reload(); // Refresh the page
+                        } 
+                        else {//If sql query isn't executed successfully
+                            alert('Something went wrong! Group not deleted successfully.');
+                            window.location.reload(); // Refresh the page
+                        }
                     })
                     .catch(error => {
                         console.error('Error:', error);
