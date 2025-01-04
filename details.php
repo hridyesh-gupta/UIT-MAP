@@ -200,6 +200,32 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .table-container {
             overflow-x: auto;
         }
+        .spinner-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="bg-white text-gray-800 flex flex-col min-h-screen">
@@ -209,6 +235,12 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="flex-grow bg-white p-6 rounded shadow">
         <center><h1 class="text-3xl font-bold mb-4">Student's Project Details</h1></center>
         <hr class="my-2 border-black-300">
+
+        <!-- Add spinner overlay -->
+        <div id="spinner" class="spinner-overlay">
+            <div class="spinner"></div>
+        </div>
+
         <div class="w-full bg-white pb-4 pr-4 pl-4 shadow-lg mb-2 mx-auto">
             <?php if ($groupExists): ?>
             <div class="w-full bg-white p-4 shadow-lg mx-auto">
@@ -496,112 +528,157 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     });
 
     //Logic to save the group details to the db when save details button is pressed
-    document.getElementById('saveDetailsBtn').addEventListener('click', (event) => {
+    document.getElementById('saveDetailsBtn').addEventListener('click', async (event) => {
         event.preventDefault();
-        const responsibilitiesTable = document.getElementById('responsibilitiesTable');
-        const rows = responsibilitiesTable.querySelectorAll('tr');
-        let allFieldsFilled = true;
-        const membersData = [];
+        const spinner = document.getElementById('spinner');
+        const saveBtn = document.getElementById('saveDetailsBtn');
+        const confirmChange = confirm(`Are you sure you want to add these members to your group?`);
+            if (confirmChange) {
+                // Show spinner and disable button
+                spinner.style.display = 'flex';
+                saveBtn.disabled = true;
+                saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                
+                try {
+                    const responsibilitiesTable = document.getElementById('responsibilitiesTable');
+                    const rows = responsibilitiesTable.querySelectorAll('tr');
+                    let allFieldsFilled = true;
+                    const membersData = [];
 
-        rows.forEach(row => {
-            const roll = row.cells[0].innerText;
-            const name = row.cells[1].innerText;
-            const section = row.cells[2].innerText;
-            const branch = row.cells[3].innerText;
-            const responsibility = row.cells[4].innerText;
+                    rows.forEach(row => {
+                        const roll = row.cells[0].innerText;
+                        const name = row.cells[1].innerText;
+                        const section = row.cells[2].innerText;
+                        const branch = row.cells[3].innerText;
+                        const responsibility = row.cells[4].innerText;
 
-            if (!roll || !name || !branch || !section || !responsibility) {
-                allFieldsFilled = false;
+                        if (!roll || !name || !branch || !section || !responsibility) {
+                            allFieldsFilled = false;
+                        }
+
+                        membersData.push({ roll, name, branch, section, responsibility });
+                    });
+
+                    if (!allFieldsFilled) {
+                        // Hide spinner and enable button before showing alert
+                        spinner.style.display = 'none';
+                        saveBtn.disabled = false;
+                        saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        alert('Please fill all fields.');
+                        return;
+                    }
+
+                    if (membersData.length === 0) {
+                        // Hide spinner and enable button before showing alert
+                        spinner.style.display = 'none';
+                        saveBtn.disabled = false;
+                        saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        alert('No members added to the group.');
+                        return;
+                    }
+
+                    // Prepare the data to be sent to the server, including the action
+                    const groupData = {
+                        action: 'save_group',  // Indicate that this request is for saving group details
+                        members: membersData,
+                    };
+
+                    // Send data to the server to save group member details
+                    const response = await fetch('details.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(groupData),
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        alert('Group Details saved successfully.');
+                        window.location.reload(); // Refresh the page
+                    } else {
+                        throw new Error(data.message || 'Failed to save group details');
+                    }
+                } catch (error) {
+                    console.error('Error occurred:', error);
+                    // Hide spinner and enable button before showing alert
+                    spinner.style.display = 'none';
+                    saveBtn.disabled = false;
+                    saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    alert('An unexpected error occurred. Please try again later.');
+                }
             }
-
-            membersData.push({ roll, name, branch, section, responsibility });
-        });
-
-        if (!allFieldsFilled) {
-            alert('Please fill all fields.');
-            return;
-        }
-        // Prepare the data to be sent to the server, including the action
-        const groupData = {
-            action: 'save_group',  // Indicate that this request is for saving group details
-            members: membersData,
-        };
-        // Send data to the server to save group member details
-        fetch('details.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(groupData),
-        })
-        .then(response => response.json())//It converts the response to JSON to make it more readable and to use it in the next .then block
-        .then(data => {//It is used to access the data returned by the previous .then block and then we can use this data to display the message. Also we can name the data anything we want, here we have named it as data
-            if (data.success) {
-                alert('Group Details saved successfully.');
-                window.location.reload(); // Refresh the page
-            } 
-            else {
-                alert('Something went wrong! Group Details not saved successfully.');
-                window.location.reload(); // Refresh the page
-            }
-        })
-        .catch(error => {
-            console.error('Error occurred:', error);
-            alert('An unexpected error occurred. Please try again later.');
-        });
     });
+
     <?php if ($groupExists): ?>
-        //Logic to save the project details to the db when save details button is pressed
-        document.getElementById('saveProjDetailsBtn').addEventListener('click', (event) => {
-            event.preventDefault(); // Prevent the default form submission
+    //Logic to save the project details to the db when save details button is pressed
+    document.getElementById('saveProjDetailsBtn').addEventListener('click', async (event) => {
+        event.preventDefault(); // Prevent the default form submission
+        const spinner = document.getElementById('spinner');
+        const saveBtn = document.getElementById('saveProjDetailsBtn');
+        const confirmChange = confirm(`Are you sure you want to save the project details?`);
+            if (confirmChange) {
+                try {
+                    // Show spinner and disable button
+                    spinner.style.display = 'flex';
+                    saveBtn.disabled = true;
+                    saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
 
-            // Collect the data from the form fields
-            const projectTitle = document.getElementById('projectTitle').value;
-            const briefIntroduction = document.getElementById('briefIntroduction').value;
-            const objectiveStatement = document.getElementById('objectiveStatement').value;
-            const technology1Word = document.getElementById('technology1Word').value;
-            const technologyUsed = document.getElementById('technologyUsed').value;
+                    // Collect the data from the form fields
+                    const projectTitle = document.getElementById('projectTitle').value;
+                    const briefIntroduction = document.getElementById('briefIntroduction').value;
+                    const objectiveStatement = document.getElementById('objectiveStatement').value;
+                    const technology1Word = document.getElementById('technology1Word').value;
+                    const technologyUsed = document.getElementById('technologyUsed').value;
 
-            // Ensure all fields are filled
-            if (!projectTitle || !briefIntroduction || !objectiveStatement || !technology1Word || !technologyUsed) {
-                alert('Please fill all fields.');
-                return;
-            }
+                    // Ensure all fields are filled
+                    if (!projectTitle || !briefIntroduction || !objectiveStatement || !technology1Word || !technologyUsed) {
+                        alert('Please fill all fields.');
+                        return;
+                    }
 
-            // Prepare the data to be sent to the server, including the action
-            const projectData = {
-                action: 'save_project',  // Indicate that this request is for saving project details
-                title: projectTitle,
-                intro: briefIntroduction,
-                objective: objectiveStatement,
-                tech: technology1Word,
-                technology: technologyUsed
-            };
+                    // Prepare the data to be sent to the server, including the action
+                    const projectData = {
+                        action: 'save_project',  // Indicate that this request is for saving project details
+                        title: projectTitle,
+                        intro: briefIntroduction,
+                        objective: objectiveStatement,
+                        tech: technology1Word,
+                        technology: technologyUsed
+                    };
 
-            // Send the data to the server to save project details
-            fetch('details.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(projectData),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
+                    // Send the data to the server to save project details
+                    const response = await fetch('details.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(projectData),
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
                         alert('Project Details saved successfully.');
                         window.location.reload(); // Refresh the page
-                    } 
-                else {
-                    alert('Something went wrong! Project Details not saved successfully.');
-                    window.location.reload(); // Refresh the page
-                }
-            })
-            .catch(error => {
+                    } else {
+                        alert('Something went wrong! Project Details not saved successfully.');
+                        window.location.reload(); // Refresh the page
+                    }
+                } catch (error) {
                     console.error('Error occurred:', error);
                     alert('An unexpected error occurred. Please try again later.');
-            });
-        });
+                } finally {
+                    // Hide spinner and enable button
+                    spinner.style.display = 'none';
+                    saveBtn.disabled = false;
+                    saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }
+    });
     <?php endif; ?>
 
     updateMembersUI();
