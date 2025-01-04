@@ -310,6 +310,34 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
         .table-container {
             overflow-x: auto;
         }
+
+        /* Spinner styles */
+        .spinner-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="bg-white text-gray-800 flex flex-col min-h-screen">
@@ -352,6 +380,12 @@ include 'adminheaders.php';
             </div>
         </div>
     </main>
+
+    <!-- Spinner Overlay -->
+    <div id="spinner" class="spinner-overlay">
+        <div class="spinner"></div>
+    </div>
+
     <!-- Modal for Group and Project Information -->
     <div id="groupProjectInfoModal" class="modal">
         <div class="modal-content">
@@ -390,7 +424,6 @@ include 'adminheaders.php';
         const lastDate = <?php echo json_encode($lastDate); ?>;
         const mentors = <?php echo json_encode($mentors); ?>;
         const userType = "<?php echo $_SESSION['usertype']; ?>";
-        // console.log(groupRows);
 
         // Populate the table when the page loads
         document.addEventListener('DOMContentLoaded', populateTable);
@@ -515,7 +548,6 @@ include 'adminheaders.php';
         function openWeeklyAnalysisModal(groupId) {
             console.log('Opening weekly analysis for group:', groupId); // Debugging line
             const analysis = analysisRows.filter(analysis => analysis.number == groupId);
-            // console.log(analysis); 
             const group = groupRows.find(group => group.number == groupId);
             const gnum = group.gnum;
             const modal = document.getElementById('weeklyAnalysisModal');
@@ -529,7 +561,6 @@ include 'adminheaders.php';
                 // Loop through the weeks to render the form for each week
                 for (let week = 1; week <= maxWeek; week++) {
                     const weekData = analysis.find(item => item.weeknum == week);
-                    // console.log(weekData);
                     const weekDiv = document.createElement('div');
                     weekDiv.classList.add('mb-4');
                     weekDiv.innerHTML = `
@@ -575,14 +606,15 @@ include 'adminheaders.php';
                     const weekNum = this.getAttribute('data-week-num');
                     const groupId = this.getAttribute('data-group-id');
                     const weekDiv = this.closest('div');
+                    const spinner = document.getElementById('spinner');
 
                     const summary = weekDiv.querySelector('textarea').value.trim();
                     const performance = weekDiv.querySelector('select').value;
 
-                    // if (!summary) {
-                    //     alert('Weekly Analysis for this week has not been filled out.');
-                    //     return;
-                    // }
+                    // Show spinner and disable button
+                    if (spinner) spinner.style.display = 'flex';
+                    if (this) this.disabled = true;
+                    if (this) this.classList.add('opacity-50', 'cursor-not-allowed');
 
                     // Prepare the data to send to the server
                     const requestData = {
@@ -591,7 +623,7 @@ include 'adminheaders.php';
                         weekNum: parseInt(weekNum, 10),//Convert the week number to integer with base 10
                         summary: summary,
                         performance: performance,
-                        action : 'weekperformance',
+                        action: 'weekperformance',
                     };
 
                     // Save the modal state and position to local storage before sending the data as after it is sent, the page will reload
@@ -613,13 +645,19 @@ include 'adminheaders.php';
                             alert(`Details saved successfully for Week ${weekNum}!`);
                             window.location.reload();
                         } else {
-                            alert(`Error saving details for Week ${weekNum}: ${data.error}`);
+                            throw new Error(`Error saving details for Week ${weekNum}: ${data.error}`);
                         }
                     })
-                    // .catch(error => {
-                    //     console.error('Error:', error);
-                    //     alert('An error occurred while saving the details.');
-                    // });
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert(error.message || 'An error occurred while saving details.');
+                    })
+                    .finally(() => {
+                        // Hide spinner and enable button
+                        if (spinner) spinner.style.display = 'none';
+                        if (this) this.disabled = false;
+                        if (this) this.classList.remove('opacity-50', 'cursor-not-allowed');
+                    });
                 });
             });
             // Function to clear modal state
@@ -1614,11 +1652,18 @@ include 'adminheaders.php';
             function saveRubricData(gnum, rubricNumber, groupId) {
                 const examiner = document.getElementById(`examiner-${rubricNumber}`).value;
                 const status = document.getElementById(`status-${rubricNumber}`).value;
+                const saveButton = document.querySelector(`[data-rubric="${rubricNumber}"]`);
+                const spinner = document.getElementById('spinner');
 
                 if (!examiner || !status) {
                     alert("Please fill in all fields before saving.");
                     return;
                 }
+
+                // Show spinner and disable button
+                if (spinner) spinner.style.display = 'flex';
+                if (saveButton) saveButton.disabled = true;
+                if (saveButton) saveButton.classList.add('opacity-50', 'cursor-not-allowed');
 
                 const data = {
                     gnum: gnum,
@@ -1645,10 +1690,19 @@ include 'adminheaders.php';
                         alert(`Rubric R${rubricNumber} details saved successfully!`);
                         window.location.reload();
                     } else {
-                        alert(`Failed to save Rubric R${rubricNumber} details: ${response.message}`);
+                        throw new Error(`Failed to save Rubric R${rubricNumber} details: ${response.message}`);
                     }
                 })
-                .catch(error => console.error("Error:", error));
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert(error.message || 'An error occurred while saving rubric details.');
+                })
+                .finally(() => {
+                    // Hide spinner and enable button
+                    if (spinner) spinner.style.display = 'none';
+                    if (saveButton) saveButton.disabled = false;
+                    if (saveButton) saveButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                });
             }
 
             // Add event listeners to Save buttons to save the marks for their respective rubric when they are clicked
@@ -1656,10 +1710,10 @@ include 'adminheaders.php';
             msaveButtons.forEach(button => {
                 button.addEventListener("click", () => {
                     const rubricNumber = button.dataset.rubric;
-                    saveRubricMarks(group.gnum, rubricNumber, groupNumber);//Taking parameters gnum to save the details for that particular grp,  
+                    saveRubricMarks(group.gnum, rubricNumber, groupNumber, button);//Taking parameters gnum to save the details for that particular grp, grpNumber to save the modal in local storage and button to enable & disable it during spinner
                 });
             });
-            function saveRubricMarks(gnum, rubricNumber, groupId) {
+            function saveRubricMarks(gnum, rubricNumber, groupId, saveButton) {
                 // Collect data for all members and all subparts of the rubric
                 const rubricParts = {
                     1: ['r11', 'r12', 'r13'],
@@ -1702,6 +1756,12 @@ include 'adminheaders.php';
                     rubricData,
                 };
 
+                // Show spinner and disable button
+                const spinner = document.getElementById('spinner');
+                if (spinner) spinner.style.display = 'flex';
+                if (saveButton) saveButton.disabled = true;
+                if (saveButton) saveButton.classList.add('opacity-50', 'cursor-not-allowed');
+                
                 // Save the modal state and position to local storage before sending the data as after it is sent, the page will reload
                 localStorage.setItem('rmodalState', 'open');
                 localStorage.setItem('rmodalPosition', document.getElementById('rubricsReviewModal').scrollTop);
@@ -1721,12 +1781,18 @@ include 'adminheaders.php';
                             alert(`Rubric R${rubricNumber} marks saved successfully!`);
                             window.location.reload();
                         } else {
-                            alert(`Failed to save Rubric R${rubricNumber} marks: ${data.message}`);
+                            throw new Error(`Failed to save Rubric R${rubricNumber} marks: ${data.message}`);
                         }
                     })
                     .catch(error => {
                         console.error("Error saving rubric marks:", error);
-                        alert(`An error occurred while saving Rubric R${rubricNumber} marks.`);
+                        alert(error.message || 'An error occurred while saving Rubric R${rubricNumber} marks.');
+                    })
+                    .finally(() => {
+                        // Hide spinner and enable button
+                        if (spinner) spinner.style.display = 'none';
+                        if (saveButton) saveButton.disabled = false;
+                        if (saveButton) saveButton.classList.remove('opacity-50', 'cursor-not-allowed');
                     });
             }
 
@@ -1887,8 +1953,9 @@ include 'adminheaders.php';
             const groupId = localStorage.getItem('groupId');
             const group = groupRows.find(group => group.number == groupId);
             const gnum = group.gnum;
+            const spinner = document.getElementById('spinner');
+            const deleteButton = event.target;
 
-            // Determine which column to update based on the file URL
             let columnName = "";
             if (fileUrl.includes("r2ppt")) {
                 columnName = "r2ppt";
@@ -1902,17 +1969,21 @@ include 'adminheaders.php';
             else if (fileUrl.includes('r6pdf')) {
                 columnName = "r6pdf";
             }
-            // console.log(fileUrl);
-            // console.log(gnum);
-            // console.log(columnName);
+
             if (!fileUrl || !gnum || !columnName) {
                 alert("Something unexpected happened! Please try again later.");
                 return;
             }
+
             const confirmDelete = confirm('Are you sure you want to delete this document?');
             if (!confirmDelete) return;
 
-            // Save the modal state and position before making the request
+            // Show spinner and disable button
+            if (spinner) spinner.style.display = 'flex';
+            if (deleteButton) deleteButton.disabled = true;
+            if (deleteButton) deleteButton.classList.add('opacity-50', 'cursor-not-allowed');
+            // Save the modal state and position to local storage before sending the data as after it is sent, the page will reload
+
             localStorage.setItem('rmodalState', 'open');
             localStorage.setItem('rmodalPosition', document.getElementById('rubricsReviewModal').scrollTop);
             localStorage.setItem('groupId', groupId);
@@ -1939,6 +2010,16 @@ include 'adminheaders.php';
                     alert('Error deleting document: ' + data.message);
                 }
             })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(error.message || 'An error occurred while deleting document.');
+            })
+            .finally(() => {
+                // Hide spinner and enable button
+                if (spinner) spinner.style.display = 'none';
+                if (deleteButton) deleteButton.disabled = false;
+                if (deleteButton) deleteButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            });
         }
         // Close the modals when the close button is clicked
         document.querySelectorAll('.close').forEach(closeButton => {
@@ -1995,9 +2076,15 @@ include 'adminheaders.php';
             const gnum = groupRows.find(group => group.number == groupId).gnum; // Get the unique gnum from groupRows, it searches through the groupRows array to find the group whose number(is in groupRows) matches the groupId from the table row. Once found, .gnum retrieves the unique identifier (gnum) of that group.
             const mentorDropdown = row.querySelector('select'); // First it selects the dropdown element in the row
             const selectedMentor = mentorDropdown.value; // Then extracts the value of that dropdown element
+            const spinner = document.getElementById('spinner');
 
             const confirmChange = confirm(`Are you sure you want to change mentor for Group ID ${groupId}?`);
             if (confirmChange) {
+                // Show spinner and disable button
+                if (spinner) spinner.style.display = 'flex';
+                if (button) button.disabled = true;
+                if (button) button.classList.add('opacity-50', 'cursor-not-allowed');
+                if (mentorDropdown) mentorDropdown.disabled = true;
                 // Send an AJAX request to change the mentor of the group
                 fetch('groups.php', {
                     method: 'POST',//It indicates that the request is a POST request
@@ -2012,16 +2099,24 @@ include 'adminheaders.php';
                 })
                 .then(response => response.json())
                 .then(data => {
-                        if (data.success) {//If sql query executed succesfully
-                            alert('Mentor changed successfully!');
-                            window.location.reload(); // Refresh the page
-                        } 
-                        else {//If sql query isn't executed successfully
-                            alert('Something went wrong! Mentor not changed successfully.');
-                            window.location.reload(); // Refresh the page
-                        }
-                    })
-                .catch(error => console.error('Error:', error));
+                    if (data.success) {//If SQL query executed successfully
+                        alert('Mentor changed successfully!');
+                        window.location.reload();
+                    } else {//If SQL query isn't executed successfully then throw an error
+                        throw new Error('Something went wrong! Mentor not changed successfully.');
+                    }
+                })
+                .catch(error => {//To catch any unexpected error
+                    console.error('Error:', error);
+                    alert(error.message || 'An error occurred while changing mentor.');
+                })
+                .finally(() => {
+                    // Hide spinner and enable button
+                    if (spinner) spinner.style.display = 'none';
+                    if (button) button.disabled = false;
+                    if (button) button.classList.remove('opacity-50', 'cursor-not-allowed');
+                    if (mentorDropdown) mentorDropdown.disabled = false;
+                });
             }
         }
         //To toggle the visibility of the "Change" button only when a different mentor is selected
@@ -2049,39 +2144,49 @@ include 'adminheaders.php';
 
         //To provide the functionality to delete button to delete the grp members and proj info from the database
         function deleteGroup(button) {
-                const row = button.closest('tr'); // Get the row containing the button, it looks for the closest tr element to the button
-                const groupId = row.cells[0].textContent; // Get the group ID from the first cell of the row
-                const gnum = groupRows.find(group => group.number == groupId).gnum; // Get the unique gnum from groupRows, it searches through the groupRows array to find the group whose number(is in groupRows) matches the groupId from the table row. Once found, .gnum retrieves the unique identifier (gnum) of that group.
+            const row = button.closest('tr');
+            const groupId = row.cells[0].textContent;
+            const gnum = groupRows.find(group => group.number == groupId).gnum;
+            const spinner = document.getElementById('spinner');
 
-                const confirmDelete = confirm(`Are you sure you want to delete Group ID ${groupId}?`);
-                if (confirmDelete) {
-                    // Send an AJAX request to delete the group from the database
-                    fetch('groups.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            gnum: gnum,      // Unique group number
-                            action: 'delete' // Action type
-                        }), // Send gnum & action as JSON payload
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {//If sql query executed succesfully
-                            alert('Group deleted successfully!');
-                            window.location.reload(); // Refresh the page
-                        } 
-                        else {//If sql query isn't executed successfully
-                            alert('Something went wrong! Group not deleted successfully.');
-                            window.location.reload(); // Refresh the page
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                    });
-                }
-            }   
+            const confirmDelete = confirm(`Are you sure you want to delete Group ID ${groupId}?`);
+            if (confirmDelete) {
+                // Show spinner and disable button
+                if (spinner) spinner.style.display = 'flex';
+                if (button) button.disabled = true;
+                if (button) button.classList.add('opacity-50', 'cursor-not-allowed');
+
+                fetch('groups.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        gnum: gnum,
+                        action: 'delete'
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Group deleted successfully!');
+                        window.location.reload();
+                    } else {
+                        throw new Error('Something went wrong! Group not deleted successfully.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.message || 'An error occurred while deleting group.');
+                })
+                .finally(() => {
+                    // Hide spinner and enable button
+                    if (spinner) spinner.style.display = 'none';
+                    if (button) button.disabled = false;
+                    if (button) button.classList.remove('opacity-50', 'cursor-not-allowed');
+                });
+            }
+        }   
     </script>
     <?php include 'footer.php' ?>
     </body>
