@@ -230,7 +230,6 @@ include 'adminheaders.php';
     <script>
         const result = <?php echo json_encode($result); ?>;
         const data= <?php echo json_encode($data); ?>;
-        console.log(data);
         if(result!=null && document.getElementById('downloadExcel')){
             document.getElementById('downloadExcel').addEventListener('click', () => {
                 const table = document.querySelector('table'); // Select the table element

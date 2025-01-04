@@ -1,5 +1,5 @@
 <?php
-// error_reporting(0); //To hide the errors
+error_reporting(0); //To hide the errors
 include 'dbconnect.php';
 include 's3client.php';
 session_start();
@@ -22,10 +22,12 @@ if ($gnumResult->num_rows > 0) {
 }
 // Check if gnum exists, and if it does, check if user has a group ID (has a project)
 if ($gnum) {
-    $numberQuery = "SELECT number FROM projinfo WHERE gnum = '$gnum' LIMIT 1";
+    $numberQuery = "SELECT number,dAppDate FROM projinfo WHERE gnum = '$gnum' LIMIT 1";
     $numberResult = $conn->query($numberQuery);
     if ($numberResult->num_rows > 0) {
-        $groupId = $numberResult->fetch_assoc()['number'];
+        $row = $numberResult->fetch_assoc();
+        $groupId = $row['number'];
+        $dAppDate = $row['dAppDate'];
     }
 }
 // Fetch rubrics data through gnum
@@ -48,14 +50,17 @@ if ($groupId) { //Means grp has a project as grpid is only allotted after the pr
     }
     //Fetch last date of all rubrics through batchyr
     $lastDateExists = false;
-    $lastDateSql = "SELECT lastR1, lastR2, lastR3, lastR4, lastR5, lastR6, lastR7, lastR8 FROM batches WHERE batchyr = '$batchyr'";
-    $lastDateResults = $conn->query($lastDateSql);
-    $lastDate = $lastDateResults -> fetch_assoc();
-    if ($lastDateResults->num_rows > 0) {
-        if (array_filter($lastDate)) { // Will return false if all values are NULL
-            $lastDateExists = true;
-        }
+    $lastDateSql = "SELECT lastR1, lastR2, lastR3, lastR4, lastR5, lastR6, lastR7, lastR8 FROM batches WHERE batchyr = ?";
+    $stmt = $conn->prepare($lastDateSql);
+    $stmt->bind_param("s", $batchyr);
+    $stmt->execute();
+    $lastDateResults = $stmt->get_result();
+    $lastDate = $lastDateResults->fetch_assoc();
+    $last = $lastDate['lastR1'];
+    if ($last) {
+        $lastDateExists = true;
     }
+    $stmt->close();
 }
 // Handle file uploads
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES)) {
@@ -106,15 +111,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES)) {
             // Get the URL
             $fileUrl = $result['ObjectURL'];
             
-            // Update database
+            // Update database with prepared statement
             $sql = "UPDATE projinfo SET $columnName = ? WHERE gnum = ?";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("ss", $fileUrl, $gnum);
-            $stmt->execute();
-            if(!$stmt){
+            $success = $stmt->execute();
+            $stmt->close();
+
+            if(!$success) {
                 echo json_encode(['success' => false, 'message' => 'Error inserting data!']);
-            }
-            else{
+            } else {
                 echo json_encode(['success' => true, 'message' => 'File uploaded successfully!']);
             }
             exit;
@@ -140,6 +146,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES)) {
             z-index: 1001;
             position: relative;
         }
+
+        .spinner-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="bg-white text-gray-800 flex flex-col min-h-screen">
@@ -153,7 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES)) {
             <hr class="my-8 border-black-300">
             <center>
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                <strong class="font-bold">Oops!</strong>
+                <strong class="font-bold">Notice:</strong>
                 <span class="block sm:inline">You are not assigned to any group.</span>
             </div>
             </center>
@@ -165,9 +198,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES)) {
                 <span class="block sm:inline">Your group has no project records in our database.</span>
                 </center>
             </div>
+        <?php elseif (!$dAppDate): ?>
+            <hr class="my-8 border-black-300">
+            <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded relative" role="alert">
+                <center>
+                <strong class="font-bold">Notice:</strong>
+                <span class="block sm:inline">No mentor has been allotted to your group.</span>
+                </center>
+            </div>
         <?php elseif (!$lastDateExists): ?>
             <hr class="my-8 border-black-300">
-            <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
                 <center>
                 <strong class="font-bold">Notice:</strong>
                 <span class="block sm:inline">Rubrics Review for your batch has not been started yet.</span>
@@ -180,13 +221,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES)) {
             </div>
         <?php endif; ?>
     </main>
+
+    <!-- Spinner Overlay -->
+    <div id="spinner" class="spinner-overlay">
+        <div class="spinner"></div>
+    </div>
+
     <script>
         <?php if ($groupId): ?>
             const rubricsData = <?php echo json_encode($rubricsData); ?>;
             const lastDate = <?php echo json_encode($lastDate); ?>;
         <?php endif; ?>
-        // console.log(rubricsData);
-        // console.log(lastDate);
         function renderRubricsPage() {  
             const container = document.getElementById("rubricsContainer");
             container.innerHTML = ""; // Clear existing content
@@ -291,27 +336,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES)) {
             document.getElementById(formId).addEventListener('submit', function(e) {
                 e.preventDefault();
                 const formData = new FormData(this);
+                const spinner = document.getElementById('spinner');
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const fileInput = this.querySelector('input[type="file"]');
                 
-                fetch('rubrics.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {//If sql query executed succesfully
-                        alert('File uploaded successfully.');
-                        window.location.reload(); // Refresh the page
-                    } 
-                    else {//If sql query isn't executed successfully
-                        alert('Something went wrong! File not uploaded successfully.');
-                        window.location.reload(); // Refresh the page
-                    }
-                })
-                .catch(error => {//Triggers when any unexpected error come
-                    console.error('Error:', error);
-                    alert('An error occurred while uploading files.');
-                    window.location.reload();
-                });
+                const confirmUpload = confirm('Are you sure you want to upload this file?');
+                if (confirmUpload) {
+                    // Show spinner and disable button
+                    if (spinner) spinner.style.display = 'flex';
+                    if (submitBtn) submitBtn.disabled = true;
+                    if (submitBtn) submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    if (fileInput) fileInput.disabled = true;
+
+                    fetch('rubrics.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('File uploaded successfully.');
+                            window.location.reload();
+                        } else {
+                            throw new Error(data.message || 'Upload failed');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while uploading the file. Please try again.');
+                    })
+                    .finally(() => {
+                        // Hide spinner and enable button
+                        if (spinner) spinner.style.display = 'none';
+                        if (submitBtn) submitBtn.disabled = false;
+                        if (submitBtn) submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        if (fileInput) fileInput.disabled = false;
+                    });
+                }
             });
         }
 

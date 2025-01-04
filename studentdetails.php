@@ -131,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $postData = json_decode(file_get_contents('php://input'), true);
     
         if ($postData === null) {
-            echo json_encode(['success' => 'false', 'message' => 'Invalid JSON data received']);
+            echo json_encode(['success' => false, 'message' => 'Invalid JSON data received']);
             exit;
         }
     
@@ -168,7 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     
         if (empty($fields)) {
-            echo json_encode(['success' => 'false', 'message' => 'No valid fields to update']);
+            echo json_encode(['success' => false, 'message' => 'No valid fields to update']);
             exit;
         }
     
@@ -196,10 +196,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bind_param($types, ...$values);
     
         if ($stmt->execute()) {
-            echo json_encode(['success' => 'true', 'message' => 'Marks saved successfully!']);
+            echo json_encode(['success' => true, 'message' => 'Marks saved successfully!']);
             exit;
         } else {
-            echo json_encode(['success' => 'false', 'message' => 'Failed to save marks!']);
+            echo json_encode(['success' => false, 'message' => 'Failed to save marks!']);
             exit;
         }
     
