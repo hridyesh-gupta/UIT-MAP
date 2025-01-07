@@ -11,6 +11,11 @@ elseif($_SESSION['usertype']!="admin" && $_SESSION['usertype']!="student" && $_S
 
 include 'dbconnect.php';
 
+$username = $_SESSION['username'];
+$batchyrQuery = "SELECT batchyr FROM info WHERE username='$username' LIMIT 1"; 
+$batchyrResult = $conn->query($batchyrQuery); 
+$batchyr = $batchyrResult->fetch_assoc()['batchyr'];
+
 // Function to generate a unique identifier with numbers and letters
 function generateUniqueId($length = 16) {
     $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -83,17 +88,20 @@ if ($groupExists) {
     }
 }
 
-// If no group exist now check what to do next, means whether we have to fetch student roll numbers or to save details to the db
+// If no group exist now check what to do next, means whether the request which we are getting is for fetching student roll numbers or to save grp/project details to the db
 
 //Code to fetch the roll numbers of all the students from db and store it in $students to show in dropdown(means when the page is loaded then this request will get generated) 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {//As the browser automatically sends a GET request when the page is loaded
-    $sql = "SELECT roll FROM info WHERE roll NOT IN (SELECT roll FROM groups WHERE gnum IS NOT NULL) ORDER BY roll ASC";//To fetch the roll numbers of all the students who are not in any group
+    $sql = "SELECT roll, name, section, branch FROM info WHERE roll NOT IN (SELECT roll FROM groups) and batchyr = '$batchyr' ORDER BY roll ASC";//To fetch the roll numbers of all the students who are not in any group
     $result = $conn->query($sql);
 
     $students = [];
     if ($result->num_rows > 0) {
         while($row = $result->fetch_assoc()) {
             $students[] = $row['roll']; //Roll numbers(roll) from DB are stored in $students, so that can be used in the dropdown
+            $students[] = $row['name']; 
+            $students[] = $row['section']; 
+            $students[] = $row['branch']; 
         }
     }
     $conn->close();
@@ -355,43 +363,72 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     const groupMembers = <?php echo json_encode($groupMembers); ?>; //All the detail names getting stored in groupMembers will be same as the column names in the groups table as $groupMembers has fetched the data from the groups table and further it is being converted to JSON so names will be same
     <?php endif; ?>
     
-    //Logic to create the member template when the add member button is pressed
-    function memberTemplate(index) {
-        return `
-            <div class="member-form p-4 border ${members[index]?.locked ? 'locked' : ''}">
-                <h4 class="text-lg font-bold">Project Member ${index + 1} ${index === 0 ? '(Your Details)' : ''}</h4>
-                <div class="mb-2">
-                    <label class="block text-gray-700">Student Roll Number:</label>
-                    <select class="w-full border p-2 roll-number" data-index="${index}">
-                        <option value="">Select...</option>
-                        ${studentRolls.map(roll => 
-                            `<option value="${roll}" ${members[index]?.roll === roll ? 'selected' : ''}>${roll}</option>
-                        `).join('')}
-                        //studentRolls.map(...): This returns an array of option tag HTML strings, where each element is an option tag for a student roll no. & join(''): This method is used to concatenate (join) all these strings together without any separator (since '' is an empty string).
-                    </select>
-                </div>
-                <div class="details ${members[index]?.roll ? '' : 'hidden'}">
-                    <div class="mb-2">
-                        <label class="block text-gray-700">Name:</label>
-                        <input type="text" class="w-full border p-2 name" maxlength="35" ${members[index]?.locked ? 'disabled' : ''} value="${members[index]?.name || ''}">
-                    </div>
-                    <div class="mb-2">
-                        <label class="block text-gray-700">Section:</label>
-                        <input type="text" class="w-full border p-2 section" maxlength="4" ${members[index]?.locked ? 'disabled' : ''} value="${members[index]?.section || ''}">
-                    </div>
-                    <div class="mb-2">
-                        <label class="block text-gray-700">Branch:</label>
-                        <input type="text" class="w-full border p-2 branch" maxlength="4" ${members[index]?.locked ? 'disabled' : ''} value="${members[index]?.branch || ''}">
-                    </div>
-                    <div class="mb-2">
-                        <label class="block text-gray-700">Responsibility:</label>
-                        <input type="text" class="w-full border p-2 responsibility" maxlength="35" ${members[index]?.locked ? 'disabled' : ''} value="${members[index]?.responsibility || ''}">
-                    </div>
-                </div>
-                <button class="bg-red-500 text-white px-4 py-2 mt-2 lock-member" data-index="${index}">${members[index]?.locked ? 'Unlock' : 'Lock'} Member</button>
-            </div>
-        `;
+    // Helper function to find student details by roll number
+    function findStudentDetails(roll) {
+        // Since the PHP array is structured as [roll1, name1, section1, branch1, roll2, name2, section2, branch2, ...]
+        const index = studentRolls.findIndex(r => r === roll);
+        if (index !== -1 && index % 4 === 0) {
+            return {
+                roll: studentRolls[index],
+                name: studentRolls[index + 1],
+                section: studentRolls[index + 2],
+                branch: studentRolls[index + 3]
+            };
+        }
+        return null;
     }
+
+    function memberTemplate(index) {
+    // If there's a roll number selected, get the student details
+    let studentDetails = null;
+    if (members[index]?.roll) {
+        studentDetails = findStudentDetails(members[index].roll);
+    }
+
+    return `
+        <div class="member-form p-4 border ${members[index]?.locked ? 'locked' : ''}">
+            <h4 class="text-lg font-bold">Project Member ${index + 1} ${index === 0 ? '(Your Details)' : ''}</h4>
+            <div class="mb-2">
+                <label class="block text-gray-700">Student Roll Number:</label>
+                <select class="w-full border p-2 roll-number" data-index="${index}" ${members[index]?.locked ? 'disabled' : ''}>
+                    <option value="">Select...</option>
+                    ${studentRolls.filter((_, i) => i % 4 === 0).map(roll => 
+                        `<option value="${roll}" ${members[index]?.roll === roll ? 'selected' : ''}>${roll}</option>
+                    `).join('')}
+                </select>
+            </div>
+            <div class="details ${members[index]?.roll ? '' : 'hidden'}">
+                <div class="mb-2">
+                    <label class="block text-gray-700">Name:</label>
+                    <input type="text" class="w-full border p-2 name" maxlength="35" 
+                        disabled 
+                        value="${studentDetails?.name || members[index]?.name || ''}">
+                </div>
+                <div class="mb-2">
+                    <label class="block text-gray-700">Section:</label>
+                    <input type="text" class="w-full border p-2 section" maxlength="4" 
+                        disabled 
+                        value="${studentDetails?.section || members[index]?.section || ''}">
+                </div>
+                <div class="mb-2">
+                    <label class="block text-gray-700">Branch:</label>
+                    <input type="text" class="w-full border p-2 branch" maxlength="4" 
+                        disabled 
+                        value="${studentDetails?.branch || members[index]?.branch || ''}">
+                </div>
+                <div class="mb-2">
+                    <label class="block text-gray-700">Responsibility:</label>
+                    <input type="text" class="w-full border p-2 responsibility" maxlength="35" 
+                        ${members[index]?.locked ? 'disabled' : ''} 
+                        value="${members[index]?.responsibility || ''}">
+                </div>
+            </div>
+            <button class="bg-red-500 text-white px-4 py-2 mt-2 lock-member" data-index="${index}">
+                ${members[index]?.locked ? 'Unlock' : 'Lock'} Member
+            </button>
+        </div>
+    `;
+}
     //Logic to update the members UI when a new member is added
     function updateMembersUI() {
         const membersDiv = document.getElementById('members');
@@ -407,12 +444,18 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             select.addEventListener('change', (e) => {
                 const index = e.target.dataset.index;
                 const roll = e.target.value;
+                
                 if (roll) {
-                    members[index].roll = roll;
-                    members[index].name = '';  // Reset name, section, branch, responsibility
-                    members[index].section = '';
-                    members[index].branch = '';
-                    members[index].responsibility = '';
+                    const studentDetails = findStudentDetails(roll);
+                    if (studentDetails) {
+                        // Preserve existing responsibility if any
+                        const existingResponsibility = members[index]?.responsibility || '';
+                        
+                        members[index] = {
+                            ...studentDetails,
+                            responsibility: existingResponsibility
+                        };
+                    }
                     e.target.closest('.member-form').querySelector('.details').classList.remove('hidden');
                 } else {
                     members[index] = {};
@@ -524,7 +567,9 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (members.length < maxMembers) {
             members.push({});
             updateMembersUI();
-        }
+        } else {
+        alert('Maximum members reached!');
+    }
     });
 
     //Logic to save the group details to the db when save details button is pressed
