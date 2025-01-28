@@ -89,7 +89,7 @@
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-image: url('uit.png');
+            background-image: url('img/uit.png');
             background-size: cover;
             background-repeat: no-repeat;
             display: flex;

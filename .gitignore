@@ -1,2 +1,8 @@
-cred.env
 .vscode/
+/vendor
+Sample Diary.pdf
+composer.phar
+
+cred.env
+dbconnect.php
+forgotpassword.php

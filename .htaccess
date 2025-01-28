@@ -1,0 +1,5 @@
+DirectoryIndex UIT-MAP/index.php
+<FilesMatch "\.(ppt|pptx)$">
+    ForceType application/octet-stream
+    Header set Content-Disposition "attachment"
+</FilesMatch>
