@@ -89,7 +89,9 @@
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #2f3e50;
+            background-image: url('uit.png');
+            background-size: cover;
+            background-repeat: no-repeat;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -218,9 +220,9 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container rounded bg-opacity-80">
         <div class="left-side">
-            <img src="COLLEGE.png" alt="United Institute of Technology Logo" class="logo">
+            <img src="img/COLLEGE.png" alt="United Institute of Technology Logo" class="logo">
             <h2 id="form-title">Reset Your Password</h2>
             <p id="form-description">Please enter your new password and confirm it.</p>
 
@@ -252,7 +254,7 @@
         </div>
         
         <div class="right-side">
-            <img id="dynamic-image" src="resetpswd.gif" alt="Forgot Password Image">
+            <img id="dynamic-image" src="img/resetpswd.gif" alt="Forgot Password Image">
         </div>
     </div>
 

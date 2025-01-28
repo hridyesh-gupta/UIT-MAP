@@ -10,21 +10,23 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
-            background-color: #466079;
+            background-image: url('img/uit.png');
+            background-size: cover;
+            background-repeat: no-repeat;
         }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
 
-    <div class="flex flex-col lg:flex-row bg-white shadow-lg rounded-lg max-w-4xl w-full">
-        <div class="p-8 w-full lg:w-1/2">
-            <div class="flex justify-center mb-6">
-                <img src="COLLEGE.png" alt="United Group Of Institution logo" width="200" height="100">
+<div class="p-8 w-full lg:w-1/3 bg-white rounded bg-opacity-80">
+<h2 class="text-2xl font-bold mb-4"><center>UIT-MAP: Monitoring and Assessment of student Project</center></h2>
+        <div class="flex justify-center mb-6">
+            <img src="img/COLLEGE_T.png" alt="United Institute of Technology logo" width="200" height="100">
             </div>
-            <h1 class="text-center text-1.5xl font-bold mb-4">Login Here</h1>
+            <h1 class="text-center text-2xl font-bold mb-4">Login Here</h1>
             <form action="login.php" method="POST">
                 <div class="mb-4">
-                    <label for="uniqueId" class="block text-sm font-medium text-gray-700">Unique Id</label>
+                    <label for="uniqueId" class="block text-sm font-medium text-black-700"><b>Unique Id</b></label>
                     <div class="mt-1 relative rounded-md shadow-sm">
                         <input type="text" id="uniqueId" name="uniqueId" pattern="[A-Za-z0-9]{4,20}" title="Please enter a valid unique ID (4-20 alphanumeric characters)" class="block w-full pr-10 border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                         <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -33,7 +35,7 @@
                     </div>
                 </div>
                 <div class="mb-6">
-                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <label for="password" class="block text-sm font-medium text-black-700"><b>Password</b></label>
                     <div class="mt-1 relative rounded-md shadow-sm">
                         <input type="password" name="password" id="password" class="block w-full pr-10 border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                         <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer">
@@ -59,28 +61,18 @@
                     <button type="submit" name="submit" class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Login</button>
                 </div>
                 <div class="mt-4 text-center">
-                    <a href="forgotpassword.php" class="text-blue-500 text-sm">Forgot your password?</a>
+                    <a href="forgotpassword.php" class="text-blue-500 text-sm"><b>Forgot your password?</b></a>
                 </div>
             </form>
-            <div class="mt-6 text-xs text-center text-gray-500">
-                <p>Copyright © 2024 Prototype UNITED INSTITUTE OF TECHNOLOGY</p>
+            <div class="mt-4 text-xs text-center text-black-500">
                 <p class="mt-2">
-                    <a href="#" class="text-blue-500">Terms of Service</a> |
-                    <a href="#" class="text-blue-500">Privacy Policy</a>
+                        <b>Made with &#10084; by <a href="https://www.linkedin.com/in/hridyesh-gupta/" class="text-blue-500">Hridyesh</a> and team</b>
                 </p>
             </div>
+            <div class="mt-2 text-xs text-center text-gray-500">
+                <p class="text-sm">&copy; 2025 • UNITED INSTITUTE OF TECHNOLOGY</p>
+            </div>
         </div>
-        <div class="p-8 w-full lg:w-1/2 bg-white">
-            <h2 class="text-2xl font-bold mb-4">MAP- Monitoring And Assessment Of Student Project <i class="fas fa-trophy text-yellow-500"></i></h2>
-            <p class="mb-4"> A comprehensive web-based application developed to simplify the process of maintaining project diaries for final-year students at the United Institute of Technology, Prayagraj.</p>
-            <ul class="list-disc pl-5 space-y-2 mb-4">
-                <li><i class="fas fa-arrow-right text-yellow-500"></i> Streamlined Project Diary Management: <a href="#" class="text-blue-500">MAP virtualizes the project diary process, eliminating the need for physical signatures and approvals.</a></li>
-                <li><i class="fas fa-arrow-right text-yellow-500"></i> Admin Monitoring and Assessment:<a href="#" class="text-blue-500"> Enables admins to seamlessly monitor and assess student projects.</a></li>
-                <li><i class="fas fa-arrow-right text-yellow-500"></i> Responsive Design: <a href="#" class="text-blue-500"> Accessible on multiple devices, including mobile phones and laptops.</a></li>
-                <li><i class="fas fa-arrow-right text-yellow-500"></i> Time-Saving and User-Friendly: <a href="#" class="text-blue-500"> Saves time and is easy to use for both students and administrators.</a></li>
-            </ul>
-        </div>
-    </div>
     <script>
         const passwordField = document.getElementById('password');
         const togglePassword = document.getElementById('togglePassword');
