@@ -5,7 +5,7 @@ RewriteBase /
 RewriteCond %{REQUEST_URI} !^/UIT-MAP/
 RewriteRule ^(.*)$ UIT-MAP/$1 [L]
 
-# Handle PHP files in UIT-MAP
+# Handle PHP files in UIT-MAP platform
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . UIT-MAP/index.php [L]
