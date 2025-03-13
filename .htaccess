@@ -1,4 +1,15 @@
-DirectoryIndex UIT-MAP/index.php
+RewriteEngine On
+RewriteBase /
+
+# Redirect all requests to UIT-MAP so that it assumes UIT-MAP as root rather than it's parent directory public_html. Because if we don't do this then we have to change everything path wrt the public_html root directory
+RewriteCond %{REQUEST_URI} !^/UIT-MAP/
+RewriteRule ^(.*)$ UIT-MAP/$1 [L]
+
+# Handle PHP files in UIT-MAP
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . UIT-MAP/index.php [L]
+
 <FilesMatch "\.(ppt|pptx)$">
     ForceType application/octet-stream
     Header set Content-Disposition "attachment"
