@@ -179,8 +179,10 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
         $columnStatus = "statusR$rubric";
         $columnEval = "evalR$rubric";
         // Update the projinfo table
-        $sql = "UPDATE projinfo SET $columnExaminer = '$examiner', $columnStatus = '$status', $columnEval = CURDATE() WHERE gnum = '$gnum'";
-        $stmt = $conn->query($sql);
+        $sql = "UPDATE projinfo SET $columnExaminer = ?, $columnStatus = ?, $columnEval = CURDATE() WHERE gnum = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sss", $examiner, $status, $gnum);
+        $stmt->execute();
         
         if ($stmt) {
             echo json_encode(["success" => true, "message" => "Rubric updated successfully!"]);
@@ -789,7 +791,7 @@ include 'adminheaders.php';
                         <!-- Examiner Name -->
                         <div class="mb-5">
                             <label for="examiner" class="block text-gray-700 font-medium mb-2">Examiner Name:</label>
-                            <input id="examiner-${i}" type="text" value="${group[`examinerR${i}`] || ""}" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg" maxlength="28">
+                            <input id="examiner-${i}" type="text" value="${encodeURIComponent(group[`examinerR${i}`] || "")}" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg" maxlength="28">
                         </div>
 
                         <!-- Status -->

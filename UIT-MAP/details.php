@@ -132,8 +132,11 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
 
         // Prepare the SQL query to insert the project details into the projinfo table
-        $sql = "INSERT INTO projinfo (gnum, batchyr, title, intro, objective, tech, technology, creator, date) VALUES ('$gnum', '$batchyr', '$title', '$intro', '$objective', '$tech', '$technology', '$creator', '$date')";
-        $sqlResult= $conn->query($sql);
+        $sql = "INSERT INTO projinfo (gnum, batchyr, title, intro, objective, tech, technology, creator, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sssssssss", $gnum, $batchyr, $title, $intro, $objective, $tech, $technology, $creator, $date);
+        $sqlResult = $stmt->execute();
+        $stmt->close();    
         // If the insertion was not successful it'll enter in this block
         if (!$sqlResult) {
             echo json_encode(['success' => false, 'message' => 'Error inserting data: ' . $conn->error]);
@@ -170,8 +173,11 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $section = $member['section'];
             $responsibility = $member['responsibility'];
             // Insert the member data into the groups table
-            $sql = "INSERT INTO groups (roll, name, batchyr, branch, section, responsibility, gnum, creator) VALUES ('$roll', '$name', '$batchyr', '$branch', '$section', '$responsibility', '$gnum', '$creator')";
-            $sqlResult= $conn->query($sql);
+            $sql = "INSERT INTO groups (roll, name, batchyr, branch, section, responsibility, gnum, creator) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ssssssss", $roll, $name, $batchyr, $branch, $section, $responsibility, $gnum, $creator);
+            $sqlResult = $stmt->execute();
+            $stmt->close();
             // Check if the insertion of current member is successful or not means it will only enter in if block if the insertion was not successful
             if (!$sqlResult) {
                 // If there is an error during insertion, return an error response
@@ -420,7 +426,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <label class="block text-gray-700">Responsibility:</label>
                     <input type="text" class="w-full border p-2 responsibility" maxlength="35" 
                         ${members[index]?.locked ? 'disabled' : ''} 
-                        value="${members[index]?.responsibility || ''}">
+                        value="${encodeURIComponent(members[index]?.responsibility || '')}">
                 </div>
             </div>
             <button class="bg-red-500 text-white px-4 py-2 mt-2 lock-member" data-index="${index}">

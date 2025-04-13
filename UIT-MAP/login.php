@@ -13,13 +13,24 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
     //Getting the values from the form
     $username=$_POST['uniqueId']; 
     $password=$_POST['password'];
-    //Checking whether the entered username and password exists in the database or not
-    $sql="SELECT * FROM user WHERE username='$username' AND password='$password'";
-    $result=mysqli_query($conn,$sql); 
-    //Through $conn parameter(which is initialised in the dbconnect.php), the function knows which database connection to use when executing the query and through $sql parameter, the function knows which query to execute. And mysqli_query() function returns the whole result set of all those rows(users) which satisfy the condition in sql query. But this result set will only contain single row as the username is unique. 
     
-    //And this fetched result set can't be used directly. So, we need to fetch the data from the result set using mysqli_fetch_array() function which will fetch the first row of result set. 
-    $row=mysqli_fetch_array($result); 
+    // Prepare the SQL query with placeholders
+    $sql = "SELECT * FROM user WHERE username=? AND password=?";
+    
+    // Prepare the statement
+    $stmt = $conn->prepare($sql);
+    
+    // Bind the parameters
+    $stmt->bind_param("ss", $username, $password);
+    
+    // Execute the query
+    $stmt->execute();
+    
+    // Get the result
+    $result = $stmt->get_result();
+    
+    // Fetch the row
+    $row = $result->fetch_array();
 
     if($row["usertype"]=="admin"){ 
         $_SESSION['username']=$username; //Storing the username in session variable whenever the correct username and password is entered so that when we check those session variables in adminhome.php, we can know that the user is logged in and is not accessing through URL editing. Or we can also use it somewhere else in the whole session.
