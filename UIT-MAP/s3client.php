@@ -1,7 +1,7 @@
 <?php
     //Load Composer's autoloader
    require __DIR__ . '/../vendor/autoload.php';//__DIR__ is a magic constant in PHP that returns the absolute parent directory path of the current script(means the path of the parent folder of the current file).
-
+   error_reporting(0); //To hide the errors
 
    use Aws\S3\S3Client;
    use Aws\Exception\AwsException;

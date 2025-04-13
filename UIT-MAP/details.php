@@ -384,6 +384,20 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         return null;
     }
 
+    function customEncode(str) {
+        if (!str) return "";
+        return str.split(' ').map(part => 
+            encodeURIComponent(part)
+        ).join(' ');
+    }
+
+    function customDecode(str) {
+        if (!str) return "";
+        return str.split(' ').map(part => 
+            decodeURIComponent(part)
+        ).join(' ');
+    }
+
     function memberTemplate(index) {
     // If there's a roll number selected, get the student details
     let studentDetails = null;
@@ -426,7 +440,8 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <label class="block text-gray-700">Responsibility:</label>
                     <input type="text" class="w-full border p-2 responsibility" maxlength="35" 
                         ${members[index]?.locked ? 'disabled' : ''} 
-                        value="${encodeURIComponent(members[index]?.responsibility || '')}">
+                        value="${customEncode(members[index]?.responsibility || '')}"
+                        oninput="this.value = customDecode(this.value)">
                 </div>
             </div>
             <button class="bg-red-500 text-white px-4 py-2 mt-2 lock-member" data-index="${index}">

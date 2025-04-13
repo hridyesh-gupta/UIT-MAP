@@ -1,6 +1,6 @@
 <?php
 include 'dbconnect.php'; //Database connection
-
+error_reporting(0); //To hide the errors
 // Fetch the logged-in user's name
 $username = $_SESSION['username'];
 $nameQuery = "SELECT name FROM info WHERE username = '$username' LIMIT 1";

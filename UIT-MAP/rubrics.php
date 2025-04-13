@@ -305,7 +305,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES)) {
                     <!-- Examiner Name -->
                     <div class="mb-5">
                         <label class="block text-gray-700 font-medium mb-2">Examiner Name:</label>
-                        <input type="text" value="${encodeURIComponent(rubricsData[`examinerR${i}`] || "")}" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg" disabled>
+                        <input type="text" value="${customEncode(rubricsData[`examinerR${i}`] || "")}" 
+                               oninput="this.value = customDecode(this.value)"
+                               class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg" disabled>
                     </div>
 
                     <!-- Status -->
@@ -386,6 +388,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES)) {
         if (pdfForm) handleFormSubmit(`r${i}pdfForm`);
     });
 });
+
+        // Function to handle custom encoding while preserving spaces
+        function customEncode(str) {
+            if (!str) return "";
+            return str.split(' ').map(part => 
+                encodeURIComponent(part)
+            ).join(' ');
+        }
+
+        // Function to handle custom decoding while preserving spaces
+        function customDecode(str) {
+            if (!str) return "";
+            return str.split(' ').map(part => 
+                decodeURIComponent(part)
+            ).join(' ');
+        }
 
         // To open the document in new tab
         function openDocument(fileUrl) {

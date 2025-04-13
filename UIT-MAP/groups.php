@@ -713,6 +713,22 @@ include 'adminheaders.php';
             }
         });
 
+        // Function to handle custom encoding while preserving spaces
+        function customEncode(str) {
+            if (!str) return "";
+            return str.split(' ').map(part => 
+                encodeURIComponent(part)
+            ).join(' ');
+        }
+
+        // Function to handle custom decoding while preserving spaces
+        function customDecode(str) {
+            if (!str) return "";
+            return str.split(' ').map(part => 
+                decodeURIComponent(part)
+            ).join(' ');
+        }
+
         // Function to open the rubrics review modal
         function openRubricsReviewModal(groupNumber) {
             console.log('Button clicked for group:', groupNumber); // Debugging line
@@ -791,7 +807,9 @@ include 'adminheaders.php';
                         <!-- Examiner Name -->
                         <div class="mb-5">
                             <label for="examiner" class="block text-gray-700 font-medium mb-2">Examiner Name:</label>
-                            <input id="examiner-${i}" type="text" value="${encodeURIComponent(group[`examinerR${i}`] || "")}" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg" maxlength="28">
+                            <input id="examiner-${i}" type="text" value="${customEncode(group[`examinerR${i}`] || "")}" 
+                                   oninput="this.value = customDecode(this.value)"
+                                   class="w-full p-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out shadow-md hover:shadow-lg" maxlength="28">
                         </div>
 
                         <!-- Status -->
