@@ -19,7 +19,7 @@
 <body class="flex items-center justify-center min-h-screen p-4">
 
 <div class="p-8 w-full lg:w-1/3 bg-white rounded bg-opacity-80">
-<h2 class="text-2xl font-bold mb-4"><center>UIT-MAP: Monitoring and Assessment of student Project</center></h2>
+<h2 class="text-2xl font-bold mb-4"><center>UIT-MAP: Monitoring and Assessment of Project</center></h2>
         <div class="flex justify-center mb-6">
             <img src="img/COLLEGE_T.png" alt="United Institute of Technology logo" width="200" height="100">
             </div>
