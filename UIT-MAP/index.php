@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UIT-MAP Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.unpkg.com/@heyform-inc/embed@latest/dist/index.umd.js"></script>
     <?php include 'favicon.php' ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -13,6 +14,19 @@
             background-image: url('img/uit.png');
             background-size: cover;
             background-repeat: no-repeat;
+        }
+        #feedback {
+            position: fixed !important;
+            bottom: 20px;
+            right: 20px;
+            padding: 8px 12px; /* Smaller padding */
+            font-size: 14px;   /* Smaller font size */
+            z-index: 9999;
+            cursor: pointer;
+        }
+        div[data-heyform-id="Bio4zgP3"] .heyform__trigger-button:hover {
+            background-color: #1e40af !important;  /* your hover color */
+            opacity: 1 !important;
         }
     </style>
 </head>
@@ -68,6 +82,21 @@
                 <p class="mt-2">
                         <b>Made with &#10084; by <a href="https://www.linkedin.com/in/hridyesh-gupta/" class="text-blue-500">Hridyesh</a> and team</b>
                 </p>
+            </div>
+            <div
+                data-heyform-id="Bio4zgP3"
+                data-heyform-type="modal"
+                data-heyform-custom-url="https://heyform.net/f/Bio4zgP3"
+                data-heyform-size="large"
+                data-heyform-open-trigger="click"
+                data-heyform-open-delay="5"
+                data-heyform-open-scroll-percent="30"
+                data-heyform-trigger-background="#2563eb"
+                data-heyform-trigger-text="Feedback please!!"
+                data-heyform-hide-after-submit="true"
+                data-heyform-auto-close="3"
+                data-heyform-transparent-background="false">
+                <button id="feedback" class="heyform__trigger-button py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" type="button" onclick="HeyForm.openModal('Bio4zgP3Modal')">Feedback please!!</button>
             </div>
             <div class="mt-2 text-xs text-center text-gray-500">
                 <p class="text-sm">&copy; 2025 • UNITED INSTITUTE OF TECHNOLOGY</p>
