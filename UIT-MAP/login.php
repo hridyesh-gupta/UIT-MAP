@@ -7,12 +7,20 @@ session_start(); //To start the session
 
 include 'dbconnect.php';
 //Including the database connection file in this file so that we can have access of the database
+include 'csrf.php';
 
 if($_SERVER["REQUEST_METHOD"]=="POST"){
     //Will only execute when someone clicks on login button of form on index.php
+    //Verify CSRF token
+    $token = isset($_POST['csrf_token']) ? $_POST['csrf_token'] : '';
+    if(!csrf_verify($token)){
+        $_SESSION['loginMessage'] = 'Invalid request (CSRF token).';
+        header('Location: index.php');
+        exit;
+    }
     //Getting the values from the form
-    $username=$_POST['uniqueId']; 
-    $password=$_POST['password'];
+    $username = isset($_POST['uniqueId']) ? $_POST['uniqueId'] : '';
+    $password = isset($_POST['password']) ? $_POST['password'] : '';
     
     // Prepare the SQL query with placeholders
     $sql = "SELECT * FROM user WHERE username=? AND password=?";
