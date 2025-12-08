@@ -429,6 +429,18 @@ include 'adminheaders.php';
 
         // Populate the table when the page loads
         document.addEventListener('DOMContentLoaded', populateTable);
+        // Attach client-side search filter
+        document.addEventListener('DOMContentLoaded', function(){
+            const searchInput = document.getElementById('searchInput');
+            if(!searchInput) return;
+            searchInput.addEventListener('input', function(){
+                const q = this.value.trim().toLowerCase();
+                document.querySelectorAll('.group-item').forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(q) ? '' : 'none';
+                });
+            });
+        });
          
         // Function to dynamically populate the table with mentors and group data
         function populateTable() {

@@ -21,72 +21,29 @@ $loggedInName = $nameResult->num_rows > 0 ? $nameResult->fetch_assoc()['name'] :
 
 <html>
     <head>
+        <?php include 'theme.php'; ?>
         <style>
-            .modal {
-                display: none; /* Hidden by default */
-                position: fixed;
-                z-index: 1000; /* Ensure the modal appears above other elements */
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                overflow: auto;
-                background-color: rgba(0, 0, 0, 0.4); /* Black with opacity */
-                padding-top: 60px;
-            }
-            .modal-content {
-                background-color: #fefefe;
-                margin: 5% auto;
-                padding: 20px;
-                border: 1px solid #888;
-                width: 80%;
-                z-index: 1001; /* Ensure the modal content appears above the modal background */
-            }
-            .close {
-                color: #aaa;
-                float: right;
-                font-size: 28px;
-                font-weight: bold;
-            }
-            .close:hover,
-            .close:focus {
-                color: black;
-                text-decoration: none;
-                cursor: pointer;
-            }
-            .bg-blue-500 {
-                background-color: #3b82f6;
-            }
-            .text-white {
-                color: #ffffff;
-            }
-            .py-2 {
-                padding-top: 0.5rem;
-                padding-bottom: 0.5rem;
-            }
-            .px-4 {
-                padding-left: 1rem;
-                padding-right: 1rem;
-            }
-            .rounded {
-                border-radius: 0.25rem;
-            }
-            .hover\:bg-blue-700:hover {
-                background-color: #1d4ed8;
-            }
-            .transition {
-                transition: all 0.3s ease;
-            }
-            .duration-300 {
-                transition-duration: 300ms;
-            }
+            /* Minimal header-specific utilities; theme variables and link interactions live in theme.php */
+            .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0, 0, 0, 0.4); padding-top: 60px; }
+            .modal-content { background-color: var(--card-bg, #fefefe); margin: 5% auto; padding: 20px; border: 1px solid rgba(0,0,0,0.08); width: 80%; z-index: 1001; }
+            .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
+            .close:hover, .close:focus { color: black; text-decoration: none; cursor: pointer; }
+            .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+            .px-4 { padding-left: 1rem; padding-right: 1rem; }
+            .rounded { border-radius: 0.25rem; }
+            .hover\:bg-blue-700:hover { background-color: var(--link-hover, #1d4ed8); }
+            .transition { transition: all 0.3s ease; }
+            .duration-300 { transition-duration: 300ms; }
+            /* Make nav anchors more tappable on mobile */
+            nav a { display:inline-block; padding:8px 10px; }
         </style>
     </head>
     <body>
+        <a href="#main" class="skip-link" style="position:absolute;left:-999px;top:auto;overflow:hidden;clip:rect(0 0 0 0);height:1px;width:1px;" onfocus="this.style.position='static';this.style.left='20px';this.style.top='12px';this.style.width='auto';this.style.height='auto';this.style.clip='auto';">Skip to content</a>
         <!-- Header --> 
         <header class="bg-blue-600 text-white p-4">
             <div class="max-w-6xl mx-auto flex justify-between items-center">
-                <img src="img/COLLEGE.png" alt="College Logo" class="h-12">
+                <img src="img/COLLEGE.png" alt="College Logo" class="h-12" loading="lazy">
                 <div class="flex-1 text-center">
                     <?php if($_SESSION['usertype'] == "admin"){ ?>                
                         <h1 class="text-3xl font-bold text-center">MAP - Admin Panel</h1>
@@ -103,8 +60,12 @@ $loggedInName = $nameResult->num_rows > 0 ? $nameResult->fetch_assoc()['name'] :
                     </svg>
                     <span class="text-lg font-medium"><?php echo htmlspecialchars($loggedInName); ?></span>
                 </div>
+                <!-- Theme toggle -->
+                <div class="absolute right-36 top-6">
+                    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
+                </div>
                 <!-- Hamburger Icon -->
-                <button id="menu-toggle" class="text-white focus:outline-none md:hidden">
+                <button id="menu-toggle" class="text-white focus:outline-none md:hidden" aria-label="Toggle menu">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
                     </svg>
@@ -116,12 +77,12 @@ $loggedInName = $nameResult->num_rows > 0 ? $nameResult->fetch_assoc()['name'] :
         <nav id="desktop-menu" class="md:block bg-blue-500 text-white">
             <div class="max-w-6xl mx-auto p-4 flex space-x-4 justify-between">
             <?php if($_SESSION['usertype'] == "admin"){ ?>                
-                <a href="addstudent.php" class="text-lg">Admin Controls</a>
+                <a href="addstudent.php" class="text-lg" aria-label="Admin Controls">Admin Controls</a>
             <?php } ?>                
-                <a href="#" id="groups-link" class="text-lg">Groups</a>
-                <a href="#" id="marks-link" class="text-lg">Rubrics Marks</a>
-                <a href="guidelines.php" class="text-lg">Guidelines</a>
-                <a href="logout.php" class="text-lg">Logout</a>
+                <a href="#" id="groups-link" class="text-lg" aria-label="Groups">Groups</a>
+                <a href="#" id="marks-link" class="text-lg" aria-label="Rubrics Marks">Rubrics Marks</a>
+                <a href="guidelines.php" class="text-lg" aria-label="Guidelines">Guidelines</a>
+                <a href="logout.php" class="text-lg" aria-label="Logout">Logout</a>
             </div>
         </nav>
 
@@ -265,6 +226,28 @@ $loggedInName = $nameResult->num_rows > 0 ? $nameResult->fetch_assoc()['name'] :
                     yearSelectionModal2.style.display = 'none';
                 }
             });
+        </script>
+
+        <script>
+            // Theme initialization and toggle
+            (function(){
+                const root = document.documentElement;
+                const btn = document.getElementById('theme-toggle');
+                const stored = localStorage.getItem('theme');
+                const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                let theme = stored || (prefersDark ? 'dark' : 'light');
+                root.setAttribute('data-theme', theme);
+                if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+
+                function toggle(){
+                    theme = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                    root.setAttribute('data-theme', theme);
+                    localStorage.setItem('theme', theme);
+                    if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+                }
+
+                if (btn) btn.addEventListener('click', toggle);
+            })();
         </script>
 
     </body>

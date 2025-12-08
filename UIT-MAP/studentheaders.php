@@ -7,10 +7,11 @@ $nameQuery = "SELECT name FROM info WHERE username = '$username' LIMIT 1";
 $nameResult = $conn->query($nameQuery);
 $loggedInName = $nameResult->num_rows > 0 ? $nameResult->fetch_assoc()['name'] : 'User';
 ?>
+<?php include 'theme.php'; ?>
 <!-- Header --> 
 <header class="bg-blue-600 text-white p-4">
     <div class="max-w-6xl mx-auto flex justify-between items-center">
-        <img src="img/COLLEGE.png" alt="College Logo" class="h-12">
+        <img src="img/COLLEGE.png" alt="College Logo" class="h-12" loading="lazy">
         <div class="flex-1 text-center">
             <h1 class="text-3xl font-bold text-center">MAP - Student Panel</h1>        
         </div>
@@ -23,23 +24,27 @@ $loggedInName = $nameResult->num_rows > 0 ? $nameResult->fetch_assoc()['name'] :
             <span class="text-lg font-medium"><?php echo htmlspecialchars($loggedInName); ?></span>
         </div>
         <!-- Hamburger Icon -->
-        <button id="menu-toggle" class="text-white focus:outline-none md:hidden">
+        <button id="menu-toggle" class="text-white focus:outline-none md:hidden" aria-label="Toggle menu">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
             </svg>
         </button>
+        <!-- Theme toggle -->
+        <div class="absolute right-36 top-6">
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
+        </div>
     </div>
 </header>
 
 <!-- Sub-header for large screens -->
 <nav id="desktop-menu" class="md:block bg-blue-500 text-white">
     <div class="max-w-6xl mx-auto p-4 flex space-x-4 justify-between">
-        <a href="studentdetails.php" class="text-lg">Student Details</a>
-        <a href="guidelines.php" class="text-lg">Guidelines</a>
-        <a href="details.php" class="text-lg">Group Details</a>
-        <a href="weekanalysis.php" class="text-lg">Weekly Analysis</a>
-        <a href="rubrics.php" class="text-lg">Rubrics</a>
-        <a href="logout.php" class="text-lg">Logout</a>
+        <a href="studentdetails.php" class="text-lg" aria-label="Student Details">Student Details</a>
+        <a href="guidelines.php" class="text-lg" aria-label="Guidelines">Guidelines</a>
+        <a href="details.php" class="text-lg" aria-label="Group Details">Group Details</a>
+        <a href="weekanalysis.php" class="text-lg" aria-label="Weekly Analysis">Weekly Analysis</a>
+        <a href="rubrics.php" class="text-lg" aria-label="Rubrics">Rubrics</a>
+        <a href="logout.php" class="text-lg" aria-label="Logout">Logout</a>
     </div>
 </nav>
 
@@ -87,4 +92,23 @@ $loggedInName = $nameResult->num_rows > 0 ? $nameResult->fetch_assoc()['name'] :
 
     // Check on resize
     window.addEventListener('resize', checkScreenSize);
+</script>
+
+<script>
+    // Small theme toggle for student header fragment
+    (function(){
+        const root = document.documentElement;
+        const btn = document.getElementById('theme-toggle');
+        const stored = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        let theme = stored || (prefersDark ? 'dark' : 'light');
+        root.setAttribute('data-theme', theme);
+        if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+        if (btn) btn.addEventListener('click', () => {
+            theme = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            root.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+        });
+    })();
 </script>
