@@ -27,6 +27,16 @@ function generateUniqueId($length = 16) {
     return $randomString;
 }
 
+// Force any date to use year 2027 while keeping the same month-day
+function forceYear2027($dateString = null) {
+    $base = $dateString ?: date('Y-m-d');
+    $parts = explode('-', $base);
+    if (count($parts) === 3) {
+        return '2027-' . $parts[1] . '-' . $parts[2];
+    }
+    return '2027-01-01';
+}
+
 // Check if a group already exists for the current user
 $user = $_SESSION['username']; //As we have stored the username in session variable when the user logged in
 $sql = "SELECT gnum FROM groups WHERE roll = '$user'";
@@ -112,6 +122,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Decode the JSON received
     $data = json_decode(file_get_contents('php://input'), true);
     $action = $data['action'];
+    $forcedDate = forceYear2027();
     
     //Code to be executed when the project details save button is pressed
     if ($action === 'save_project') {
@@ -127,7 +138,7 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $creatorResult = $conn->query($creatorQuery); //Executing the query and saving the resultset in $creatorResult
         $creatorData = $creatorResult->fetch_assoc(); //Fetching the data from the resultset
         $creator = $creatorData['creator']; //Fetching the creator from the resultset and storing it in $creator
-        $date = $creatorData['date']; //Fetching the date from the resultset and storing it in $date
+        $date = forceYear2027($creatorData['date']); //Always keep year as 2027
         $batchyr = $creatorData['batchyr']; //Fetching the batchyr from the resultset and storing it in $batchyr
         
 
@@ -173,9 +184,9 @@ else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $section = $member['section'];
             $responsibility = $member['responsibility'];
             // Insert the member data into the groups table
-            $sql = "INSERT INTO groups (roll, name, batchyr, branch, section, responsibility, gnum, creator) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            $sql = "INSERT INTO groups (roll, name, batchyr, branch, section, responsibility, gnum, creator, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ssssssss", $roll, $name, $batchyr, $branch, $section, $responsibility, $gnum, $creator);
+            $stmt->bind_param("sssssssss", $roll, $name, $batchyr, $branch, $section, $responsibility, $gnum, $creator, $forcedDate);
             $sqlResult = $stmt->execute();
             $stmt->close();
             // Check if the insertion of current member is successful or not means it will only enter in if block if the insertion was not successful

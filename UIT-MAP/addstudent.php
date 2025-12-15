@@ -20,37 +20,82 @@ if (isset($_POST['upload_file']) && isset($_FILES['uploaded_file'])) { //When th
         // Open the uploaded CSV file in read mode 
         $csvFile = fopen($_FILES['uploaded_file']['tmp_name'], 'r');
         
+        // Initialize counters and error tracking
+        $studentsAdded = 0;
+        $studentsFailed = 0;
+        $errors = array();
+        $rowNumber = 1; // Start from 1 (will be 2 after header)
+        
         // It will skip the first line of the CSV if it contains column names as we're not assigning the values of the header line(first line) to any variable
         fgetcsv($csvFile); 
         
-        // Prepare the SQL statement for inserting data into the user table
-        $stmtUser = $conn->prepare("INSERT INTO user (username, usertype, password) VALUES (?, 'student', ?)");        
-        //If you just want to insert some more columns to the data which are already there in the database then the previous query will throw duplicate key error(i.e. this primary key already exist) so use this query but with caution that this will take too much time: 
-        //$stmtUser = $conn->prepare("INSERT INTO user (username, usertype, password) VALUES (?, 'student', ?) ON DUPLICATE KEY UPDATE password = VALUES(password)"); 
+        // Prepare the SQL statement for inserting/updating data into the user table
+        $stmtUser = $conn->prepare("INSERT INTO user (username, usertype, password) VALUES (?, 'student', ?) ON DUPLICATE KEY UPDATE password = VALUES(password)");        
 
-        // Prepare the SQL statement for inserting data into the info table
-        $stmtInfo = $conn->prepare("INSERT INTO info (username, name, section, batchyr, roll, branch, dob, contact, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        
-        //If you just want to insert some more new columns to the data which are already there in the database then the previous query will throw duplicate key error(i.e. this primary key already exist) so use this query but with caution that this will take too much time: 
-        //$stmtInfo = $conn->prepare("INSERT INTO info (username, name, section, batchyr, roll, branch, dob, contact, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name), section = VALUES(section), batchyr = VALUES(batchyr), branch = VALUES(branch), dob = VALUES(dob), contact = VALUES(contact), email = VALUES(email)"); 
+        // Prepare the SQL statement for inserting/updating data into the info table
+        $stmtInfo = $conn->prepare("INSERT INTO info (username, name, section, batchyr, roll, branch, dob, contact, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name), section = VALUES(section), batchyr = VALUES(batchyr), branch = VALUES(branch), dob = VALUES(dob), contact = VALUES(contact), email = VALUES(email)"); 
         
         // Continuing from second line of the CSV file
         // Loop through each row of the CSV file 
         while (($row = fgetcsv($csvFile)) !== FALSE) { 
-            if (!empty($row[0])) {
-            // Bind the data from the CSV row to the SQL query parameters for user table
-            // Assuming roll is at index 0 and password is at index 4 in the CSV
-            $stmtUser->bind_param("ss", $row[0], $row[4]); 
-            // Execute the SQL query to insert the data into user table
-            $stmtUser->execute(); 
-            // Bind the data from the CSV row to the SQL query parameters for info table
-            // Assuming roll is at index 0, name is at index 1, section is at index 2, batchyr is at index 3 in the CSV and so on
-            $stmtInfo->bind_param("sssssssss", $row[0], $row[1], $row[2], $row[3], $row[0], $row[5], $row[6], $row[7], $row[8]); 
-            // Execute the SQL query to insert the data into info table
-            $stmtInfo->execute(); 
+            $rowNumber++;
+            
+            // Validate required fields
+            if (empty($row[0])) {
+                $studentsFailed++;
+                $errors[] = "Row $rowNumber: Username (Roll) is empty. Skipped.";
+                continue;
+            }
+            
+            if (empty($row[4])) {
+                $studentsFailed++;
+                $errors[] = "Row $rowNumber: Password is empty. Skipped.";
+                continue;
+            }
+            
+            if (empty($row[1])) {
+                $studentsFailed++;
+                $errors[] = "Row $rowNumber: Name is empty. Skipped.";
+                continue;
+            }
+            
+            // Use plain text password (no hashing)
+            $plainPassword = $row[4];
+            
+            try {
+                // Bind the data from the CSV row to the SQL query parameters for user table
+                // Assuming roll is at index 0 and password is at index 4 in the CSV
+                $stmtUser->bind_param("ss", $row[0], $plainPassword); 
+                
+                // Execute the SQL query to insert the data into user table
+                if (!$stmtUser->execute()) {
+                    // Check if it's a duplicate key error
+                    if ($conn->errno == 1062) {
+                        $studentsFailed++;
+                        $errors[] = "Row $rowNumber: Username '{$row[0]}' already exists. Skipped.";
+                    } else {
+                        $studentsFailed++;
+                        $errors[] = "Row $rowNumber: Error inserting into user table. " . $stmtUser->error;
+                    }
+                    continue;
+                }
+                
+                // Bind the data from the CSV row to the SQL query parameters for info table
+                // Assuming roll is at index 0, name is at index 1, section is at index 2, batchyr is at index 3 in the CSV and so on
+                $stmtInfo->bind_param("sssssssss", $row[0], $row[1], $row[2], $row[3], $row[0], $row[5], $row[6], $row[7], $row[8]); 
+                
+                // Execute the SQL query to insert the data into info table
+                if (!$stmtInfo->execute()) {
+                    $studentsFailed++;
+                    $errors[] = "Row $rowNumber: Error inserting into info table. " . $stmtInfo->error;
+                    continue;
+                }
 
-            // Increment the counter
-            $studentsAdded++;
+                // Increment the counter only if both inserts succeed
+                $studentsAdded++;
+            } catch (Exception $e) {
+                $studentsFailed++;
+                $errors[] = "Row $rowNumber: Exception error - " . $e->getMessage();
             }
         } 
         
@@ -58,27 +103,24 @@ if (isset($_POST['upload_file']) && isset($_FILES['uploaded_file'])) { //When th
         fclose($csvFile); 
         $stmtUser->close(); 
         $stmtInfo->close();
-        $conn->close(); 
-        if($studentsAdded == 0) {
-            // JavaScript alert for no students added
-            echo '<script type="text/javascript">
-                    alert("No students added.");
-                  </script>';
+        
+        // Build summary message
+        $summaryMessage = "Import Summary:\n";
+        $summaryMessage .= "Students Added: $studentsAdded\n";
+        $summaryMessage .= "Students Failed: $studentsFailed\n";
+        
+        if (!empty($errors)) {
+            $summaryMessage .= "\nErrors:\n" . implode("\n", $errors);
         }
-        else if ($studentsAdded == 1) {
-            // JavaScript alert for success
-            echo '<script type="text/javascript">
-                    alert("' . $studentsAdded . ' student added successfully.");
-                    window.location.href = "addstudent.php";
-                  </script>';
-        }
-        else {
-            // JavaScript alert for success
-            echo '<script type="text/javascript">
-                    alert("' . $studentsAdded . ' students added successfully.");
-                    window.location.href = "addstudent.php";
-                  </script>';
-        }
+        
+        // Store message in session for display
+        $_SESSION['importSummary'] = $summaryMessage;
+        $_SESSION['studentsAdded'] = $studentsAdded;
+        $_SESSION['studentsFailed'] = $studentsFailed;
+        
+        // Redirect to display results
+        header("location: addstudent.php?result=success");
+        exit();
     } 
     else { 
         // JavaScript alert for file upload error
@@ -105,6 +147,32 @@ if (isset($_POST['upload_file']) && isset($_FILES['uploaded_file'])) { //When th
         <div class="max-w-6xl mx-auto">
             <center><h2 class="text-2xl font-bold mb-6">Add Students</h2></center>
 
+            <!-- Display import results if available -->
+            <?php if (isset($_GET['result']) && $_GET['result'] == 'success' && isset($_SESSION['importSummary'])): ?>
+            <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-6 rounded">
+                <h3 class="font-bold mb-2">Import Summary</h3>
+                <p class="mb-2"><strong>Students Added:</strong> <?php echo $_SESSION['studentsAdded']; ?></p>
+                <p class="mb-4"><strong>Students Failed:</strong> <?php echo $_SESSION['studentsFailed']; ?></p>
+                
+                <?php 
+                $errors = explode("\n", $_SESSION['importSummary']);
+                if (count($errors) > 3): // More than just the header lines
+                ?>
+                <details class="cursor-pointer">
+                    <summary class="font-semibold">View Detailed Report</summary>
+                    <pre class="mt-3 bg-white p-3 rounded text-sm overflow-auto max-h-64 text-gray-800"><?php echo htmlspecialchars($_SESSION['importSummary']); ?></pre>
+                </details>
+                <?php endif; ?>
+                
+                <button onclick="document.getElementById('file-upload-form').style.display='block'" class="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-300">Import More</button>
+            </div>
+            <?php 
+                unset($_SESSION['importSummary']);
+                unset($_SESSION['studentsAdded']);
+                unset($_SESSION['studentsFailed']);
+            ?>
+            <?php endif; ?>
+
             <div id="form-container" class="mt-8">
                 <div id="file-upload-form" class="bg-white p-6 rounded-lg shadow-lg">
                     <form action="addstudent.php" method="POST" enctype="multipart/form-data">
@@ -112,6 +180,10 @@ if (isset($_POST['upload_file']) && isset($_FILES['uploaded_file'])) { //When th
                         <input type="file" name="uploaded_file" class="w-full p-2 border rounded mb-4" required>
                         <button type="submit" name="upload_file" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition duration-300">Submit</button>
                     </form>
+                    <p class="text-sm text-gray-600 mt-4">
+                        <strong>CSV Format Required:</strong> roll, name, section, batchyr, password, branch, dob, contact, email<br>
+                        <strong>Example:</strong> S001, John Doe, A, 2024, myPassword123, CSE, 2000-01-01, 9876543210, john@example.com
+                    </p>
                 </div>
             </div>
         </div>

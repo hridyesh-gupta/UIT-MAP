@@ -97,6 +97,9 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
     $data = json_decode(file_get_contents('php://input'), true); //Decode the JSON payload sent from the client side
     $action = $data['action']; //Get the action from the decoded JSON payload
     $gnum = $data['gnum'];
+    // Force dates to use year 2027 while keeping month/day
+    $forcedDateParts = explode('-', date('Y-m-d'));
+    $forcedDate = '2027-' . $forcedDateParts[1] . '-' . $forcedDateParts[2];
     // var_dump($gnum);
 
     //To handle the change mentor action
@@ -108,7 +111,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
         $mId= $mIdResults->fetch_assoc()['mid'];//As mid is the name of the column in the mentors table whose value is stored in the $mIdResults variable
 
         // Update the mentor, its Id and DEC approval date for the group in the 'projinfo' table using gnum. DEC approval date also bcoz at the time when DEC allotted mentor it also approved the grp.
-        $updateMentor = "UPDATE projinfo SET mentor = '$mentor', mid = '$mId', dAppDate = CURDATE() WHERE gnum = '$gnum'";
+        $updateMentor = "UPDATE projinfo SET mentor = '$mentor', mid = '$mId', dAppDate = '$forcedDate' WHERE gnum = '$gnum'";
         $stmt = $conn->query($updateMentor);
 
         if(!$stmt){
@@ -153,7 +156,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
         $performance = $data['performance'];
 
         // Update the weekly analysis data in the 'wanalysis' table
-        $updateAnalysis = "UPDATE wanalysis SET performance = '$performance', deval = CURDATE() WHERE number = '$groupId' AND weeknum = $weekNum";
+        $updateAnalysis = "UPDATE wanalysis SET performance = '$performance', deval = '$forcedDate' WHERE number = '$groupId' AND weeknum = $weekNum";
         $stmt = $conn->query($updateAnalysis);
         // $stmt->bind_param("sssi", $summary, $performance, date('Y-m-d'), $groupId, $weekNum);
         // $stmt->execute();
@@ -179,9 +182,9 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){ //If the request method is POST
         $columnStatus = "statusR$rubric";
         $columnEval = "evalR$rubric";
         // Update the projinfo table
-        $sql = "UPDATE projinfo SET $columnExaminer = ?, $columnStatus = ?, $columnEval = CURDATE() WHERE gnum = ?";
+        $sql = "UPDATE projinfo SET $columnExaminer = ?, $columnStatus = ?, $columnEval = ? WHERE gnum = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sss", $examiner, $status, $gnum);
+        $stmt->bind_param("ssss", $examiner, $status, $forcedDate, $gnum);
         $stmt->execute();
         
         if ($stmt) {

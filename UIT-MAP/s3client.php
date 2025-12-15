@@ -7,7 +7,7 @@
    use Aws\Exception\AwsException;
 
    // Initialize Dotenv and Load environment variables from .env file
-    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__, 'cred.env');
+    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../', 'cred.env');
     $dotenv->load();  
 
     // Initialize connection

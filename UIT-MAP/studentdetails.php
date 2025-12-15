@@ -1,7 +1,8 @@
 <?php
 // Student 1st page
 session_start();
-error_reporting(0); //To hide the errors
+error_reporting(E_ALL); //Show all errors for debugging
+ini_set('display_errors', 1);
 //These headers tell browsers not to cache the page.
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
