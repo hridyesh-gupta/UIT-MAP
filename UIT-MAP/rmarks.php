@@ -21,39 +21,6 @@ else{
 }
 // Sanitize the input to prevent SQL injection
 $batchyr = mysqli_real_escape_string($conn, $batchyr);
-
-// Check if this batch year exists in the batches table, if not create it
-$checkBatchQuery = "SELECT batchyr FROM batches WHERE batchyr = '$batchyr'";
-$batchResult = $conn->query($checkBatchQuery);
-
-if ($batchResult->num_rows === 0) {
-    // Batch doesn't exist, create it with format like "2023-2027"
-    // Extract the ending year from batchyr parameter
-    $endYear = intval($batchyr);
-    $startYear = $endYear - 4;
-    $batchFormat = $startYear . '-' . $endYear;
-    
-    // Set default dates for each rubric (spread throughout the batch period)
-    // R1: January, R2: February, R3: March, R4: April, R5: May, R6: June, R7: July, R8: September
-    $lastR1 = $endYear . '-01-31';
-    $lastR2 = $endYear . '-02-28';
-    $lastR3 = $endYear . '-03-31';
-    $lastR4 = $endYear . '-04-30';
-    $lastR5 = $endYear . '-05-31';
-    $lastR6 = $endYear . '-06-30';
-    $lastR7 = $endYear . '-07-31';
-    $lastR8 = $endYear . '-09-30';
-    
-    // Insert new batch with proper date values
-    $insertBatchQuery = "INSERT INTO batches (batchyr, lastR1, lastR2, lastR3, lastR4, lastR5, lastR6, lastR7, lastR8) 
-                        VALUES ('$batchFormat', '$lastR1', '$lastR2', '$lastR3', '$lastR4', '$lastR5', '$lastR6', '$lastR7', '$lastR8')";
-    $conn->query($insertBatchQuery);
-    
-    // Update the batchyr variable to use the correct format
-    $batchyr = $batchFormat;
-    $_SESSION['selected_year'] = $batchFormat;
-}
-
 // Query to fetch data from groups and projinfo for the specified batchyr if the user is admin
 if($_SESSION['usertype']=="admin"){
     $query = "
@@ -206,34 +173,22 @@ while ($row = $result->fetch_assoc()) {
     <?php include 'favicon.php' ?>
     <style>
         .table-container {
-            overflow-x: auto;
-        }
-        .main-container {
-            width: 100%;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .table-container {
-            width: 100%;
+            max-width: 100%;
             overflow-x: auto;
             margin: 0 auto;
+            display: flex;
+            justify-content: center;
         }
         .flex-container {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
+            align-items: center; /* Align items vertically in the center */
         }
         .flex-container h1 {
-            flex: 1;
-            text-align: center;
+            flex: 1; /* Allow the heading to take up available space */
+            text-align: center; /* Center the heading text */
         }
         .flex-container button {
             margin-left: auto;
-        }
-        table {
-            margin: 0 auto;
         }
     </style>
 </head>
@@ -242,10 +197,9 @@ while ($row = $result->fetch_assoc()) {
 <?php 
 include 'adminheaders.php';
 ?>
-    <div class="main-container">
-        <div class="max-w-full bg-white p-6 rounded-lg shadow">
-            <div class="flex-container">
-                <h1 class="text-2xl font-bold mb-4">Batch Year (<?php echo htmlspecialchars($batchyr-4); ?>-<?php echo htmlspecialchars($batchyr); ?>)</h1>
+    <div class="max-w-7xl mx-auto bg-white p-6 rounded-lg shadow">
+        <div class="flex-container">
+            <h1 class="text-2xl font-bold mb-4">Batch Year (<?php echo htmlspecialchars($batchyr-4); ?>-<?php echo htmlspecialchars($batchyr); ?>)</h1>
     <?php if ($result->num_rows === 0): ?>  
         </div>      
         <hr class="my-8 border-black-300">
@@ -325,7 +279,6 @@ include 'adminheaders.php';
         </table>
         </div>
     <?php endif; ?>
-        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>

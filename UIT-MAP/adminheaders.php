@@ -120,6 +120,9 @@ $loggedInName = $nameResult->num_rows > 0 ? $nameResult->fetch_assoc()['name'] :
             <?php } ?>                
                 <a href="#" id="groups-link" class="text-lg">Groups</a>
                 <a href="#" id="marks-link" class="text-lg">Rubrics Marks</a>
+            <?php if($_SESSION['usertype'] == "admin"){ ?>                
+                <a href="manage_dates.php" class="text-lg">Manage Dates</a>
+            <?php } ?>
                 <a href="guidelines.php" class="text-lg">Guidelines</a>
                 <a href="logout.php" class="text-lg">Logout</a>
             </div>
@@ -133,6 +136,9 @@ $loggedInName = $nameResult->num_rows > 0 ? $nameResult->fetch_assoc()['name'] :
             <?php } ?>
                 <a href="#" id="groups-link" class="text-lg">Groups</a>
                 <a href="#" id="marks-link" class="text-lg">Rubrics Marks</a>
+            <?php if($_SESSION['usertype'] == "admin"){ ?>                
+                <a href="manage_dates.php" class="text-lg">Manage Dates</a>
+            <?php } ?>
                 <a href="guidelines.php" class="text-lg">Guidelines</a>
                 <a href="logout.php" class="text-lg">Logout</a>
             </div>
