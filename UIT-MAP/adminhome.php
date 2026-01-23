@@ -138,6 +138,9 @@ $loggedInName = $nameResult->num_rows > 0 ? $nameResult->fetch_assoc()['name'] :
             <?php } ?>
                 <button class="bg-blue-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-blue-600 transition duration-300" onclick="location.href='#'" id="groups-link">Groups</button>
                 <button class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300" onclick="location.href='#'" id="marks-link">Rubrics Marks</button>
+            <?php if($_SESSION['usertype'] == "admin"){ ?>                
+                <button class="bg-purple-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-purple-600 transition duration-300" onclick="location.href='manage_dates.php'">Manage Dates</button>
+            <?php } ?>
                 <button class="bg-blue-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-blue-600 transition duration-300" onclick="location.href='guidelines.php'">Guidelines</button>
                 <button class="bg-red-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-red-600 transition duration-300" onclick="location.href='logout.php'">Logout</button>
             </div>
