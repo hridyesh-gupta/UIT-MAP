@@ -11,6 +11,12 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then it mean
 //PHP code to insert the data from the CSV file into the database
 include 'dbconnect.php'; //Include the database connection file
 
+// It Tracks how many new students were successfully added
+$studentsAdded = 0;
+
+// It Tracks how many duplicate students were updated instead of being rejected
+$studentsDuplicate = 0;
+
 // Check if the form is submitted 
 if (isset($_POST['upload_file']) && isset($_FILES['uploaded_file'])) { //When the button is clicked and also the file has been uploaded then only this statement will be executed
     // Check for errors in the uploaded file 
@@ -20,62 +26,66 @@ if (isset($_POST['upload_file']) && isset($_FILES['uploaded_file'])) { //When th
         // Open the uploaded CSV file in read mode 
         $csvFile = fopen($_FILES['uploaded_file']['tmp_name'], 'r');
         
-        // It will skip the first line of the CSV if it contains column names as we're not assigning the values of the header line(first line) to any variable
+        // It will skip the first line of the CSV if it contains column names
         fgetcsv($csvFile); 
         
-        // Prepare the SQL statement for inserting data into the user table
-        $stmtUser = $conn->prepare("INSERT INTO user (username, usertype, password) VALUES (?, 'student', ?)");        
-        //If you just want to insert some more columns to the data which are already there in the database then the previous query will throw duplicate key error(i.e. this primary key already exist) so use this query but with caution that this will take too much time: 
-        //$stmtUser = $conn->prepare("INSERT INTO user (username, usertype, password) VALUES (?, 'student', ?) ON DUPLICATE KEY UPDATE password = VALUES(password)"); 
-
-        // Prepare the SQL statement for inserting data into the info table
-        $stmtInfo = $conn->prepare("INSERT INTO info (username, name, section, batchyr, roll, branch, dob, contact, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        // If student username already exists, update their password instead of crashing , this allows existing students to have updated credentials
+        $stmtUser = $conn->prepare("INSERT INTO user (username, usertype, password) VALUES (?, 'student', ?) ON DUPLICATE KEY UPDATE password = VALUES(password)");        
         
-        //If you just want to insert some more new columns to the data which are already there in the database then the previous query will throw duplicate key error(i.e. this primary key already exist) so use this query but with caution that this will take too much time: 
-        //$stmtInfo = $conn->prepare("INSERT INTO info (username, name, section, batchyr, roll, branch, dob, contact, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name), section = VALUES(section), batchyr = VALUES(batchyr), branch = VALUES(branch), dob = VALUES(dob), contact = VALUES(contact), email = VALUES(email)"); 
+        // If student record already exists, update their information (name, email, contact, etc.) ,this ensures old records get refreshed with latest data from CSV instead of causing errors or page crashed
+        $stmtInfo = $conn->prepare("INSERT INTO info (username, name, section, batchyr, roll, branch, dob, contact, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name), section = VALUES(section), batchyr = VALUES(batchyr), branch = VALUES(branch), dob = VALUES(dob), contact = VALUES(contact), email = VALUES(email)"); 
         
-        // Continuing from second line of the CSV file
         // Loop through each row of the CSV file 
         while (($row = fgetcsv($csvFile)) !== FALSE) { 
             if (!empty($row[0])) {
-            // Bind the data from the CSV row to the SQL query parameters for user table
-            // Assuming roll is at index 0 and password is at index 4 in the CSV
-            $stmtUser->bind_param("ss", $row[0], $row[4]); 
-            // Execute the SQL query to insert the data into user table
-            $stmtUser->execute(); 
-            // Bind the data from the CSV row to the SQL query parameters for info table
-            // Assuming roll is at index 0, name is at index 1, section is at index 2, batchyr is at index 3 in the CSV and so on
-            $stmtInfo->bind_param("sssssssss", $row[0], $row[1], $row[2], $row[3], $row[0], $row[5], $row[6], $row[7], $row[8]); 
-            // Execute the SQL query to insert the data into info table
-            $stmtInfo->execute(); 
+                // Try to add the student's login credentials (username and password)
+                $stmtUser->bind_param("ss", $row[0], $row[4]); 
+                if ($stmtUser->execute()) {
+                    // Also add or update the student's personal information in the info table
+                    $stmtInfo->bind_param("sssssssss", $row[0], $row[1], $row[2], $row[3], $row[0], $row[5], $row[6], $row[7], $row[8]); 
+                    if ($stmtInfo->execute()) {
+                        // Check if this was a NEW student added (1 row affected) or an EXISTING student updated (2 rows affected)
+                        
+                        if ($conn->affected_rows == 1) { // affected_rows = 1 means INSERT happened (new student)
+                            $studentsAdded++; // Count as new addition
 
-            // Increment the counter
-            $studentsAdded++;
+                        } else if ($conn->affected_rows == 2) { // affected_rows = 2 means UPDATE happened (duplicate student, info refreshed)
+                            $studentsDuplicate++; // Count as duplicate 
+                        }
+                    }
+                }
             }
         } 
-        
-        // Clean up: Close the CSV file, the prepared statements, and the database connection 
+        // Clean up: Closing the CSV file, the prepared statements, and the database connection 
         fclose($csvFile); 
         $stmtUser->close(); 
         $stmtInfo->close();
         $conn->close(); 
-        if($studentsAdded == 0) {
-            // JavaScript alert for no students added
+        // Checking if anything was actually processed from the CSV file
+        if($studentsAdded == 0 && $studentsDuplicate == 0) {
+            // The CSV was likely empty or had no valid entries
             echo '<script type="text/javascript">
-                    alert("No students added.");
-                  </script>';
-        }
-        else if ($studentsAdded == 1) {
-            // JavaScript alert for success
-            echo '<script type="text/javascript">
-                    alert("' . $studentsAdded . ' student added successfully.");
-                    window.location.href = "addstudent.php";
+                    alert("No students added. Please check the CSV file.");
                   </script>';
         }
         else {
-            // JavaScript alert for success
+            // Build a friendly message showing what happened during the upload
+            $summary = "";
+            
+            // If there were new students added, mention that
+            if ($studentsAdded > 0) {
+                $summary .= $studentsAdded . " new student" . ($studentsAdded > 1 ? "s" : "") . " added successfully.";
+            }
+            
+            // If there were duplicates that got updated, mention that too with password update info
+            if ($studentsDuplicate > 0) {
+                if ($summary) $summary .= " "; // Add space between messages if both exist
+                $summary .= $studentsDuplicate . " student" . ($studentsDuplicate > 1 ? "s" : "") . " details updated.";
+            }
+            
+            // Show the final summary to the admin
             echo '<script type="text/javascript">
-                    alert("' . $studentsAdded . ' students added successfully.");
+                    alert("' . $summary . '");
                     window.location.href = "addstudent.php";
                   </script>';
         }

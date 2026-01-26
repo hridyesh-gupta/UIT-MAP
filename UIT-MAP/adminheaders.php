@@ -116,7 +116,7 @@ $loggedInName = $nameResult->num_rows > 0 ? $nameResult->fetch_assoc()['name'] :
         <nav id="desktop-menu" class="md:block bg-blue-500 text-white">
             <div class="max-w-6xl mx-auto p-4 flex space-x-4 justify-between">
             <?php if($_SESSION['usertype'] == "admin"){ ?>                
-                <a href="addstudent.php" class="text-lg">Admin Controls</a>
+                <a href="admincontrols.php" class="text-lg">Admin Controls</a>
             <?php } ?>                
                 <a href="#" id="groups-link" class="text-lg">Groups</a>
                 <a href="#" id="marks-link" class="text-lg">Rubrics Marks</a>
@@ -129,7 +129,7 @@ $loggedInName = $nameResult->num_rows > 0 ? $nameResult->fetch_assoc()['name'] :
         <nav id="mobile-menu" class="bg-blue-500 text-white hidden">
             <div class="max-w-6xl mx-auto p-4 flex flex-col space-y-4">
             <?php if($_SESSION['usertype'] == "admin"){ ?>                
-                <a href="addstudent.php" class="text-lg">Admin Controls</a>
+                <a href="admincontrols.php" class="text-lg">Admin Controls</a>
             <?php } ?>
                 <a href="#" id="groups-link" class="text-lg">Groups</a>
                 <a href="#" id="marks-link" class="text-lg">Rubrics Marks</a>
