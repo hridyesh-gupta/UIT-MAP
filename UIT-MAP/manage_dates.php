@@ -22,42 +22,60 @@ include 'dbconnect.php';
 // Check if form was submitted via POST method and contains update_dates flag
 if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_dates'])) {
     
-    // Retrieve the batch year from the form submission
-    $batchYear = $_POST['batchYear'];
+    // Initialize validation flag
+    $validationError = false;
+
+    // Retrieve and validate the batch year from the form submission
+    $batchYearRaw = isset($_POST['batchYear']) ? $_POST['batchYear'] : null;
+    $batchYear = filter_var($batchYearRaw, FILTER_VALIDATE_INT);
+    if ($batchYear === false) {
+        $updateError = "Invalid batch year provided.";
+        $validationError = true;
+    }
     
     // Retrieve all rubric deadline dates from the form (may be empty if admin didn't fill them)
-    $lastR1 = $_POST['lastR1'];  // Rubric 1 deadline
-    $lastR2 = $_POST['lastR2'];  // Rubric 2 deadline
-    $lastR3 = $_POST['lastR3'];  // Rubric 3 deadline
-    $lastR4 = $_POST['lastR4'];  // Rubric 4 deadline
-    $lastR5 = $_POST['lastR5'];  // Rubric 5 deadline
-    $lastR6 = $_POST['lastR6'];  // Rubric 6 deadline
-    $lastR7 = $_POST['lastR7'];  // Rubric 7 deadline
-    $lastR8 = $_POST['lastR8'];  // Rubric 8 deadline
+    $lastR1 = isset($_POST['lastR1']) ? trim($_POST['lastR1']) : '';  // Rubric 1 deadline
+    $lastR2 = isset($_POST['lastR2']) ? trim($_POST['lastR2']) : '';  // Rubric 2 deadline
+    $lastR3 = isset($_POST['lastR3']) ? trim($_POST['lastR3']) : '';  // Rubric 3 deadline
+    $lastR4 = isset($_POST['lastR4']) ? trim($_POST['lastR4']) : '';  // Rubric 4 deadline
+    $lastR5 = isset($_POST['lastR5']) ? trim($_POST['lastR5']) : '';  // Rubric 5 deadline
+    $lastR6 = isset($_POST['lastR6']) ? trim($_POST['lastR6']) : '';  // Rubric 6 deadline
+    $lastR7 = isset($_POST['lastR7']) ? trim($_POST['lastR7']) : '';  // Rubric 7 deadline
+    $lastR8 = isset($_POST['lastR8']) ? trim($_POST['lastR8']) : '';  // Rubric 8 deadline
     
     // Validate that all submitted dates fall within the batch year range
     // Academic year: (batchYear - 4) to batchYear (e.g., 2021-2025)
-    $validationError = false;
-    $minYear = $batchYear - 4;  // Start of academic year
-    $maxYear = $batchYear;       // End of academic year
-    
-    // Array of all date fields to validate
-    $dates = [
-        'Rubric 1' => $lastR1, 'Rubric 2' => $lastR2, 'Rubric 3' => $lastR3, 'Rubric 4' => $lastR4,
-        'Rubric 5' => $lastR5, 'Rubric 6' => $lastR6, 'Rubric 7' => $lastR7, 'Rubric 8' => $lastR8
-    ];
-    
-    // Check each date that is not empty
-    foreach($dates as $rubricName => $dateValue) {
-        if(!empty($dateValue)) {
-            // Extract year from the date (format: YYYY-MM-DD)
-            $dateYear = (int)date('Y', strtotime($dateValue));
-            
-            // Check if date year is within valid range
-            if($dateYear < $minYear || $dateYear > $maxYear) {
-                $updateError = "$rubricName deadline must be between $minYear and $maxYear (batch year range).";
-                $validationError = true;
-                break;  // Stop checking once we find an invalid date
+    if (!$validationError) {
+        $minYear = $batchYear - 4;  // Start of academic year
+        $maxYear = $batchYear;       // End of academic year
+        
+        // Array of all date fields to validate
+        $dates = [
+            'Rubric 1' => $lastR1, 'Rubric 2' => $lastR2, 'Rubric 3' => $lastR3, 'Rubric 4' => $lastR4,
+            'Rubric 5' => $lastR5, 'Rubric 6' => $lastR6, 'Rubric 7' => $lastR7, 'Rubric 8' => $lastR8
+        ];
+        
+        // Check each date that is not empty
+        foreach($dates as $rubricName => $dateValue) {
+            if(!empty($dateValue)) {
+                // Ensure date is in the correct format (YYYY-MM-DD)
+                $dateTime = DateTime::createFromFormat('Y-m-d', $dateValue);
+                $dateErrors = DateTime::getLastErrors();
+                if ($dateTime === false || $dateErrors['warning_count'] > 0 || $dateErrors['error_count'] > 0) {
+                    $updateError = "$rubricName deadline must be a valid date in YYYY-MM-DD format.";
+                    $validationError = true;
+                    break;  // Stop checking once we find an invalid date
+                }
+
+                // Extract year from the validated date
+                $dateYear = (int)$dateTime->format('Y');
+                
+                // Check if date year is within valid range
+                if($dateYear < $minYear || $dateYear > $maxYear) {
+                    $updateError = "$rubricName deadline must be between $minYear and $maxYear (batch year range).";
+                    $validationError = true;
+                    break;  // Stop checking once we find an invalid date
+                }
             }
         }
     }
