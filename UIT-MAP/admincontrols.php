@@ -27,7 +27,7 @@ elseif($_SESSION['usertype']!="admin"){ //If the user is not admin, then redirec
             <center><h2 class="text-2xl font-bold mb-6">Admin Controls</h2></center>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
                 <button class="bg-green-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-green-600 transition duration-300" onclick="location.href='addstudent.php'">Add Student</button>
-                <button class="bg-purple-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-purple-600 transition duration-300" onclick="location.href='manage_dates.php'">Manage Dates</button>
+                <button class="bg-blue-500 text-white py-4 px-6 rounded-lg shadow-lg hover:bg-blue-600 transition duration-300" onclick="location.href='manage_dates.php'">Manage Dates</button>
             </div>
         </div>
     </main>
