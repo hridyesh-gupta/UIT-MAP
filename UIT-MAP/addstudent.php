@@ -45,11 +45,9 @@ if (isset($_POST['upload_file']) && isset($_FILES['uploaded_file'])) { //When th
                     $stmtInfo->bind_param("sssssssss", $row[0], $row[1], $row[2], $row[3], $row[0], $row[5], $row[6], $row[7], $row[8]); 
                     if ($stmtInfo->execute()) {
                         // Check if this was a NEW student added (1 row affected) or an EXISTING student updated (2 rows affected)
-                        
-                        if ($conn->affected_rows == 1) { // affected_rows = 1 means INSERT happened (new student)
+                        if ($stmtInfo->affected_rows == 1) { // affected_rows = 1 means INSERT happened (new student)
                             $studentsAdded++; // Count as new addition
-
-                        } else if ($conn->affected_rows == 2) { // affected_rows = 2 means UPDATE happened (duplicate student, info refreshed)
+                        } else if ($stmtInfo->affected_rows == 2) { // affected_rows = 2 means UPDATE happened (duplicate student, info refreshed)
                             $studentsDuplicate++; // Count as duplicate 
                         }
                     }

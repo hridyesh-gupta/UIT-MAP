@@ -206,10 +206,10 @@ if($selectedYear) {
                             <button 
                                 type="submit"
                                 name="batchYear"
-                                value="<?php echo $year; ?>"
+                                value="<?php echo htmlspecialchars($year, ENT_QUOTES, 'UTF-8'); ?>"
                                 class="px-4 py-2 rounded transition-colors <?php echo ($selectedYear == $year) ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'; ?>">
                                 <!-- Display year range (e.g., "2021-2025" for batchyr 2025) -->
-                                <?php echo ($year - 4) . " - " . $year; ?>
+                                <?php echo htmlspecialchars(($year - 4) . " - " . $year, ENT_QUOTES, 'UTF-8'); ?>
                             </button>
                         <?php endforeach; ?>
                     </div>
