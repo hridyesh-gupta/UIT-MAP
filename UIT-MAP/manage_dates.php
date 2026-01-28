@@ -228,11 +228,11 @@ if($selectedYear) {
             <form method="POST" class="bg-white rounded-lg shadow p-6" id="dateForm">
                 <!-- Hidden fields to track which dates to update -->
                 <input type="hidden" name="update_dates" value="1">
-                <input type="hidden" name="batchYear" value="<?php echo $selectedYear; ?>">
+                <input type="hidden" name="batchYear" value="<?php echo htmlspecialchars((string)$selectedYear, ENT_QUOTES, 'UTF-8'); ?>">
                 
                 <!-- Display date range info -->
                 <div class="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded mb-4">
-                    <strong>Note:</strong> All dates must be within the academic year range: <?php echo $minYear; ?> - <?php echo $maxYear; ?>
+                    <strong>Note:</strong> All dates must be within the academic year range: <?php echo htmlspecialchars((string)$minYear, ENT_QUOTES, 'UTF-8'); ?> - <?php echo htmlspecialchars((string)$maxYear, ENT_QUOTES, 'UTF-8'); ?>
                 </div>
                 
                 <!-- Grid layout for date input fields (2 columns on medium+ screens, 1 column on mobile) -->
