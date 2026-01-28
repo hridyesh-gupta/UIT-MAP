@@ -184,14 +184,14 @@ if($selectedYear) {
             <!-- Display success message if date update was successful -->
             <?php if(isset($updateSuccess)): ?>
                 <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                    <?php echo $updateSuccess; ?>
+                    <?php echo htmlspecialchars($updateSuccess, ENT_QUOTES, 'UTF-8'); ?>
                 </div>
             <?php endif; ?>
             
             <!-- Display error message if date update failed -->
             <?php if(isset($updateError)): ?>
                 <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                    <?php echo $updateError; ?>
+                    <?php echo htmlspecialchars($updateError, ENT_QUOTES, 'UTF-8'); ?>
                 </div>
             <?php endif; ?>
 
