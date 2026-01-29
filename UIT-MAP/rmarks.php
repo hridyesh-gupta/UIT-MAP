@@ -175,6 +175,9 @@ while ($row = $result->fetch_assoc()) {
         .table-container {
             max-width: 100%;
             overflow-x: auto;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
         }
         .flex-container {
             display: flex;
@@ -194,7 +197,7 @@ while ($row = $result->fetch_assoc()) {
 <?php 
 include 'adminheaders.php';
 ?>
-    <div class="max-w-7xl bg-white p-6 rounded-lg shadow">
+    <div class="max-w-7xl mx-auto bg-white p-6 rounded-lg shadow">
         <div class="flex-container">
             <h1 class="text-2xl font-bold mb-4">Batch Year (<?php echo htmlspecialchars($batchyr-4); ?>-<?php echo htmlspecialchars($batchyr); ?>)</h1>
     <?php if ($result->num_rows === 0): ?>  
